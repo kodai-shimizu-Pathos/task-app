@@ -24,7 +24,6 @@ export interface Task {
     // attachments?: string[]; // 添付ファイルのURL(例：['https://example.com/file1.pdf', 'https://example.com/file2.jpg'])
     // comments?: string[]; // コメント(例：['コメント1', 'コメント2'])
     // subTasks?: Task[]; // サブタスク(例：[Task, Task])
-    // dependencies?: string[]; // 依存関係のタスクID(例：['task-1', 'task-2'])
     // reminders?: string[]; // リマインダー(例：['2026-01-01 10:00:00', '2026-01-02 10:00:00'])
     // notes?: string[]; // ノート(例：['ノート1', 'ノート2'])
 }
