@@ -1,0 +1,18 @@
+<div class="kanban-column">
+    <!-- 列のヘッダー：タイトルとタスク件数-->
+     <div class="column-header">
+        <h3 class="column-title">{{ title }}</h3>
+        <span class="task-count">{{ tasks.length }}</span>
+     </div>
+
+     <!-- タスクカードの一覧エリア -->
+      <div class="card-list">
+        <!-- *ngForでタスクの数だけカードを繰り返し描画する -->
+         <app-task-card *ngFor="let task of tasks" [task]="task"></app-task-card>
+
+         <!-- タスクが0件のときのメッセージ-->
+          <div class="empty-message" *ngIf="tasks.length === 0">
+            タスクがありません
+          </div>
+     </div>
+</div>

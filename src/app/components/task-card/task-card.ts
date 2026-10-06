@@ -4,8 +4,8 @@ import { Task } from '../../models/task.model';
 
 @Component({
   selector: 'app-task-card',
-  standalone: true,
-  imports: [CommonModule],
+  standalone: true, //単独かつ軽量なコンポーネントとして宣言
+  imports: [CommonModule], //HTMLでngIf(条件分岐)やngFor(繰り返し処理)などのAngularの機能を使用できるようにする
   templateUrl: './task-card.html',
   styleUrl: './task-card.css',
 })
