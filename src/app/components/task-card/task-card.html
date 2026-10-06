@@ -1,0 +1,29 @@
+<div class="task-card" *ngIf="task">
+    <!-- ヘッダー：優先度バッジとステータス-->
+     <div class="card-header">
+        <span class="badge priority" [ngClass]="task.priority">
+            {{ task.priority | uppercase}}
+        </span>
+        <span class="status-label">{{ task.status}}</span>
+     </div>
+     <!-- タスクタイトル -->
+      <h4 class="#card-title">{{ task.title }}</h4>
+      
+      <!-- タグ一覧 -->
+       <div class="tags-list" *ngIf="task.tags && task.tags.length > 0">
+        <span class="tag" *ngFor="let tag of task.tags">{{ tag }}</span>
+       </div>
+
+       <!-- 進捗バー -->
+        <div class="progress-section">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" [style.width.%]="task.progress"></div>
+            </div>
+            <span class="progress-text">{{ task.progress }}%</span>
+        </div>
+
+        <!-- フッター：締切日 -->
+         <div class="card-footer" *ngIf="task.deadline">
+            <span class="deadline">📅{{ task.deadline }}</span>
+         </div>
+</div>
