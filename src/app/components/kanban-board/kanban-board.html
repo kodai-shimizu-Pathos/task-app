@@ -1,0 +1,8 @@
+<div class="kanban-board">
+    <!-- 1列目：未着手-->
+     <app-kanban-column title="未着手 (TODO)" [tasks]="todoTasks"></app-kanban-column>
+     <!-- 2列目：進行中-->
+     <app-kanban-column title="進行中 (IN PROGRESS)" [tasks]="inProgressTasks"></app-kanban-column>
+     <!-- 3列目：完了-->
+     <app-kanban-column title="完了 (DONE)" [tasks]="doneTasks"></app-kanban-column>
+</div>
