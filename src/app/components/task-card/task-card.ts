@@ -22,6 +22,7 @@ export class TaskCard {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const deadlineDate = new Date(deadline);
+    deadlineDate.setHours(0, 0, 0, 0);
     return deadlineDate < today;
   }
 }

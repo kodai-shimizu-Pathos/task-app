@@ -58,7 +58,7 @@
   border-radius: 4px;
 }
 
-/* 日付エリア共通 */
+/* 日付表示エリア */
 .dates-section {
   display: flex;
   flex-direction: column;
@@ -68,43 +68,39 @@
   font-size: 11px;
 }
 
-.scheduled-dates {
-  color: #a6adc8;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.date-label {
-  color: #7f849c;
-}
-
-/* 最終締め切り日バッジ（共通ベース） */
-.deadline-badge {
+.date-badge {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 5px 8px;
   border-radius: 4px;
-  font-weight: bold;
-  margin-top: 2px;
-  transition: all 0.2s ease;
+  font-size: 11px;
 }
 
-/* ① 期限超過タスク（警告：赤紫背景 × 鮮やかな赤ピンク枠） */
-.deadline-badge.overdue {
-  background-color: #3b1e2e;
-  border: 1.5px solid #f38ba8;
-  color: #f38ba8;
+.date-label { font-size: 11px; }
+.date-value { font-size: 11px; font-weight: 600; }
+
+/* ① 作業予定日バッジ */
+.date-badge.scheduled-badge {
+  background-color: #181825;
+  border: 1px solid #313244;
+  color: #a6adc8;
 }
 
-/* ② 期限内タスク（落ち着いたスタイル：暗め背景 × アクセント青枠/青文字） */
-.deadline-badge.upcoming {
+/* ② 最終期限バッジ：期限内（落ち着いたブルーグレー） */
+.date-badge.deadline-badge.upcoming {
   background-color: #181825;
   border: 1px solid #45475a;
   color: #89b4fa;
 }
 
+/* ② 最終期限バッジ：期限超過（目立つ赤枠＆赤紫背景） */
+.date-badge.deadline-badge.overdue {
+  background-color: #3b1e2e !important;
+  border: 1.5px solid #f38ba8 !important;
+  color: #f38ba8 !important;
+  font-weight: bold;
+}
 /* 完了済みタスクカード（全体を少し半透明にし、タイトルに打ち消し線を入れる） */
 .task-card.done-card {
   opacity: 0.7;
