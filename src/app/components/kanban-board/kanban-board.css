@@ -2,6 +2,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  height: 100%; /* 高さ100%固定 */
+  height: 100%;        /* 親コンテナの高さをいっぱいに使用 */
+  min-height: 0;       /* Grid/Flex内で子要素の縮小を許可する */
   box-sizing: border-box;
 }
