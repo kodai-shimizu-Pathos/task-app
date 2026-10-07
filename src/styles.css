@@ -1,1 +1,83 @@
-/* You can add global styles to this file, and also import other style files */
+  /* ==========================================
+    優先度チップスタイル
+    ========================================== */
+  .badge.priority {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  /* 高優先度: 赤 */
+  .badge.high {
+    background-color: rgba(243, 139, 168, 0.15);
+    color: #F38BA8;
+    border: 1px solid rgba(243, 139, 168, 0.4);
+  }
+  
+  /* 中優先度: 黄/オレンジ */
+  .badge.medium {
+    background-color: rgba(250, 179, 135, 0.15);
+    color: #FAB387;
+    border: 1px solid rgba(250, 179, 135, 0.4);
+  }
+  
+  /* 低優先度: 緑 */
+  .badge.low {
+    background-color: rgba(166, 227, 161, 0.15);
+    color: #A6E3A1;
+    border: 1px solid rgba(166, 227, 161, 0.4);
+  }
+
+  /* ==========================================
+    タグチップスタイル
+    ========================================== */
+  .tag-chip {
+    background-color: #313244;
+    color: #89B4FA;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-block;
+  }
+
+  /* ==========================================
+    日付・期限チップスタイル
+    ========================================== */
+  .date-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background-color: #181825;
+    color: #A6ADC8;
+    border: 1px solid #313244;
+  }
+  
+  /* 📅 作業予定日（青系トーン） */
+  .date-chip.scheduled {
+    color: #89B4FA;
+    border-color: rgba(137, 180, 250, 0.3);
+  }
+  
+  /* ⏰ 最終締切（通常の赤ピンク系トーン） */
+  .date-chip.deadline {
+    color: #F38BA8;
+    background-color: rgba(243, 139, 168, 0.1);
+    border-color: rgba(243, 139, 168, 0.3);
+  }
+  
+  /* 🚨 期限超過アラート（背景赤＋太字で強調） */
+  .date-chip.deadline.overdue {
+    color: #11111B;
+    background-color: #F38BA8;
+    font-weight: bold;
+    border-color: #F38BA8;
+  }

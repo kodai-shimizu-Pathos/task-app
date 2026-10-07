@@ -1,0 +1,132 @@
+/* アプリ外枠の高さを画面ピッタリに固定 */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* bodyレベルのスクロールを禁止 */
+}
+
+.app-shell {
+  background-color: #1A1D24;
+  color: #CDD6F4;
+  height: 100vh; /* 100%から100vhに変更 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-header {
+  height: 48px;
+  background-color: #242832;
+  border-bottom: 1px solid #313244;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #89B4FA;
+  margin: 0;
+}
+
+.breadcrumbs {
+  font-size: 13px;
+  color: #A6ADC8;
+}
+
+.crumb-link {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.crumb-separator { margin: 0 6px; color: #6C7086; }
+.crumb-current { color: #CDD6F4; font-weight: 600; }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.view-mode-toggle {
+  display: flex;
+  background-color: #181825;
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid #313244;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #A6ADC8;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.toggle-btn.active {
+  background-color: #89B4FA;
+  color: #11111B;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background-color: #89B4FA;
+  color: #11111B;
+  border: none;
+  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-primary:hover { background-color: #B4BEFE; }
+
+.main-container {
+  flex: 1;
+  min-height: 0; /* Flexboxでの溢れ防止に必須 */
+  overflow: hidden;
+}
+
+.master-detail-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  padding: 16px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.master-pane {
+  background-color: #242832;
+  border-radius: 12px;
+  border: 1px solid #313244;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.detail-pane {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.empty-selection-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 48px);
+  color: #6C7086;
+}

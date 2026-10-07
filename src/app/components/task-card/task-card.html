@@ -2,7 +2,7 @@
     <!-- ヘッダー：優先度バッジ-->
     <div class="card-header">
         <span class="badge priority" [ngClass]="task.priority">
-            {{ task.priority | uppercase}}
+            ● {{ task.priority | uppercase}}
         </span>
         <span class="status-label">
             {{ task.status === 'done' ? '✅ 完了':''}}
@@ -14,13 +14,13 @@
       
     <!-- タグ一覧 -->
     <div class="tags-list" *ngIf="task.tags && task.tags.length > 0">
-        <span class="tag" *ngFor="let tag of task.tags">{{ tag }}</span>
+        <span class="tag-chip" *ngFor="let tag of task.tags">#{{ tag }}</span>
     </div>
 
     <!-- 日付表示エリア -->
     <div class="dates-section" *ngIf="task.scheduledStartDate || task.scheduledEndDate || task.deadline">
         <!-- 1. 作業予定日 (開始日 ～ 完了日) -->
-        <div class="date-badge scheduled-badge" *ngIf="task.scheduledStartDate || task.scheduledEndDate">
+        <div class="date-chip scheduled" *ngIf="task.scheduledStartDate || task.scheduledEndDate">
             <span class="date-label">📅 作業予定：</span>
             <span class="date-value">
                 {{ task.scheduledStartDate || '未定' }} ~ {{ task.scheduledEndDate || '未定' }}
@@ -28,7 +28,7 @@
         </div>
 
         <!-- 2. 締切日 (予定日よりも目立たせる)-->
-        <div class="date-badge deadline-badge" *ngIf="task.deadline" 
+        <div class="date-chip deadline" *ngIf="task.deadline" 
         [ngClass]="{'overdue': isOverdue(task.deadline), 'upcoming': !isOverdue(task.deadline)}">
             <span class="date-label">
             {{ isOverdue(task.deadline) ? '🚨期限超過' : '⏰最終期限' }}

@@ -1,21 +1,71 @@
-<div style="background-color: #11111b; min-height: 100vh; padding-top: 16px;">
-    <!-- ヘッダーエリア："＋新規タスク" ボタン -->
-    <div style="padding: 0 24px 16px 24px; display: flex; justify-content: space-between; align-items: center;">
-      <h1 style="color: #cdd6f4; font-size: 20px; margin: 0;">BeSideFlow AI - Task Board</h1>
-      <button 
-        (click)="openForm()" 
-        style="background-color: #89b4fa; color: #11111b; border: none; font-weight: bold; padding: 10px 18px; border-radius: 8px; cursor: pointer;">
+<div class="app-shell">
+  <!-- 1. アプリ上部ヘッダーバー -->
+  <header class="app-header">
+    <div class="header-left">
+      <h1 class="logo-title">BeSideFlow AI</h1>
+      <!-- パンくずリスト -->
+      <nav class="breadcrumbs" *ngIf="selectedProject">
+        <span class="crumb-link" (click)="onCloseMasterDetail()">プロジェクト一覧</span>
+        <span class="crumb-separator">＞</span>
+        <span class="crumb-current">{{ selectedProject.title }}</span>
+      </nav>
+    </div>
+
+    <div class="header-right">
+      <!-- 表示モード切替 ([カンバン | ガントチャート]) -->
+      <div class="view-mode-toggle">
+        <button 
+          class="toggle-btn" 
+          [ngClass]="{'active': currentMode === 'KANBAN'}"
+          (click)="switchViewMode('KANBAN')">
+          カンバン
+        </button>
+        <button 
+          class="toggle-btn" 
+          [ngClass]="{'active': currentMode === 'GANTT'}"
+          (click)="switchViewMode('GANTT')">
+          ガントチャート
+        </button>
+      </div>
+
+      <!-- ＋新規タスクボタン -->
+      <button class="btn-primary" (click)="openForm()">
         ＋ 新規タスク
       </button>
     </div>
-  
-    <!-- カンバンボード -->
-    <app-kanban-board [tasks]="allTasks"></app-kanban-board>
-  
-    <!-- タスク作成モーダル (isFormOpen が true の時だけ表示) -->
-    <app-task-form 
-      *ngIf="isFormOpen" 
-      (taskCreated)="onTaskCreated($event)" 
-      (closeModal)="closeForm()">
-    </app-task-form>
-  </div>
+  </header>
+
+  <!-- 2. メインコンテンツ領域 (Master-Detail 左右分割) -->
+  <main class="main-container">
+    <div class="master-detail-layout" *ngIf="selectedProject; else noProjectSelected">
+      
+      <!-- 左側 30%: Master パネル -->
+      <aside class="master-pane">
+        <app-master-info-panel
+          [project]="selectedProject"
+          (closePanel)="onCloseMasterDetail()">
+        </app-master-info-panel>
+      </aside>
+
+      <!-- 右側 70%: Detail パネル (子タスクカンバン) -->
+      <section class="detail-pane">
+        <app-kanban-board [tasks]="filteredSubtasks"></app-kanban-board>
+      </section>
+
+    </div>
+
+    <!-- 親課題未選択時の表示 -->
+    <ng-template #noProjectSelected>
+      <div class="empty-selection-container">
+        <p>親課題（プロジェクト）を選択すると、ここに詳細および子タスクが展開されます。</p>
+      </div>
+    </ng-template>
+  </main>
+
+  <!-- 3. 新規タスク作成モーダル -->
+  <app-task-form 
+    *ngIf="isFormOpen" 
+    (taskCreated)="onTaskCreated($event)" 
+    (closeModal)="closeForm()">
+  </app-task-form>
+</div>

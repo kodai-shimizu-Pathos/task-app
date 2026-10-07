@@ -21,17 +21,6 @@
   margin-bottom: 8px;
 }
 
-.badge {
-  font-size: 10px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.badge.high { background-color: #f38ba8; color: #11111b; }
-.badge.medium { background-color: #fab387; color: #11111b; }
-.badge.low { background-color: #a6e3a1; color: #11111b; }
-
 .status-label {
   font-size: 11px;
   color: #a6adc8;

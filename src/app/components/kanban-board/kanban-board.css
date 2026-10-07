@@ -1,9 +1,7 @@
 .kanban-board {
-    display: flex;
-    gap: 20px;
-    padding: 20px;
-    overflow-x: auto;
-    align-items: flex-start;
-    min-height: calc(100vh - 40px);
-    background-color: #11111b;
-  }
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  height: 100%; /* 高さ100%固定 */
+  box-sizing: border-box;
+}

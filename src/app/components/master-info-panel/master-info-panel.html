@@ -1,0 +1,73 @@
+<div class="master-panel" *ngIf="project">
+    <!-- パネルヘッダー & 閉じるボタン-->
+    <div class="panel-header">
+        <span class="breadcrumbs">プロジェクト一覧 > {{ project.title }}</span>
+        <button class="close-btn" (click)="onClose()">✕</button>
+    </div>
+
+    <!-- タイトル & 優先度-->
+    <div class="title-section">
+        <h2 class="panel-title">{{ project.title }}</h2>
+        <span class="badge priority" [ngClass]="project.priority.toLowerCase()">● {{ project.priority | uppercase}}</span>
+    </div>
+
+    <!-- タグ一覧 -->
+    <div class="tags-list" *ngIf="project.tags?.length">
+        <span class="tag-chip" *ngFor="let tag of project.tags">#{{ tag }}</span>
+    </div>
+
+    <!-- 全体進捗プログレスバー -->
+     <div class="progress-section"> 
+        <div class="progress-labels">
+            <span class="label-text">タスクの進捗</span>
+            <span class="progress-count">
+                {{ project.completedTaskCount || 0 }}/{{ project.totalTaskCount || 0 }} ({{ project.progressPercentage || 0 }}%)
+            </span>
+        </div>
+        <div class="progress-bar-track">
+            <!-- style.width を文字列結合形式に変更 -->
+             <div 
+             class="progress-bar-fill" [style.width]="(project.progressPercentage || 0) + '%'">
+            </div>
+        </div>
+    </div>
+
+    <!-- スケジュール -->
+    <div class="info-block" *ngIf="project.scheduledStartDate || project.scheduledEndDate || project.deadline">
+        <h4>📅 スケジュール</h4>
+        <div class="date-chip scheduled" *ngIf="project.scheduledStartDate || project.scheduledEndDate">
+            <span class="date-label">📅 作業予定：</span>
+            <span class="date-value">
+                {{ project.scheduledStartDate || '未定' }} ~ {{ project.scheduledEndDate || '未定' }}
+            </span>
+        </div>
+        <div class="date-chip deadline" *ngIf="project.deadline" 
+        [ngClass]="{'overdue': isOverdue(project.deadline), 'upcoming': !isOverdue(project.deadline)}">
+            <span class="date-label">
+                {{ isOverdue(project.deadline) ? '🚨期限超過' : '⏰最終期限' }}
+            </span>
+            <span class="date-value">{{ project.deadline }}</span>
+        </div>
+    </div>
+    
+    <!-- 関連リンク（仕様書・設計図） -->
+    <div class="info-block" *ngIf="project.docLinks?.length">
+        <h4>🔗 関連資料</h4>
+        <div class="links-grid">
+            <a *ngFor="let link of project.docLinks" [href]="link.url" target="_blank" class="doc-link">
+                {{ link.title }} ↗
+            </a>
+        </div>
+    </div>
+    
+    <!-- メモ・履歴 -->
+    <div class="info-block memo-block" *ngIf="project.memos?.length">
+        <h4>📝 メモ・更新履歴</h4>
+        <div class="memo-list">
+            <div *ngFor="let memo of project.memos" class="memo-item">
+                <span class="memo-time">{{ memo.timestamp }}</span>
+                <p class="memo-content">{{ memo.content }}</p>
+            </div>
+        </div>
+    </div>
+</div>
