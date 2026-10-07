@@ -42,30 +42,38 @@
                 </div>
             </div>
 
-            <!-- 進捗率 & 締切日 -->
-            <div class="form-row">
+            <!-- スケジュール (開始予定日 & 完了予定日) -->
+             <div class="form-row">
                 <div class="form-group">
-                    <label for="progress">進捗率 ({{ progress }}%)</label>
+                    <label for="scheduledStartDate">開始予定日</label>
                     <input
-                        type="range"
-                        id="progress"
-                        [(ngModel)]="progress"
-                        name="progress"
-                        min="0"
-                        max="100"
-                        step="5"
+                        type="date"
+                        id="scheduledStartDate"
+                        [(ngModel)]="scheduledStartDate"
+                        name="scheduledStartDate"
                     />
                 </div>
 
                 <div class="form-group">
-                    <label for="deadline">締切日</label>
+                    <label for="scheduledEndDate">完了予定日</label>
                     <input
                         type="date"
-                        id="deadline"
-                        [(ngModel)]="deadline"
-                        name="deadline"
+                        id="scheduledEndDate"
+                        [(ngModel)]="scheduledEndDate"
+                        name="scheduledEndDate"
                     />
                 </div>
+             </div>
+
+            <!-- 締切日 -->
+            <div class="form-group">
+                <label for="deadline">締切日</label>
+                <input
+                    type="date"
+                    id="deadline"
+                    [(ngModel)]="deadline"
+                    name="deadline"
+                />
             </div>
 
             <!-- タグ入力 -->
@@ -79,6 +87,18 @@
                     placeholder="例: UI設計, Angular"
                 />
             </div>
+
+            <!-- 説明 -->
+            <div class="form-group">
+                <label for="description">説明・メモ (任意)</label>
+                <textarea
+                    id="description"
+                    [(ngModel)]="description"
+                    name="description"
+                    rows="3"
+                    placeholder="タスクの詳細やメモを入力…"
+                ></textarea>
+             </div>
 
             <!-- ボタンエリア -->
             <div class="modal-footer">

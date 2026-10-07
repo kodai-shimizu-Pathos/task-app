@@ -6,7 +6,7 @@ export interface Task {
     priority: 'high' | 'medium' | 'low'; // 優先度
     progress: number; // 進捗度(1~100)
     tags: string[]; // タグ(例：['work', 'personal', 'urgent'])
-    scheduledDate?: string; // 作業開始予定日 (yyyy-mm-dd)
+    scheduledStartDate?: string; // 作業開始予定日 (yyyy-mm-dd)
     scheduledEndDate?: string; // 作業完了予定日 (yyyy-mm-dd)
     deadline?: string; // 最終締切日 (yyyy-mm-dd)
     parentTaskId?: string; // 親課題のID (Master-Detail UI時の紐づけに使用)

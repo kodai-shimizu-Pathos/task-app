@@ -20,10 +20,12 @@ export class TaskForm {
   title = '';
   status: 'todo' | 'in_progress' | 'done' = 'todo';
   priority: 'low' | 'medium' | 'high' = 'medium';
-  progress = 0;
-  deadline = '';
-  description = '';
+  scheduledStartDate: string = '';
+  scheduledEndDate: string = '';
+  deadline: string = '';
+  description: string = '';
   tagsString: string = ''; // カンマ区切りの文字列用 (例： "UI設計, Angular")
+  // progress = 0; 進捗は一旦非表示にする
 
   // フォーム送信 (タスク作成ボタン押下時)
   onSubmit(): void {
@@ -42,10 +44,12 @@ export class TaskForm {
       title: this.title,
       status: this.status,
       priority: this.priority,
-      progress: this.progress,
-      deadline: this.deadline,
-      description: this.description,
+      scheduledStartDate: this.scheduledStartDate || undefined,
+      scheduledEndDate: this.scheduledEndDate || undefined,
+      deadline: this.deadline || undefined,
+      description: this.description || undefined,
       tags: tags,
+      progress: this.status === 'done' ? 100 : (this.status === 'in_progress' ? 50 : 0),
       createdAt: new Date().toISOString()
     };
 

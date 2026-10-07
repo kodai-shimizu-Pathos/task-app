@@ -17,10 +17,12 @@
     border: 1px solid #313244;
     border-radius: 12px;
     width: 90%;
-    max-width: 500px;
+    max-width: 520px;
     padding: 24px;
     color: #cdd6f4;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    max-height: 90vh;
+    overflow-y: auto;
   }
   
   .modal-header {
@@ -71,25 +73,34 @@
   
   input[type="text"],
   input[type="date"],
-  select {
+  select,
+  textarea {
     background-color: #181825;
     border: 1px solid #313244;
     border-radius: 6px;
     padding: 10px 12px;
     color: #cdd6f4;
     font-size: 14px;
+    font-family: inherit;
+  }
+  
+  textarea {
+    resize: vertical;
+    min-height: 70px;
   }
   
   input[type="text"]:focus,
   input[type="date"]:focus,
-  select:focus {
+  select:focus,
+  textarea:focus {
     outline: none;
     border-color: #89b4fa;
   }
   
-  input[type="range"] {
-    accent-color: #89b4fa;
-    margin-top: 8px;
+  /* 日付入力欄のカレンダーアイコン・タップエリア調整 */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+    cursor: pointer;
   }
   
   .modal-footer {
