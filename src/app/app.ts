@@ -1,17 +1,20 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { KanbanBoard } from './components/kanban-board/kanban-board';
-import { KanbanColumn } from './components/kanban-column/kanban-column';
+import { TaskForm } from './components/task-form/task-form';
 import { Task } from './models/task.model';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [KanbanBoard],
+  imports: [CommonModule, KanbanBoard, TaskForm],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class AppComponent {
-  // テスト用の全タスクリスト（未着手・進行中・完了を混在させる）
+  // モーダルの表示/非表示フラグ
+  isFormOpen: boolean = false;
+
   allTasks: Task[] = [
     {
       id: '1',
@@ -30,24 +33,16 @@ export class AppComponent {
       progress: 75,
       tags: ['UI設計', 'Angular'],
       deadline: '2026-10-15'
-    },
-    {
-      id: '3',
-      title: 'Firebase Hostingへの自動デプロイ設定',
-      status: 'in_progress',
-      priority: 'medium',
-      progress: 40,
-      tags: ['インフラ', 'Firebase'],
-      deadline: '2026-10-20'
-    },
-    {
-      id: '4',
-      title: 'ドラッグ＆ドロップ機能の実装',
-      status: 'todo',
-      priority: 'low',
-      progress: 0,
-      tags: ['機能開発'],
-      deadline: '2026-10-25'
     }
   ];
+
+  // モーダルの開閉
+  openForm(): void { this.isFormOpen = true; }
+  closeForm(): void { this.isFormOpen = false; }
+
+  // 新規タスク追加処理
+  onTaskCreated(newTask: Task): void {
+    // 新しいタスクを配列の先頭に追加
+    this.allTasks = [newTask, ...this.allTasks];
+  }
 }

@@ -1,1 +1,21 @@
-<app-kanban-board [tasks]="allTasks"></app-kanban-board>
+<div style="background-color: #11111b; min-height: 100vh; padding-top: 16px;">
+    <!-- ヘッダーエリア："＋新規タスク" ボタン -->
+    <div style="padding: 0 24px 16px 24px; display: flex; justify-content: space-between; align-items: center;">
+      <h1 style="color: #cdd6f4; font-size: 20px; margin: 0;">BeSideFlow AI - Task Board</h1>
+      <button 
+        (click)="openForm()" 
+        style="background-color: #89b4fa; color: #11111b; border: none; font-weight: bold; padding: 10px 18px; border-radius: 8px; cursor: pointer;">
+        ＋ 新規タスク
+      </button>
+    </div>
+  
+    <!-- カンバンボード -->
+    <app-kanban-board [tasks]="allTasks"></app-kanban-board>
+  
+    <!-- タスク作成モーダル (isFormOpen が true の時だけ表示) -->
+    <app-task-form 
+      *ngIf="isFormOpen" 
+      (taskCreated)="onTaskCreated($event)" 
+      (closeModal)="closeForm()">
+    </app-task-form>
+  </div>
