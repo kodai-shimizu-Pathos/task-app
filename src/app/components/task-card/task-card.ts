@@ -12,4 +12,16 @@ import { Task } from '../../models/task.model';
 export class TaskCard {
   // 親コンポーネントから渡される1件のタスクデータを受け取るためのプロパティ
   @Input() task!: Task;
+
+  // 期限超過チェック
+  isOverdue(deadline?: string): boolean {
+    // 締切なしもしくはステータスが「完了」の場合は期限超過とみなさない
+    if (!deadline || this.task.status === 'done') {
+      return false;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const deadlineDate = new Date(deadline);
+    return deadlineDate < today;
+  }
 }

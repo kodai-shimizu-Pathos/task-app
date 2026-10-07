@@ -1,29 +1,35 @@
-<div class="task-card" *ngIf="task">
-    <!-- ヘッダー：優先度バッジとステータス-->
-     <div class="card-header">
+<div class="task-card" *ngIf="task" [ngClass]="{'done-card':task.status === 'done'}">
+    <!-- ヘッダー：優先度バッジ-->
+    <div class="card-header">
         <span class="badge priority" [ngClass]="task.priority">
             {{ task.priority | uppercase}}
         </span>
-        <span class="status-label">{{ task.status}}</span>
-     </div>
-     <!-- タスクタイトル -->
-      <h4 class="#card-title">{{ task.title }}</h4>
+        <span class="status-label">{{ task.status === 'done' ? '✅':''}}</span>
+    </div>
+     
+    <!-- タスクタイトル -->
+    <h4 class="#card-title">{{ task.title }}</h4>
       
-      <!-- タグ一覧 -->
-       <div class="tags-list" *ngIf="task.tags && task.tags.length > 0">
+    <!-- タグ一覧 -->
+    <div class="tags-list" *ngIf="task.tags && task.tags.length > 0">
         <span class="tag" *ngFor="let tag of task.tags">{{ tag }}</span>
-       </div>
+    </div>
 
-       <!-- 進捗バー -->
-        <div class="progress-section">
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" [style.width.%]="task.progress"></div>
-            </div>
-            <span class="progress-text">{{ task.progress }}%</span>
-        </div>
-
-        <!-- フッター：締切日 -->
-         <div class="card-footer" *ngIf="task.deadline">
-            <span class="deadline">📅{{ task.deadline }}</span>
+    <!-- 日付表示エリア -->
+    <div class="dates-section" *ngIf="task.scheduledStartDate || task.scheduledEndDate || task.deadline">
+        <!-- 1. 作業予定日 (開始日 ～ 完了日) -->
+         <div class="scheduled-dates" *ngIf="task.scheduledStartDate || task.scheduledEndDate">
+            <span class="date-label">📅 予定：</span>
+            <span>{{ task.scheduledStartDate || '未定' }} ~ {{ task.scheduledEndDate || '未定' }}</span>
          </div>
+
+        <!-- 2. 締切日 (予定日よりも目立たせる)-->
+         <div class="deadline-badge" *ngIf="task.deadline" 
+         [ngClass]="{'overdue': isOverdue(task.deadline), 'upcoming': !isOverdue(task.deadline)}">
+            <span class="deadline-icon">
+            {{ isOverdue(task.deadline) ? '🚨期限超過' : '⏰最終期限' }}
+            </span>
+            <span class="deadline-date">{{ task.deadline }}</span>
+         </div>
+    </div>
 </div>

@@ -1,93 +1,118 @@
 .task-card {
-    background-color: #1e1e2e;
-    border: 1px solid #313244;
-    border-radius: 8px;
-    padding: 12px 16px;
-    color: #cdd6f4;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    margin-bottom: 12px;
-    transition: transform 0.2s, border-color 0.2s;
-  }
-  
-  .task-card:hover {
-    transform: translateY(-2px);
-    border-color: #89b4fa;
-  }
-  
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  
-  .badge {
-    font-size: 10px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-  
-  .badge.high { background-color: #f38ba8; color: #11111b; }
-  .badge.medium { background-color: #fab387; color: #11111b; }
-  .badge.low { background-color: #a6e3a1; color: #11111b; }
-  
-  .status-label {
-    font-size: 11px;
-    color: #a6adc8;
-  }
-  
-  .card-title {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  
-  .tags-list {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
-  
-  .tag {
-    font-size: 10px;
-    background-color: #313244;
-    color: #89b4fa;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-  
-  .progress-section {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  
-  .progress-bar-bg {
-    flex: 1;
-    height: 6px;
-    background-color: #313244;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  
-  .progress-bar-fill {
-    height: 100%;
-    background-color: #89b4fa;
-    border-radius: 3px;
-    transition: width 0.3s ease;
-  }
-  
-  .progress-text {
-    font-size: 11px;
-    color: #a6adc8;
-  }
-  
-  .card-footer {
-    display: flex;
-    justify-content: flex-end;
-    font-size: 11px;
-    color: #bac2de;
-  }
+  background-color: #1e1e2e;
+  border: 1px solid #313244;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #cdd6f4;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  margin-bottom: 12px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  border-color: #89b4fa;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badge.high { background-color: #f38ba8; color: #11111b; }
+.badge.medium { background-color: #fab387; color: #11111b; }
+.badge.low { background-color: #a6e3a1; color: #11111b; }
+
+.status-label {
+  font-size: 11px;
+  color: #a6adc8;
+}
+
+.card-title {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tags-list {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 10px;
+  background-color: #313244;
+  color: #89b4fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* 日付エリア共通 */
+.dates-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #313244;
+  font-size: 11px;
+}
+
+.scheduled-dates {
+  color: #a6adc8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.date-label {
+  color: #7f849c;
+}
+
+/* 最終締め切り日バッジ（共通ベース） */
+.deadline-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-top: 2px;
+  transition: all 0.2s ease;
+}
+
+/* ① 期限超過タスク（警告：赤紫背景 × 鮮やかな赤ピンク枠） */
+.deadline-badge.overdue {
+  background-color: #3b1e2e;
+  border: 1.5px solid #f38ba8;
+  color: #f38ba8;
+}
+
+/* ② 期限内タスク（落ち着いたスタイル：暗め背景 × アクセント青枠/青文字） */
+.deadline-badge.upcoming {
+  background-color: #181825;
+  border: 1px solid #45475a;
+  color: #89b4fa;
+}
+
+/* 完了済みタスクカード（全体を少し半透明にし、タイトルに打ち消し線を入れる） */
+.task-card.done-card {
+  opacity: 0.7;
+  background-color: #161622;
+  border-color: #2b2c3d;
+}
+
+.task-card.done-card .card-title {
+  text-decoration: line-through;
+  color: #7f849c;
+}
