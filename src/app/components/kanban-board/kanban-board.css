@@ -1,8 +1,16 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
 .kanban-board {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  height: 100%;        /* 親コンテナの高さをいっぱいに使用 */
-  min-height: 0;       /* Grid/Flex内で子要素の縮小を許可する */
+  height: 100%;          /* 全体の高さを100%に固定 */
+  min-height: 0;         /* 子要素による拡張を抑止 */
   box-sizing: border-box;
+  padding: 16px;
+  background-color: var(--bg-panel);
 }

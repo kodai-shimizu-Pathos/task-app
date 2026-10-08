@@ -1,3 +1,8 @@
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
 /* アプリ外枠の高さを画面ピッタリに固定 */
 html, body {
   margin: 0;
@@ -7,8 +12,8 @@ html, body {
 }
 
 .app-shell {
-  background-color: #1A1D24;
-  color: #CDD6F4;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
   height: 100vh; /* 100%から100vhに変更 */
   display: flex;
   flex-direction: column;
@@ -17,8 +22,8 @@ html, body {
 
 .app-header {
   height: 48px;
-  background-color: #242832;
-  border-bottom: 1px solid #313244;
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -34,13 +39,13 @@ html, body {
 .logo-title {
   font-size: 16px;
   font-weight: bold;
-  color: #89B4FA;
+  color: var(--accent-color);
   margin: 0;
 }
 
 .breadcrumbs {
   font-size: 13px;
-  color: #A6ADC8;
+  color: var(--text-muted);
 }
 
 .crumb-link {
@@ -48,8 +53,8 @@ html, body {
   text-decoration: underline;
 }
 
-.crumb-separator { margin: 0 6px; color: #6C7086; }
-.crumb-current { color: #CDD6F4; font-weight: 600; }
+.crumb-separator { margin: 0 6px; color: var(--text-muted); }
+.crumb-current { color: var(--text-primary); font-weight: 600; }
 
 .header-right {
   display: flex;
@@ -59,16 +64,16 @@ html, body {
 
 .view-mode-toggle {
   display: flex;
-  background-color: #181825;
+  background-color: var(--bg-secondary);
   border-radius: 6px;
   padding: 2px;
-  border: 1px solid #313244;
+  border: 1px solid var(--border-color);
 }
 
 .toggle-btn {
   background: none;
   border: none;
-  color: #A6ADC8;
+  color: var(--text-muted);
   padding: 6px 12px;
   font-size: 12px;
   border-radius: 4px;
@@ -76,14 +81,14 @@ html, body {
 }
 
 .toggle-btn.active {
-  background-color: #89B4FA;
-  color: #11111B;
+  background-color: var(--accent-color);
+  color: var(--bg-main);
   font-weight: bold;
 }
 
 .btn-primary {
-  background-color: #89B4FA;
-  color: #11111B;
+  background-color: var(--accent-color);
+  color: var(--bg-main);
   border: none;
   font-weight: bold;
   padding: 8px 16px;
@@ -91,7 +96,7 @@ html, body {
   cursor: pointer;
 }
 
-.btn-primary:hover { background-color: #B4BEFE; }
+.btn-primary:hover { background-color: var(--accent-color); opacity: 0.8; }
 
 .main-container {
   flex: 1;
@@ -110,9 +115,9 @@ html, body {
 }
 
 .master-pane {
-  background-color: #242832;
+  background-color: var(--bg-master);
   border-radius: 12px;
-  border: 1px solid #313244;
+  border: 1px solid var(--border-color);
   padding: 16px;
   overflow-y: auto;
 }
@@ -128,5 +133,5 @@ html, body {
   justify-content: center;
   align-items: center;
   height: calc(100vh - 48px);
-  color: #6C7086;
+  color: var(--text-muted);
 }

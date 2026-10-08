@@ -1,4 +1,5 @@
 import { PriorityLevel } from "./task.model";
+import { Status } from "./task.model";
 
 // 親課題 (Project) インターフェース
 export interface ParentProject {
@@ -7,7 +8,7 @@ export interface ParentProject {
     description?: string; // 親課題の説明
     priority: PriorityLevel; // 優先度
     tags: string[]; // タグ
-    status: 'todo' | 'in_progress' | 'done'; // ステータス
+    status: Status; // ステータス
     scheduledStartDate?: string; // 作業開始予定日 (yyyy-mm-dd)
     scheduledEndDate?: string; // 作業完了予定日 (yyyy-mm-dd)
     deadline?: string; // 最終締切日 (yyyy-mm-dd)

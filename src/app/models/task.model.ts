@@ -1,11 +1,11 @@
 export type PriorityLevel = 'HIGH' | 'MEDIUM' | 'LOW' | 'high' | 'medium' | 'low';
-export type TaskStatus = 'todo' | 'in_progress' | 'done';
+export type Status = 'todo' | 'in_progress' | 'done';
 
 // 1件のタスクが持つ情報の形 (設計図)
 export interface Task {
     id: string; // タスクID (例： 'task-1')
     title: string; // タスク名
-    status: 'todo' | 'in_progress' | 'done'; // ステータス(未着手|進行中|完了)
+    status: Status; // ステータス(未着手|進行中|完了)
     priority: PriorityLevel; // 優先度
     progress: number; // 進捗度(1~100)
     tags: string[]; // タグ(例：['work', 'personal', 'urgent'])

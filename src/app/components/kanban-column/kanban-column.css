@@ -1,86 +1,100 @@
-/* 1. Angularのホストタグ (<app-kanban-column>) 自体の高さを固定 */
 :host {
   display: block;
   height: 100%;
-  min-height: 0; /* 親から高さを引き継ぐための必須指定 */
+  min-height: 0;
 }
 
 .kanban-column {
-  background-color: #181825;
-  border: 1px solid #313244;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  height: 100%;          /* 親の高さいっぱいに固定 */
-  min-height: 0;         /* 子要素に押し広げられるのを防ぐ */
-  padding: 16px;
+  height: 100%;
+  min-height: 0;
+  padding: 16px;            /* ★パディングをしっかり確保 */
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
+/* ライトモード時のカラム背景色（ステータス別） */
+body[data-theme="light"] .kanban-column.todo {
+  background-color: #fef2f2;  /* 赤系の薄い背景 */
+}
+
+body[data-theme="light"] .kanban-column.in-progress {
+  background-color: #fffbf0;  /* オレンジ系の薄い背景 */
+}
+
+body[data-theme="light"] .kanban-column.done {
+  background-color: #f0fdf4;  /* グリーン系の薄い背景 */
+}
+
+/* ヘッダー基本形状 */
 .column-header {
-  flex-shrink: 0;        /* スクロール時も「未着手 (10)」のヘッダーを上部に固定 */
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #313244;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-weight: bold;
 }
 
+/* ステータス別ヘッダーカラー設定 */
+.kanban-column.todo .column-header {
+  background-color: var(--header-todo-bg);
+  color: var(--header-todo-text);
+}
+
+.kanban-column.in-progress .column-header {
+  background-color: var(--header-progress-bg);
+  color: var(--header-progress-text);
+}
+
+.kanban-column.done .column-header {
+  background-color: var(--header-done-bg);
+  color: var(--header-done-text);
+}
+
+.column-title {
+  margin: 0;
+  font-size: 15px;
+}
+
+.task-count {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* カードリスト領域（内部スクロール） */
 .card-list {
-  flex: 1;               /* ヘッダー以外の縦スペースをすべてカード領域にする */
-  min-height: 0;         /* ★最重要: これがないと10個のカードの合計高さまで枠が伸びてしまいます */
-  overflow-y: auto;      /* タスクが多くなった場合のみ、ここを縦スクロール */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-right: 4px;    /* スクロールバーとカードの重なりを防止 */
-}
-  
-.column-title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: bold;
-  color: #cdd6f4;
-}
-  
-.task-count {
-  background-color: #313244;
-  color: #89b4fa;
-  font-size: 12px;
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-  
-.card-list {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+  padding-right: 4px;
 }
   
 .empty-message {
   text-align: center;
-  color: #6c7086;
+  color: var(--text-muted);
   font-size: 13px;
   padding: 32px 0;
-  border: 2px dashed #313244;
+  border: 2px dashed var(--border-color);
   border-radius: 8px;
 }
 
-/* 未着手カラム内のスクロールバーのデザイン */
+/* スクロールバーのデザイン */
 .card-list::-webkit-scrollbar {
   width: 6px;
 }
-.card-list::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-}
 .card-list::-webkit-scrollbar-thumb {
-  background: #313244;
+  background: var(--border-color);
   border-radius: 3px;
-}
-.card-list::-webkit-scrollbar-thumb:hover {
-  background: #45475a;
 }

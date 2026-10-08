@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { KanbanBoard } from './components/kanban-board/kanban-board';
 import { TaskForm } from './components/task-form/task-form';
@@ -13,7 +13,26 @@ import { ParentProject } from './models/project.model';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  currentTheme: 'dark' | 'light' = 'dark';
+
+  ngOnInit(): void {
+    // 保存されたテーマがあれば取得、無ければ 'dark'
+    const savedTheme = localStorage.getItem('theme') as 'dark' | 'light';
+    this.setTheme(savedTheme || 'dark');
+  }
+
+  toggleTheme(): void {
+    const nextTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+    this.setTheme(nextTheme);
+  }
+
+  private setTheme(theme: 'dark' | 'light'): void {
+    this.currentTheme = theme;
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }
+
   isFormOpen: boolean = false;
   currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
 

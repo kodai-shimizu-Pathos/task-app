@@ -7,8 +7,8 @@
 
     <!-- タイトル & 優先度-->
     <div class="title-section">
-        <h2 class="panel-title">{{ project.title }}</h2>
         <span class="badge priority" [ngClass]="project.priority.toLowerCase()">● {{ project.priority | uppercase}}</span>
+        <h2 class="panel-title">{{ project.title }}</h2>
     </div>
 
     <!-- タグ一覧 -->
