@@ -3,7 +3,6 @@
   <header class="app-header">
     <div class="header-left">
       <h1 class="app-title">BeSideFlow AI</h1>
-      <!-- 🔴 新規親課題作成ボタンを追加 -->
       <button class="btn-add-project" (click)="onOpenNewProjectForm()">
         ＋ 親課題を追加
       </button>
@@ -25,29 +24,43 @@
 
   <!-- メインコンテンツ領域 -->
   <main class="main-content">
-    <!-- 左側: Master情報パネル -->
-    <aside class="master-pane">
-      <app-master-info-panel 
-        [project]="selectedProject"
-        (editProject)="onEditProject()"> <!-- 🔴 イベント連携追加 -->
-      </app-master-info-panel>
-    </aside>
+    
+    <!-- パターンA：親課題が未選択の時（全画面 Master UI: SCR-01） -->
+    <div class="full-master-pane" *ngIf="!selectedProject">
+      <app-master-kanban-board
+        [projects]="projects"
+        (selectProject)="onSelectProject($event)">
+      </app-master-kanban-board>
+    </div>
 
-    <!-- 右側: Detail表示エリア (カンバン/ガント) -->
-    <section class="detail-pane">
-      <app-kanban-board 
-        *ngIf="currentView === 'kanban'"
-        [tasks]="tasks"
-        (selectTask)="onSelectTask($event)">
-      </app-kanban-board>
+    <!-- パターンB：親課題が選択されている時（Master-Detail UI: SCR-03） -->
+    <ng-container *ngIf="selectedProject">
+      <!-- 左側: Master情報パネル -->
+      <aside class="master-pane">
+        <app-master-info-panel 
+          [project]="selectedProject"
+          (editProject)="onEditProject()"
+          (closePanel)="onUnselectProject()">
+        </app-master-info-panel>
+      </aside>
 
-      <div *ngIf="currentView === 'gantt'" class="gantt-placeholder">
-        <p>ガントチャートモードは準備中です</p>
-      </div>
-    </section>
+      <!-- 右側: Detail表示エリア (子タスク カンバン/ガント) -->
+      <section class="detail-pane">
+        <app-kanban-board 
+          *ngIf="currentView === 'kanban'"
+          [tasks]="tasks"
+          (selectTask)="onSelectTask($event)">
+        </app-kanban-board>
+
+        <div *ngIf="currentView === 'gantt'" class="gantt-placeholder">
+          <p>ガントチャートモードは準備中です</p>
+        </div>
+      </section>
+    </ng-container>
+
   </main>
 
-  <!-- 🔴 子タスク作成・編集スライドインフォーム -->
+  <!-- 子タスク作成・編集スライドインフォーム -->
   <app-task-form
     *ngIf="isTaskFormOpen"
     [taskToEdit]="taskToEdit"
@@ -58,7 +71,7 @@
     (closePanel)="onCloseTaskForm()">
   </app-task-form>
 
-  <!-- 🔴 親課題（Master）作成・編集モーダルフォーム -->
+  <!-- 親課題（Master）作成・編集モーダルフォーム -->
   <app-project-form
     *ngIf="isProjectFormOpen"
     [projectToEdit]="projectToEdit"

@@ -2,8 +2,10 @@
     <!-- パネルヘッダー & 閉じるボタン-->
     <div class="panel-header">
         <h3 class="panel-title">{{ project.title }}</h3>
-        <button class="edit-btn" (click)="onEdit()">📝 編集</button>
-        <button class="close-btn" (click)="onClose()">✕</button>
+        <div class="header-actions">
+            <button class="edit-btn" (click)="onEdit()">📝 編集</button>
+            <button class="close-btn" (click)="onClose()" title="一覧へ戻る">✕</button>
+        </div>
     </div>
 
     <!-- タグ一覧 -->

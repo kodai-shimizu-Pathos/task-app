@@ -1,0 +1,49 @@
+<div class="master-kanban-container">
+    <!-- 未着手 カラム -->
+    <div class="master-column todo">
+      <div class="column-header">
+        <span class="column-title">🔴 未着手</span>
+        <span class="count-badge">{{ todoProjects.length }}</span>
+      </div>
+      <div class="card-list">
+        <app-project-card
+          *ngFor="let project of todoProjects"
+          [project]="project"
+          (selectProject)="onSelectProject($event)">
+        </app-project-card>
+        <div *ngIf="todoProjects.length === 0" class="empty-state">親課題はありません</div>
+      </div>
+    </div>
+  
+    <!-- 進行中 カラム -->
+    <div class="master-column in-progress">
+      <div class="column-header">
+        <span class="column-title">🟠 進行中</span>
+        <span class="count-badge">{{ inProgressProjects.length }}</span>
+      </div>
+      <div class="card-list">
+        <app-project-card
+          *ngFor="let project of inProgressProjects"
+          [project]="project"
+          (selectProject)="onSelectProject($event)">
+        </app-project-card>
+        <div *ngIf="inProgressProjects.length === 0" class="empty-state">親課題はありません</div>
+      </div>
+    </div>
+  
+    <!-- 完了 カラム -->
+    <div class="master-column done">
+      <div class="column-header">
+        <span class="column-title">🟢 完了</span>
+        <span class="count-badge">{{ doneProjects.length }}</span>
+      </div>
+      <div class="card-list">
+        <app-project-card
+          *ngFor="let project of doneProjects"
+          [project]="project"
+          (selectProject)="onSelectProject($event)">
+        </app-project-card>
+        <div *ngIf="doneProjects.length === 0" class="empty-state">親課題はありません</div>
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,103 @@
+.project-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    color: var(--text-primary);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .project-card:hover {
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .badge.priority {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+  
+  .badge.priority.high { color: var(--priority-high); background-color: rgba(239, 68, 68, 0.15); }
+  .badge.priority.medium { color: var(--priority-medium); background-color: rgba(245, 158, 11, 0.15); }
+  .badge.priority.low { color: var(--priority-low); background-color: rgba(59, 130, 246, 0.15); }
+  
+  .card-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--text-primary);
+  }
+  
+  .tags-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .tag-chip {
+    font-size: 11px;
+    background-color: var(--border-color);
+    color: var(--accent-color);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  
+  .progress-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  
+  .progress-bar-track {
+    width: 100%;
+    height: 8px;
+    background-color: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .progress-bar-fill {
+    height: 100%;
+    background-color: var(--accent-color);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  
+  .dates-section {
+    font-size: 11px;
+  }
+  
+  .date-chip {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+  }
+  
+  .date-chip.overdue {
+    background-color: var(--priority-high);
+    color: #ffffff;
+    font-weight: bold;
+  }

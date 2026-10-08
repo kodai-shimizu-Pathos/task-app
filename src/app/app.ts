@@ -6,6 +6,7 @@ import { TaskForm } from './components/task-form/task-form';
 import { ParentProject } from './models/project.model';
 import { Task } from './models/task.model';
 import { ProjectForm } from './components/project-form/project-form';
+import { MasterKanbanBoard } from './components/master-kanban-board/master-kanban-board';
 
 @Component({
   selector: 'app-root',
@@ -15,14 +16,15 @@ import { ProjectForm } from './components/project-form/project-form';
     MasterInfoPanel, 
     KanbanBoard, 
     TaskForm,
-    ProjectForm
+    ProjectForm,
+    MasterKanbanBoard
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class AppComponent implements OnInit {
   // --- アプリ全体の状態保持 (Single Source of Truth) ---  
-  currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
+  currentView: 'kanban' | 'gantt' = 'kanban';
   currentTheme: 'dark' | 'light' = 'dark';
 
   // 親課題(Project)一覧・選択状態
@@ -49,8 +51,8 @@ export class AppComponent implements OnInit {
   }
 
   // 表示モード切替ハンドラ
-  switchViewMode(mode: 'KANBAN' | 'GANTT'): void {
-    this.currentMode = mode;
+  switchViewMode(view: 'kanban' | 'gantt'): void {
+    this.currentView = view;
   }
   
   ngOnInit(): void {
@@ -61,6 +63,18 @@ export class AppComponent implements OnInit {
   // =======================================================
   // 親課題(Project)操作ロジック
   // =======================================================
+
+  // 親課題を選択
+  onSelectProject(project: ParentProject): void {
+    this.selectedProject = project;
+    this.loadTasksForProject(project.id);
+  }
+
+  // 一覧へ戻る処理
+  onUnselectProject(): void {
+    this.selectedProject = null;
+    this.tasks = [];
+  }
 
   // 新規の親課題フォームを開く
   onOpenNewProjectForm(): void {
@@ -83,7 +97,7 @@ export class AppComponent implements OnInit {
   }
 
   // 親課題の作成完了ハンドラ
-  opProjectCreated(newProject: ParentProject): void {
+  onProjectCreated(newProject: ParentProject): void {
     this.projects.push(newProject);
     this.selectedProject = newProject;
     this.tasks = [];

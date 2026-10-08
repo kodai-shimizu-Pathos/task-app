@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, Outpu
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ParentProject } from '../../models/project.model';
+import { Status, PriorityLevel } from '../../models/task.model';
 
 @Component({
   selector: 'app-project-form',
@@ -20,6 +21,8 @@ export class ProjectForm implements OnInit, OnChanges {
 
   title = '';
   description = '';
+  status = 'todo';
+  priority = 'medium';
   scheduledStartDate = '';
   scheduledEndDate = '';
   deadline = '';
@@ -43,6 +46,8 @@ export class ProjectForm implements OnInit, OnChanges {
     if (this.projectToEdit) {
       this.title = this.projectToEdit.title;
       this.description = this.projectToEdit.description || '';
+      this.status = this.projectToEdit.status || 'todo';
+      this.priority = this.projectToEdit.priority || 'medium';
       this.scheduledStartDate = this.projectToEdit.scheduledStartDate || '';
       this.scheduledEndDate = this.projectToEdit.scheduledEndDate || '';
       this.deadline = this.projectToEdit.deadline || '';
@@ -90,6 +95,8 @@ export class ProjectForm implements OnInit, OnChanges {
         ...this.projectToEdit,
         title: this.title,
         description: this.description || undefined,
+        status: this.status as Status,
+        priority: this.priority as PriorityLevel,
         scheduledStartDate: this.scheduledStartDate || undefined,
         scheduledEndDate: this.scheduledEndDate || undefined,
         deadline: this.deadline || undefined,

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, Output } from '@angular/core'; 
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms'; // フォームのバリデーションを行うために使用
-import { Task } from '../../models/task.model';
+import { Task, PriorityLevel, Status } from '../../models/task.model';
 
 @Component({
   selector: 'app-task-form',
@@ -11,6 +11,8 @@ import { Task } from '../../models/task.model';
   styleUrl: './task-form.css',
 })
 export class TaskForm implements OnInit, OnChanges {
+  // 親課題IDを受け取る
+  @Input() projectId: string = '';
   // 編集対象のタスクデータを受け取る
   @Input() taskToEdit?: Task | null = null;
 
@@ -23,8 +25,8 @@ export class TaskForm implements OnInit, OnChanges {
 
   // フォームに入力された値を保持する一時データ
   title = '';
-  status: 'todo' | 'in-progress' | 'done' = 'todo';
-  priority: 'low' | 'medium' | 'high' = 'medium';
+  status: Status = 'todo';
+  priority: PriorityLevel = 'medium';
   scheduledStartDate: string = '';
   scheduledEndDate: string = '';
   deadline: string = '';
@@ -100,6 +102,7 @@ export class TaskForm implements OnInit, OnChanges {
       // 新規タスク作成
       const newTask: Task = {
         id: `ask-${Date.now()}`, // 簡易的な一意のID (タイムスタンプ)
+        parentId: this.projectId,
         title: this.title,
         status: this.status,
         priority: this.priority,
