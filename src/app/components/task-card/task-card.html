@@ -1,11 +1,8 @@
-<div class="task-card" *ngIf="task" [ngClass]="{'done-card':task.status === 'done'}">
+<div class="task-card" *ngIf="task" [ngClass]="{'done-card':task.status === 'done'}" (click)="onCardClick()">
     <!-- ヘッダー：優先度バッジ-->
     <div class="card-header">
         <span class="badge priority" [ngClass]="task.priority">
             ● {{ task.priority | uppercase}}
-        </span>
-        <span class="status-label">
-            {{ task.status === 'done' ? '✅ 完了':''}}
         </span>
     </div>
      
@@ -31,7 +28,7 @@
         <div class="date-chip deadline" *ngIf="task.deadline" 
         [ngClass]="{'overdue': isOverdue(task.deadline), 'upcoming': !isOverdue(task.deadline)}">
             <span class="date-label">
-            {{ isOverdue(task.deadline) ? '🚨期限超過' : '⏰最終期限' }}
+            {{ isOverdue(task.deadline) ? '🚨期限超過：' : '⏰最終期限：' }}
             </span>
             <span class="date-value">{{ task.deadline }}</span>
         </div>

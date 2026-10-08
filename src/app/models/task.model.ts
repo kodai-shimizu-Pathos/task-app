@@ -1,5 +1,5 @@
 export type PriorityLevel = 'HIGH' | 'MEDIUM' | 'LOW' | 'high' | 'medium' | 'low';
-export type Status = 'todo' | 'in_progress' | 'done';
+export type Status = 'todo' | 'in-progress' | 'done';
 
 // 1件のタスクが持つ情報の形 (設計図)
 export interface Task {

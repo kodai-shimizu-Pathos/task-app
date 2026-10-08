@@ -1,4 +1,7 @@
 .master-info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   background-color: var(--bg-master);
   color: var(--text-master);
   border-right: 1px solid var(--border-color);
@@ -6,6 +9,28 @@
   height: 100%;
   overflow-y: auto;
   box-sizing: border-box;
+}
+
+.info-block {
+  background-color: var(--bg-secondary);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-block h4 {
+  margin: 0;
+  font-size:13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 6px;
 }
   
   .panel-header {

@@ -1,28 +1,31 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core'; // Output, EventEmitter 追加
 import { CommonModule } from '@angular/common';
 import { Task } from '../../models/task.model';
 
 @Component({
   selector: 'app-task-card',
-  standalone: true, //単独かつ軽量なコンポーネントとして宣言
-  imports: [CommonModule], //HTMLでngIf(条件分岐)やngFor(繰り返し処理)などのAngularの機能を使用できるようにする
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './task-card.html',
   styleUrl: './task-card.css',
 })
 export class TaskCard {
-  // 親コンポーネントから渡される1件のタスクデータを受け取るためのプロパティ
   @Input() task!: Task;
+  @Output() selectTask = new EventEmitter<Task>(); // 追加: タスク選択イベント
 
-  // 期限超過チェック
+  // 追加: カードクリック時の処理
+  onCardClick(): void {
+    console.log('カードクリック:', this.task);
+    this.selectTask.emit(this.task);
+  }
+
   isOverdue(deadline?: string): boolean {
-    // 締切なしもしくはステータスが「完了」の場合は期限超過とみなさない
-    if (!deadline || this.task.status === 'done') {
-      return false;
-    }
+    if (!deadline || this.task.status === 'done') return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const deadlineDate = new Date(deadline);
+    const deadlineDate = new Date(deadline.replace(/-/g, '/'));
     deadlineDate.setHours(0, 0, 0, 0);
+    
     return deadlineDate < today;
   }
 }

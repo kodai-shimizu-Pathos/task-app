@@ -54,7 +54,7 @@
 
       <!-- 右側 70%: Detail パネル (子タスクカンバン) -->
       <section class="detail-pane">
-        <app-kanban-board [tasks]="filteredSubtasks"></app-kanban-board>
+        <app-kanban-board [tasks]="filteredSubtasks" (selectTask)="onTaskSelected($event)"></app-kanban-board>
       </section>
 
     </div>
@@ -70,7 +70,10 @@
   <!-- 3. 新規タスク作成モーダル -->
   <app-task-form 
     *ngIf="isFormOpen" 
+    [taskToEdit]="taskToEdit"
     (taskCreated)="onTaskCreated($event)" 
+    (taskUpdated)="onTaskUpdated($event)"
+    (taskDeleted)="onTaskDeleted($event)"
     (closeModal)="closeForm()">
   </app-task-form>
 </div>

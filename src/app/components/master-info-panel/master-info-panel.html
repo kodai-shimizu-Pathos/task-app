@@ -44,7 +44,7 @@
         <div class="date-chip deadline" *ngIf="project.deadline" 
         [ngClass]="{'overdue': isOverdue(project.deadline), 'upcoming': !isOverdue(project.deadline)}">
             <span class="date-label">
-                {{ isOverdue(project.deadline) ? '🚨期限超過' : '⏰最終期限' }}
+                {{ isOverdue(project.deadline) ? '🚨 期限超過：' : '⏰ 最終期限：' }}
             </span>
             <span class="date-value">{{ project.deadline }}</span>
         </div>

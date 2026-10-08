@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskCard } from '../task-card/task-card';
 import { Task } from '../../models/task.model';
@@ -11,9 +11,10 @@ import { Task } from '../../models/task.model';
   styleUrl: './kanban-column.css',
 })
 export class KanbanColumn {
-  // カラムのタイトル
-  @Input() title!: string;
-
-  // カラムに表示するタスクのリスト
+  @Input() title: string = '';
   @Input() tasks: Task[] = [];
+
+  @Input() status: 'todo' | 'in-progress' | 'done' = 'todo';
+
+  @Output() selectTask = new EventEmitter<Task>();
 }

@@ -1,40 +1,30 @@
-<div class="modal-overlay" (click)="onClose()">
-    <!-- (click.stop) でモーダル内のクリックが親 (オーバレイ) 要素に伝播しないようにする -->
-     <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-            <h2>新規タスク作成</h2>
+<div class="side-panel-backdrop" (click)="onClose()">
+    <div class="side-panel-container" (click)="$event.stopPropagation()">
+        <div class="panel-header">
+            <h3>{{ taskToEdit ? 'タスク詳細・編集' : '新規タスク作成' }}</h3>
             <button class="close-btn" (click)="onClose()">✕</button>
         </div>
 
-        <form (ngSubmit)="onSubmit()">
+        <div class="panel-body">
             <!-- タスク名 -->
-            <div class="form-group">
-                <label for=""title>タスク名 <span class="required">*</span></label>
-                <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    [(ngModel)]="title"
-                    name="title"
-                    placeholder="例: 仕様書を作成する"
-                    required
-                />
+             <div class="form-group">
+                <label>タスク名 <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="title" placeholder="タスク名を入力" class="form-input" />
             </div>
 
             <!-- ステータス & 優先度 -->
             <div class="form-row">
-                <div class="form-group">
-                    <label for="status">ステータス</label>
-                    <select id="status" [(ngModel)]="status" name="status">
+                <div class="form-group half">
+                    <label>ステータス</label>
+                    <select [(ngModel)]="status" class="form-select">
                         <option value="todo">未着手 (TODO)</option>
-                        <option value="in_progress">進行中 (IN PROGRESS)</option>
+                        <option value="in-progress">進行中 (IN PROGRESS)</option>
                         <option value="done">完了 (DONE)</option>
                     </select>
                 </div>
-
-                <div class="form-group">
-                    <label for="priority">優先度</label>
-                    <select id="priority" [(ngModel)]="priority" name="priority">
+                <div class="form-group half">
+                    <label>優先度</label>
+                    <select [(ngModel)]="priority" class="form-select">
                         <option value="high">高 (HIGH)</option>
                         <option value="medium">中 (MEDIUM)</option>
                         <option value="low">低 (LOW)</option>
@@ -43,23 +33,23 @@
             </div>
 
             <!-- スケジュール (開始予定日 & 完了予定日) -->
-             <div class="form-row">
-                <div class="form-group">
-                    <label for="scheduledStartDate">開始予定日</label>
+            <div class="form-row">
+                <div class="form-group half">
+                    <label>作業開始予定日</label>
                     <input
                         type="date"
-                        id="scheduledStartDate"
                         [(ngModel)]="scheduledStartDate"
+                        class="form-input"
                         name="scheduledStartDate"
                     />
                 </div>
 
-                <div class="form-group">
-                    <label for="scheduledEndDate">完了予定日</label>
+                <div class="form-group half">
+                    <label>作業完了予定日</label>
                     <input
                         type="date"
-                        id="scheduledEndDate"
                         [(ngModel)]="scheduledEndDate"
+                        class="form-input"
                         name="scheduledEndDate"
                     />
                 </div>
@@ -67,22 +57,22 @@
 
             <!-- 締切日 -->
             <div class="form-group">
-                <label for="deadline">締切日</label>
+                <label>最終期限</label>
                 <input
                     type="date"
-                    id="deadline"
                     [(ngModel)]="deadline"
+                    class="form-input"
                     name="deadline"
                 />
             </div>
 
             <!-- タグ入力 -->
             <div class="form-group">
-                <label for="tags">タグ (カンマ区切り)</label>
+                <label>タグ (カンマ区切り)</label>
                 <input
                     type="text"
-                    id="tags"
                     [(ngModel)]="tagsString"
+                    class="form-input"
                     name="tagsString"
                     placeholder="例: UI設計, Angular"
                 />
@@ -90,21 +80,24 @@
 
             <!-- 説明 -->
             <div class="form-group">
-                <label for="description">説明・メモ (任意)</label>
+                <label>説明・メモ</label>
                 <textarea
-                    id="description"
                     [(ngModel)]="description"
+                    class="form-input"
                     name="description"
                     rows="3"
                     placeholder="タスクの詳細やメモを入力…"
                 ></textarea>
              </div>
 
-            <!-- ボタンエリア -->
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" (click)="onClose()">キャンセル</button>
-                <button type="submit" class="btn-submit">タスクを作成</button>
+             <!-- フッター-->
+            <div class="panel-footer">
+                <button *ngIf="taskToEdit" type="button" class="btn-danger" (click)="onDelete()">🗑️削除</button>
+                <div class="right-actions">
+                    <button type="button" class="btn-secondary" (click)="onClose()">キャンセル</button>
+                    <button type="button" class="btn-primary" (click)="onSubmit()">{{ taskToEdit ? '更新' : '作成' }}</button>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>

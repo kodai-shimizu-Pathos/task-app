@@ -6,11 +6,13 @@
   color: var(--text-primary);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
 }
 
 .task-card:hover {
   border-color: var(--accent-color);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .task-title {
@@ -84,20 +86,31 @@
   color: var(--text-muted);
 }
 
-/* ② 最終期限バッジ：期限内（落ち着いたブルーグレー） */
-.date-badge.deadline-badge.upcoming {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--accent-color);
-  color: var(--accent-color);
+/* 共通のチップスタイル */
+.date-chip.deadline {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* ② 最終期限バッジ：期限超過（目立つ赤枠＆赤紫背景） */
-.date-badge.deadline-badge.overdue {
-  background-color: var(--priority-high) !important;
-  border: 1.5px solid var(--priority-high) !important;
-  color: #ffffff !important;
+/* ⏰ 通常の最終期限（期限内）：落ち着いた警告色（黄色/オレンジ系やグレー） */
+.date-chip.deadline.upcoming {
+  background-color: rgba(234, 179, 8, 0.15);
+  border: 1px solid #eab308;
+  color: #eab308;
+}
+
+/* 🚨 期限超過：はっきりとした赤枠＆赤背景強調 */
+.date-chip.deadline.overdue {
+  background-color: rgba(220, 53, 69, 0.2);
+  border: 1px solid var(--priority-high, #dc3545);
+  color: var(--priority-high, #dc3545);
   font-weight: bold;
 }
+
 /* 完了済みタスクカード（全体を少し半透明にし、タイトルに打ち消し線を入れる） */
 .task-card.done-card {
   opacity: 0.7;

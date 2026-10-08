@@ -1,8 +1,23 @@
 <div class="kanban-board">
     <!-- 1列目：未着手-->
-     <app-kanban-column title="未着手" [tasks]="todoTasks"></app-kanban-column>
+     <app-kanban-column
+     title="未着手"
+     status="todo"
+     [tasks]="todoTasks"
+     (selectTask)="selectTask.emit($event)">
+    </app-kanban-column>
      <!-- 2列目：進行中-->
-     <app-kanban-column title="進行中" [tasks]="inProgressTasks"></app-kanban-column>
+     <app-kanban-column
+     title="進行中"
+     status="in-progress"
+     [tasks]="inProgressTasks"
+     (selectTask)="selectTask.emit($event)">
+    </app-kanban-column>
      <!-- 3列目：完了-->
-     <app-kanban-column title="完了" [tasks]="doneTasks"></app-kanban-column>
+     <app-kanban-column
+     title="完了"
+     status="done"
+     [tasks]="doneTasks"
+     (selectTask)="selectTask.emit($event)">
+    </app-kanban-column>
 </div>
