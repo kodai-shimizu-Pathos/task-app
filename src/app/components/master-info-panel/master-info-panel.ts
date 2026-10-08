@@ -11,6 +11,12 @@ import { ParentProject } from '../../models/project.model';
 })
 export class MasterInfoPanel {
   @Input() project!: ParentProject;
+  @Output() editProject = new EventEmitter<void>();
+
+  onEdit(): void {
+    this.editProject.emit();
+    
+  }
   @Output() closePanel = new EventEmitter<void>();
 
   onClose(): void {

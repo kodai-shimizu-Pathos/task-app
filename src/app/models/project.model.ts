@@ -17,6 +17,6 @@ export interface ParentProject {
     totalTaskCount: number; // 総タスク数
     completedTaskCount: number; // 完了タスク数
     progressPercentage: number; // 子タスク進捗率
-    // createdAt?: string; // 作成日時 (yyyy-mm-dd HH:MM:SS)
-    // updatedAt?: string; // 更新日時 (yyyy-mm-dd HH:MM:SS)
+    createdAt?: string; // 作成日時 (yyyy-mm-dd HH:MM:SS)
+    updatedAt?: string; // 更新日時 (yyyy-mm-dd HH:MM:SS)
 }

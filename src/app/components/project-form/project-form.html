@@ -1,0 +1,70 @@
+<div class="side-panel-backdrop" (click)="onClose()">
+    <div class="side-panel-container" (click)="$event.stopPropagation()">
+      <div class="panel-header">
+        <h2>{{ projectToEdit ? '親課題の編集' : '新規親課題の作成' }}</h2>
+        <button class="close-btn" (click)="onClose()">✕</button>
+      </div>
+  
+      <form (ngSubmit)="onSubmit()" class="panel-body">
+        <!-- タイトル -->
+        <div class="form-group">
+          <label for="proj-title">親課題名 <span class="required">*</span></label>
+          <input type="text" id="proj-title" name="title" [(ngModel)]="title" placeholder="例: 開発フェーズ1 仕様策定" required />
+        </div>
+  
+        <!-- 概要・メモ -->
+        <div class="form-group">
+          <label for="proj-desc">概要・メモ</label>
+          <textarea id="proj-desc" name="description" [(ngModel)]="description" rows="4" placeholder="課題の目的や背景、全体メモを入力..."></textarea>
+        </div>
+  
+        <!-- スケジュール -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="proj-start">開始予定日</label>
+            <input type="date" id="proj-start" name="scheduledStartDate" [(ngModel)]="scheduledStartDate" />
+          </div>
+          <div class="form-group">
+            <label for="proj-end">完了予定日</label>
+            <input type="date" id="proj-end" name="scheduledEndDate" [(ngModel)]="scheduledEndDate" />
+          </div>
+        </div>
+  
+        <div class="form-group">
+          <label for="proj-deadline">最終期限</label>
+          <input type="date" id="proj-deadline" name="deadline" [(ngModel)]="deadline" />
+        </div>
+  
+        <!-- 関連資料リンクの追加・管理 -->
+        <div class="form-group">
+          <label>関連資料・リンク</label>
+          <div class="doc-input-row">
+            <input type="text" [(ngModel)]="docTitle" name="docTitle" placeholder="資料名 (例: 要件定義書)" />
+            <input type="text" [(ngModel)]="docUrl" name="docUrl" placeholder="URL (https://...)" />
+            <button type="button" class="btn-add-doc" (click)="addDoc()">追加</button>
+          </div>
+  
+          <!-- 登録済みリンク一覧 -->
+          <ul class="doc-list" *ngIf="docLinks.length > 0">
+            <li *ngFor="let doc of docLinks; let i = index">
+              <span>📎 {{ doc.title }}</span>
+              <button type="button" class="btn-remove-doc" (click)="removeDoc(i)">✕</button>
+            </li>
+          </ul>
+        </div>
+  
+        <!-- フッター -->
+        <div class="panel-footer">
+          <button *ngIf="projectToEdit" type="button" class="btn-delete" (click)="onDelete()">
+            🗑️ 親課題を削除
+          </button>
+          <div class="footer-right">
+            <button type="button" class="btn-cancel" (click)="onClose()">キャンセル</button>
+            <button type="submit" class="btn-submit">
+              {{ projectToEdit ? '変更を保存' : '親課題を作成' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>

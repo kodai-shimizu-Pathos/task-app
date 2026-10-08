@@ -5,6 +5,7 @@ import { KanbanBoard } from './components/kanban-board/kanban-board';
 import { TaskForm } from './components/task-form/task-form';
 import { ParentProject } from './models/project.model';
 import { Task } from './models/task.model';
+import { ProjectForm } from './components/project-form/project-form';
 
 @Component({
   selector: 'app-root',
@@ -13,32 +14,35 @@ import { Task } from './models/task.model';
     CommonModule, 
     MasterInfoPanel, 
     KanbanBoard, 
-    TaskForm
+    TaskForm,
+    ProjectForm
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class AppComponent implements OnInit {
-  // --- アプリ全体の状態保持 (Single Source of Truth) ---
-  selectedProject: ParentProject | null = null;
-  allTasks: Task[] = [];
-  
-  // 表示モード管理（カンバンモード / ガントチャートモード）
+  // --- アプリ全体の状態保持 (Single Source of Truth) ---  
   currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
-
-  // 🔴 テーマ管理（ダークテーマ / ライトテーマ）を追加
   currentTheme: 'dark' | 'light' = 'dark';
 
-  // モーダル・パネルの表示状態
-  isFormOpen = false;
+  // 親課題(Project)一覧・選択状態
+  projects: ParentProject[] = [];
+  selectedProject: ParentProject | null = null;
+
+  // 子タスク(Task)一覧・選択状態
+  tasks: Task[] = [];
+  selectedTask: Task | null = null;
+
+  // 親課題 (Project) フォームの表示状態
+  isProjectFormOpen = false;
+  projectToEdit?: ParentProject | null = null;  
+
+  // 子タスク (Task) フォームの表示状態
+  isTaskFormOpen = false;
   taskToEdit: Task | null = null;
 
-  ngOnInit(): void {
-    document.body.setAttribute('data-theme', this.currentTheme);
-    this.loadInitialData();
-  }
-
-  // 🔴 テーマ切り替えハンドラ
+  
+  // テーマ切り替えハンドラ
   toggleTheme(): void {
     this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
     document.body.setAttribute('data-theme', this.currentTheme);
@@ -48,126 +52,216 @@ export class AppComponent implements OnInit {
   switchViewMode(mode: 'KANBAN' | 'GANTT'): void {
     this.currentMode = mode;
   }
-
-  // Master-Detail パネル閉じるハンドラ
-  onCloseMasterDetail(): void {
-    this.selectedProject = null;
-    this.closeForm();
+  
+  ngOnInit(): void {
+    document.body.setAttribute('data-theme', this.currentTheme);
+    this.loadInitialData();
   }
 
-  // 表示中の親課題に紐づく子タスクのみを抽出
-  get filteredSubtasks(): Task[] {
-    if (!this.selectedProject) return [];
-    return this.allTasks.filter(task => task.parentId === this.selectedProject?.id);
+  // =======================================================
+  // 親課題(Project)操作ロジック
+  // =======================================================
+
+  // 新規の親課題フォームを開く
+  onOpenNewProjectForm(): void {
+    this.projectToEdit = null;
+    this.isProjectFormOpen = true;
   }
 
-  // パネル・モーダル開閉ハンドラ
-  openForm(): void {
-    this.taskToEdit = null;
-    this.isFormOpen = true;
-  }
-
-  onTaskSelected(task: Task): void {
-    console.log('Appまでイベントが届きました:', task);
-    this.taskToEdit = task;
-    this.isFormOpen = true;
-  }
-
-  closeForm(): void {
-    this.isFormOpen = false;
-    this.taskToEdit = null;
-  }
-
-  // タスクデータ操作 (CRUD) ＆ 進捗自動同期
-  onTaskCreated(newTask: Task): void {
+  // 既存の親課題の編集フォームを開く
+  onEditProject(): void {
     if (this.selectedProject) {
-      newTask.parentId = this.selectedProject.id;
+      this.projectToEdit = { ...this.selectedProject };
+      this.isProjectFormOpen = true;
     }
-    this.allTasks = [newTask, ...this.allTasks];
-    this.updateProjectProgress();
   }
 
+  // 親課題フォームを閉じる
+  onCloseProjectForm(): void {
+    this.isProjectFormOpen = false;
+    this.projectToEdit = null;
+  }
+
+  // 親課題の作成完了ハンドラ
+  opProjectCreated(newProject: ParentProject): void {
+    this.projects.push(newProject);
+    this.selectedProject = newProject;
+    this.tasks = [];
+    this.onCloseProjectForm();
+  }
+
+  // 親課題の更新完了ハンドラ
+  onProjectUpdated(updatedProject: ParentProject): void {
+    const index = this.projects.findIndex(p => p.id === updatedProject.id);
+    if (index !== -1) {
+      this.projects[index] = updatedProject;
+      if (this.selectedProject?.id === updatedProject.id) {
+        this.selectedProject = updatedProject;
+      }
+    }
+    this.onCloseProjectForm();
+  }
+
+  // 親課題の削除完了ハンドラ
+  onProjectDeleted(projectId: string): void {
+    // プロジェクト一覧から削除
+    this.projects = this.projects.filter(p => p.id !== projectId);
+
+    // 紐づく子タスクも削除
+    this.tasks = this.tasks.filter(t => t.parentId !== projectId);
+
+    // 別のプロジェクトを選択、なければクリア
+    if (this.projects.length > 0) {
+      this.selectedProject = this.projects[0];
+      this.loadTasksForProject(this.selectedProject.id);
+    } else {
+      this.selectedProject = null;
+      this.tasks = [];
+    }
+    this.onCloseProjectForm();
+  }
+
+  // =======================================================
+  // 子タスク(Task)操作ロジック
+  // =======================================================
+
+  // タスク選択時 (カードクリック)
+  onSelectTask(task: Task): void {
+    this.taskToEdit = task? { ...task } : null;
+    this.isTaskFormOpen = true;
+  }
+
+  // 新規タスク追加フォームを開く
+  onOpenNewTaskForm(): void {
+    this.taskToEdit = null;
+    this.isTaskFormOpen = true;
+  }
+
+  // タスクフォームを閉じる
+  onCloseTaskForm(): void {
+    this.isTaskFormOpen = false;
+    this.taskToEdit = null;
+  }
+
+  // タスクの作成完了ハンドラ
+  onTaskCreated(newTask: Task): void {
+    this.tasks.push(newTask);
+    this.recalculateProgress();
+    this.onCloseTaskForm();
+  }
+
+  // タスクの更新完了ハンドラ
   onTaskUpdated(updatedTask: Task): void {
-    this.allTasks = this.allTasks.map(t => t.id === updatedTask.id ? updatedTask : t);
-    this.updateProjectProgress();
+    const index = this.tasks.findIndex(t => t.id === updatedTask.id);
+    if (index !== -1) {
+      this.tasks[index] = updatedTask;
+      this.recalculateProgress();
+    }
+    this.onCloseTaskForm();
   }
 
+  // タスクの削除完了ハンドラ
   onTaskDeleted(taskId: string): void {
-    this.allTasks = this.allTasks.filter(t => t.id !== taskId);
-    this.updateProjectProgress();
+    this.tasks = this.tasks.filter(t => t.id !== taskId);
+    this.recalculateProgress();
+    this.onCloseTaskForm();
   }
 
-  updateProjectProgress(): void {
+  // 進捗率と完了タスク数の自動再計算
+  private recalculateProgress(): void {
     if (!this.selectedProject) return;
-    
-    const subtasks = this.filteredSubtasks;
-    const total = subtasks.length;
-    const completed = subtasks.filter(t => t.status === 'done').length;
-    
+    const total = this.tasks.length;
+    const completed = this.tasks.filter(t => t.status === 'done').length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
     this.selectedProject.totalTaskCount = total;
     this.selectedProject.completedTaskCount = completed;
-    this.selectedProject.progressPercentage = total > 0 ? 
-      Math.round((completed / total) * 100) : 0;
+    this.selectedProject.progressPercentage = percentage;
+
+    // projects 配列内の該当プロジェクトの進捗率を更新
+    const index = this.projects.findIndex(p => p.id === this.selectedProject?.id);
+    if (index !== -1) {
+      this.projects[index] = { ...this.selectedProject };
+    }
   }
 
+  // ==========================================
+  // 初期データロード処理
+  // ==========================================
+
   private loadInitialData(): void {
-    // 1. サンプル親課題（プロジェクト）のセット
-    this.selectedProject = {
+    // サンプル親課題データ
+    const sampleProject: ParentProject = {
       id: 'proj-1',
-      title: '課題管理アプリ開発',
-      description: 'BeSideFlow AI の Master-Detail UI および核心機能の実装',
-      priority: 'HIGH',
-      tags: ['開発', 'アプリ', 'Angular'],
+      title: 'BeSideFlow AI 開発フェーズ1',
+      description: 'デスクトップ常駐型タスクパートナーアプリの基礎設計とMaster-Detail UIの実装。',
+      
+      // 🔴 不足していた必須プロパティを追加
       status: 'in-progress',
-      scheduledEndDate: '2026-10-26',
-      deadline: '2026-11-01',
+      priority: 'high',
+      tags: ['開発', 'UI'],
+
+      scheduledStartDate: '2026-10-01',
+      scheduledEndDate: '2026-10-31',
+      deadline: '2026-11-15',
+      progressPercentage: 0,
+      completedTaskCount: 0,
+      totalTaskCount: 0,
       docLinks: [
-        { title: '仕様書_v1.1', url: '#' },
-        { title: 'UIレイアウト仕様書', url: '#' }
+        { title: '仕様書 v1.1', url: 'https://example.com/spec' },
+        { title: 'UIレイアウト仕様書', url: 'https://example.com/ui-spec' }
       ],
-      memos: [
-        { timestamp: '10/06 14:00', content: 'Master-Detail UI 骨格の構築に着手' }
-      ],
-      totalTaskCount: 3,
-      completedTaskCount: 1,
-      progressPercentage: 33
+      createdAt: new Date().toISOString()
     };
-  
-    // 2. サンプル子タスク一覧のセット
-    this.allTasks = [
+
+    this.projects = [sampleProject];
+    this.selectedProject = sampleProject;
+
+    // サンプル子タスクのロード
+    this.loadTasksForProject(sampleProject.id);
+  }
+
+  private loadTasksForProject(projectId: string): void {
+    // サンプル子タスク一覧
+    const sampleTasks: Task[] = [
       {
         id: 'task-1',
-        parentId: 'proj-1',
-        title: '要件定義・データモデル設計',
+        parentId: projectId,
+        title: 'Master-Detail UI のレイアウト構築',
+        description: '左側にMasterエリア、右側にカンバンボードを配置するレイアウトの実装。',
         status: 'done',
         priority: 'high',
-        progress: 100,
-        tags: ['設計'],
-        deadline: '2026-10-05'
+        progress: 100, // 🔴 追加 (完了なので100%)
+        tags: ['UI', 'レイアウト'], // 🔴 追加
+        deadline: '2026-10-05',
+        createdAt: new Date().toISOString()
       },
       {
         id: 'task-2',
-        parentId: 'proj-1',
-        title: '画面遷移図とUI仕様書の作成',
+        parentId: projectId,
+        title: 'テーマ切り替え機能（ダーク/ライト）の実装',
+        description: 'styles.cssのCSS変数とbodyタグのdata-theme属性によるテーマ切り替え。',
         status: 'in-progress',
-        priority: 'high',
-        progress: 75,
-        tags: ['UI設計', 'Angular'],
-        deadline: '2026-10-15'
+        priority: 'medium',
+        progress: 50, // 🔴 追加 (進行中なので50%)
+        tags: ['CSS', 'テーマ'], // 🔴 追加
+        deadline: '2026-10-10',
+        createdAt: new Date().toISOString()
       },
       {
         id: 'task-3',
-        parentId: 'proj-1',
-        title: 'フロント結合テスト',
+        parentId: projectId,
+        title: 'ガントチャート表示モードの構築',
+        description: 'SCR-04 ガントチャートモード画面コンポーネントの作成とデータ連動。',
         status: 'todo',
-        priority: 'high',
-        progress: 0,
-        tags: ['結合'],
-        deadline: '2026-10-25'
+        priority: 'low',
+        progress: 0, // 🔴 追加 (未着手なので0%)
+        tags: ['機能開発'], // 🔴 追加
+        deadline: '2026-10-25',
+        createdAt: new Date().toISOString()
       }
     ];
-  
-    // 3. 親課題の進捗率を初期計算
-    this.updateProjectProgress();
+
+    this.tasks = sampleTasks;
+    this.recalculateProgress();
   }
 }

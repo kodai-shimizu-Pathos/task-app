@@ -1,14 +1,9 @@
 <div class="master-panel" *ngIf="project">
     <!-- パネルヘッダー & 閉じるボタン-->
     <div class="panel-header">
-        <span class="breadcrumbs">プロジェクト一覧 > {{ project.title }}</span>
+        <h3 class="panel-title">{{ project.title }}</h3>
+        <button class="edit-btn" (click)="onEdit()">📝 編集</button>
         <button class="close-btn" (click)="onClose()">✕</button>
-    </div>
-
-    <!-- タイトル & 優先度-->
-    <div class="title-section">
-        <span class="badge priority" [ngClass]="project.priority.toLowerCase()">● {{ project.priority | uppercase}}</span>
-        <h2 class="panel-title">{{ project.title }}</h2>
     </div>
 
     <!-- タグ一覧 -->

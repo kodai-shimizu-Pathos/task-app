@@ -184,11 +184,40 @@
   }
   
   .memo-timestamp { font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px; }
-  .memo-content { margin: 0; font-size: 12px; }
+  .memo
+  
+  /* 既存の css に以下を追加してください */
 
-/* リンクやタグチップは flex-wrap で折り返しを許可 */
-.tags-list, .links-grid {
+.panel-header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* 編集ボタンのスタイル */
+.btn-edit-project {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color 0.2s;
+}
+
+.btn-edit-project:hover {
+  background-color: var(--border-color);
 }

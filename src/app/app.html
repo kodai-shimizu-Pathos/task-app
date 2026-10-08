@@ -1,79 +1,70 @@
-<div class="app-shell">
-  <!-- 1. アプリ上部ヘッダーバー -->
+<div class="app-layout">
+  <!-- グローバルヘッダー -->
   <header class="app-header">
     <div class="header-left">
-      <h1 class="logo-title">BeSideFlow AI</h1>
-      <!-- パンくずリスト -->
-      <nav class="breadcrumbs" *ngIf="selectedProject">
-        <span class="crumb-link" (click)="onCloseMasterDetail()">プロジェクト一覧</span>
-        <span class="crumb-separator">＞</span>
-        <span class="crumb-current">{{ selectedProject.title }}</span>
-      </nav>
+      <h1 class="app-title">BeSideFlow AI</h1>
+      <!-- 🔴 新規親課題作成ボタンを追加 -->
+      <button class="btn-add-project" (click)="onOpenNewProjectForm()">
+        ＋ 親課題を追加
+      </button>
+    </div>
+
+    <div class="header-center">
+      <div class="view-switcher">
+        <button [class.active]="currentView === 'kanban'" (click)="currentView = 'kanban'">カンバン</button>
+        <button [class.active]="currentView === 'gantt'" (click)="currentView = 'gantt'">ガントチャート</button>
+      </div>
     </div>
 
     <div class="header-right">
-      <!-- ヘッダー右側などに配置するボタン -->
       <button class="theme-toggle-btn" (click)="toggleTheme()">
-        {{ currentTheme === 'dark' ? '🌙 ダーク' : '☀️ ライト' }}
-      </button>
-
-      <!-- 表示モード切替 ([カンバン | ガントチャート]) -->
-      <div class="view-mode-toggle">
-        <button 
-          class="toggle-btn" 
-          [ngClass]="{'active': currentMode === 'KANBAN'}"
-          (click)="switchViewMode('KANBAN')">
-          カンバン
-        </button>
-        <button 
-          class="toggle-btn" 
-          [ngClass]="{'active': currentMode === 'GANTT'}"
-          (click)="switchViewMode('GANTT')">
-          ガントチャート
-        </button>
-      </div>
-
-      <!-- ＋新規タスクボタン -->
-      <button class="btn-primary" (click)="openForm()">
-        ＋ 新規タスク
+        {{ currentTheme === 'dark' ? '☀️ ライト' : '🌙 ダーク' }}
       </button>
     </div>
   </header>
 
-  <!-- 2. メインコンテンツ領域 (Master-Detail 左右分割) -->
-  <main class="main-container">
-    <div class="master-detail-layout" *ngIf="selectedProject; else noProjectSelected">
-      
-      <!-- 左側 30%: Master パネル -->
-      <aside class="master-pane">
-        <app-master-info-panel
-          [project]="selectedProject"
-          (closePanel)="onCloseMasterDetail()">
-        </app-master-info-panel>
-      </aside>
+  <!-- メインコンテンツ領域 -->
+  <main class="main-content">
+    <!-- 左側: Master情報パネル -->
+    <aside class="master-pane">
+      <app-master-info-panel 
+        [project]="selectedProject"
+        (editProject)="onEditProject()"> <!-- 🔴 イベント連携追加 -->
+      </app-master-info-panel>
+    </aside>
 
-      <!-- 右側 70%: Detail パネル (子タスクカンバン) -->
-      <section class="detail-pane">
-        <app-kanban-board [tasks]="filteredSubtasks" (selectTask)="onTaskSelected($event)"></app-kanban-board>
-      </section>
+    <!-- 右側: Detail表示エリア (カンバン/ガント) -->
+    <section class="detail-pane">
+      <app-kanban-board 
+        *ngIf="currentView === 'kanban'"
+        [tasks]="tasks"
+        (selectTask)="onSelectTask($event)">
+      </app-kanban-board>
 
-    </div>
-
-    <!-- 親課題未選択時の表示 -->
-    <ng-template #noProjectSelected>
-      <div class="empty-selection-container">
-        <p>親課題（プロジェクト）を選択すると、ここに詳細および子タスクが展開されます。</p>
+      <div *ngIf="currentView === 'gantt'" class="gantt-placeholder">
+        <p>ガントチャートモードは準備中です</p>
       </div>
-    </ng-template>
+    </section>
   </main>
 
-  <!-- 3. 新規タスク作成モーダル -->
-  <app-task-form 
-    *ngIf="isFormOpen" 
+  <!-- 🔴 子タスク作成・編集スライドインフォーム -->
+  <app-task-form
+    *ngIf="isTaskFormOpen"
     [taskToEdit]="taskToEdit"
-    (taskCreated)="onTaskCreated($event)" 
+    [projectId]="selectedProject?.id || ''"
+    (taskCreated)="onTaskCreated($event)"
     (taskUpdated)="onTaskUpdated($event)"
     (taskDeleted)="onTaskDeleted($event)"
-    (closeModal)="closeForm()">
+    (closePanel)="onCloseTaskForm()">
   </app-task-form>
+
+  <!-- 🔴 親課題（Master）作成・編集モーダルフォーム -->
+  <app-project-form
+    *ngIf="isProjectFormOpen"
+    [projectToEdit]="projectToEdit"
+    (projectCreated)="onProjectCreated($event)"
+    (projectUpdated)="onProjectUpdated($event)"
+    (projectDeleted)="onProjectDeleted($event)"
+    (closeModal)="onCloseProjectForm()">
+  </app-project-form>
 </div>
