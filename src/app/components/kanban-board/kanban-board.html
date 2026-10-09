@@ -1,23 +1,37 @@
-<div class="kanban-board">
-    <!-- 1列目：未着手-->
-     <app-kanban-column
-     title="未着手"
-     status="todo"
-     [tasks]="todoTasks"
-     (selectTask)="selectTask.emit($event)">
-    </app-kanban-column>
-     <!-- 2列目：進行中-->
-     <app-kanban-column
-     title="進行中"
-     status="in-progress"
-     [tasks]="inProgressTasks"
-     (selectTask)="selectTask.emit($event)">
-    </app-kanban-column>
-     <!-- 3列目：完了-->
-     <app-kanban-column
-     title="完了"
-     status="done"
-     [tasks]="doneTasks"
-     (selectTask)="selectTask.emit($event)">
-    </app-kanban-column>
-</div>
+<div class="kanban-wrapper">
+    <!-- 1. 操作用ヘッダーバー (将来の検索窓・ソート・フィルター領域) -->
+    <div class="kanban-header">
+      <div class="header-left">
+        <h3 class="kanban-title">タスク一覧</h3>
+      </div>
+      <div class="header-right">
+        <button class="btn-primary-add" (click)="onAddTask()">
+          ＋ 新規タスク
+        </button>
+      </div>
+    </div>
+  
+    <!-- 2. カンバンボード本体 (ここだけを横3列のGridにする) -->
+    <div class="kanban-body">
+      <app-kanban-column 
+        title="未着手" 
+        status="todo"
+        [tasks]="todoTasks"
+        (selectTask)="selectTask.emit($event)">
+      </app-kanban-column>
+      
+      <app-kanban-column 
+        title="進行中" 
+        status="in-progress"
+        [tasks]="inProgressTasks"
+        (selectTask)="selectTask.emit($event)">
+      </app-kanban-column>
+      
+      <app-kanban-column 
+        title="完了" 
+        status="done"
+        [tasks]="doneTasks"
+        (selectTask)="selectTask.emit($event)">
+      </app-kanban-column>
+    </div>
+  </div>

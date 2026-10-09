@@ -21,7 +21,7 @@ export class TaskForm implements OnInit, OnChanges {
   @Output() taskDeleted = new EventEmitter<string>(); // タスク削除時のイベント
 
   // モーダルを閉じるイベント
-  @Output() closeModal = new EventEmitter<void>();
+  @Output() closePanel = new EventEmitter<void>();
 
   // フォームに入力された値を保持する一時データ
   title = '';
@@ -129,6 +129,6 @@ export class TaskForm implements OnInit, OnChanges {
 
   // キャンセル　/モーダルを閉じるボタン押下時
   onClose(): void {
-    this.closeModal.emit();
+    this.closePanel.emit();
   }
 }

@@ -40,7 +40,8 @@
         <app-master-info-panel 
           [project]="selectedProject"
           (editProject)="onEditProject()"
-          (closePanel)="onUnselectProject()">
+          (closePanel)="onUnselectProject()"
+          (addTask)="onOpenNewTaskForm()">
         </app-master-info-panel>
       </aside>
 
@@ -49,7 +50,8 @@
         <app-kanban-board 
           *ngIf="currentView === 'kanban'"
           [tasks]="tasks"
-          (selectTask)="onSelectTask($event)">
+          (selectTask)="onSelectTask($event)"
+          (addTask)="onOpenNewTaskForm()">
         </app-kanban-board>
 
         <div *ngIf="currentView === 'gantt'" class="gantt-placeholder">

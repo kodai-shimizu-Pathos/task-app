@@ -2,7 +2,7 @@
     <div class="side-panel-container" (click)="$event.stopPropagation()">
         <div class="panel-header">
             <h3>{{ taskToEdit ? 'タスク詳細・編集' : '新規タスク作成' }}</h3>
-            <button class="close-btn" (click)="onClose()">✕</button>
+            <button class="close-btn" (click)="onClose()" title="閉じる">✕</button>
         </div>
 
         <div class="panel-body">
@@ -92,10 +92,9 @@
 
              <!-- フッター-->
             <div class="panel-footer">
-                <button *ngIf="taskToEdit" type="button" class="btn-danger" (click)="onDelete()">🗑️削除</button>
-                <div class="right-actions">
-                    <button type="button" class="btn-secondary" (click)="onClose()">キャンセル</button>
-                    <button type="button" class="btn-primary" (click)="onSubmit()">{{ taskToEdit ? '更新' : '作成' }}</button>
+                <button *ngIf="taskToEdit" type="button" class="btn-danger" (click)="onDelete()">🗑️タスクを削除</button>
+                <div class="footer-right">
+                    <button class="btn-submit" (click)="onSubmit()">{{ taskToEdit ? '更新' : '作成' }}</button>
                 </div>
             </div>
         </div>

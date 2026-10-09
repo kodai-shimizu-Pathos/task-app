@@ -1,16 +1,64 @@
 :host {
   display: block;
   height: 100%;
-  min-height: 0;
+  width: 100%;
 }
 
-.kanban-board {
+.kanban-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 1. 操作用ヘッダーバー */
+.kanban-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.kanban-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.btn-primary-add {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-primary-add:hover {
+  opacity: 0.85;
+}
+
+/* 2. カンバンボード本体 (常に横3列に均等割り) */
+.kanban-body {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  height: 100%;          /* 全体の高さを100%に固定 */
-  min-height: 0;         /* 子要素による拡張を抑止 */
-  box-sizing: border-box;
   padding: 16px;
-  background-color: var(--bg-panel);
+  box-sizing: border-box;
+  overflow: hidden;
 }

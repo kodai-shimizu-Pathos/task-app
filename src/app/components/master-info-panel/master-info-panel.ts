@@ -15,12 +15,17 @@ export class MasterInfoPanel {
 
   onEdit(): void {
     this.editProject.emit();
-    
+
   }
   @Output() closePanel = new EventEmitter<void>();
 
   onClose(): void {
     this.closePanel.emit();
+  }
+  @Output() addTask = new EventEmitter<void>();
+
+  onAddTask(): void {
+    this.addTask.emit();
   }
 
   // 期限超過チェック

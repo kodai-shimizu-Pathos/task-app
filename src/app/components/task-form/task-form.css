@@ -314,19 +314,6 @@ textarea {
   opacity: 0.85;
 }
 
-.btn-cancel {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.btn-cancel:hover {
-  background-color: var(--border-color);
-}
-
 .btn-delete {
   background-color: var(--priority-high);
   color: #ffffff;

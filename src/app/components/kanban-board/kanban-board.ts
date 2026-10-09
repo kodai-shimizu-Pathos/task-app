@@ -15,6 +15,7 @@ export class KanbanBoard {
   @Input() tasks: Task[] = [];
 
   @Output() selectTask = new EventEmitter<Task>();
+  @Output() addTask = new EventEmitter<Task>();
 
   // 「未着手」のタスクだけを抽出するゲッター
   get todoTasks(): Task[] {
@@ -29,5 +30,9 @@ export class KanbanBoard {
   // 「完了」のタスクだけを抽出するゲッター
   get doneTasks() : Task[] {
     return this.tasks.filter(task => task.status === "done");
+  }
+
+  onAddTask(): void {
+    this.addTask.emit();
   }
 }
