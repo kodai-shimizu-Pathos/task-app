@@ -1,21 +1,32 @@
-<div class="kanban-column" [ngClass]="status">
-    <!-- 列のヘッダー：タイトルとタスク件数-->
-     <div class="column-header">
-        <h3 class="column-title">{{ title }}</h3>
-        <span class="task-count">{{ tasks.length }}</span>
-     </div>
+<div class="kanban-column-container" [ngClass]="status">
+  <!-- カラムヘッダー -->
+  <div class="column-header" [ngClass]="status" [style.border-top-color]="headerColor">
+    <h3>{{ title }} <span class="task-count">({{ tasks.length }})</span></h3>
+  </div>
 
-     <!-- タスクカードの一覧エリア -->
-      <div class="card-list">
-        <!-- *ngForでタスクの数だけカードを繰り返し描画する -->
-         <app-task-card *ngFor="let task of tasks"
-         [task]="task"
-         (selectTask)="selectTask.emit($event)">
-        </app-task-card>
+  <!-- CdkDropList 領域 -->
+  <div
+    class="column-droplist"
+    cdkDropList
+    [id]="status"
+    [cdkDropListData]="tasks"
+    (cdkDropListDropped)="onDrop($event)">
+    
+    <!-- ドラッグ可能タスクカード -->
+    <div
+      *ngFor="let task of tasks"
+      cdkDrag
+      [cdkDragData]="task"
+      class="draggable-task-wrapper">
+      <app-task-card
+        [task]="task"
+        (click)="onSelectTask(task)">
+      </app-task-card>
+    </div>
 
-         <!-- タスクが0件のときのメッセージ-->
-          <div class="empty-message" *ngIf="tasks.length === 0">
-            タスクがありません
-          </div>
-     </div>
+    <!-- カラムが空の時のプレースホルダー -->
+    <div *ngIf="tasks.length === 0" class="empty-placeholder">
+      タスクをここへドラッグ
+    </div>
+  </div>
 </div>

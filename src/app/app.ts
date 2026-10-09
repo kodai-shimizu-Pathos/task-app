@@ -162,6 +162,17 @@ export class AppComponent implements OnInit {
     this.onCloseProjectForm();
   }
 
+  // 親課題のステータス変更ハンドラ（カンバンボードのドラッグ&ドロップ時）
+  onParentTaskUpdated(updatedProject: ParentProject): void {
+    const index = this.projects.findIndex(p => p.id === updatedProject.id);
+    if (index !== -1) {
+      this.projects[index] = updatedProject;
+      if (this.selectedProject?.id === updatedProject.id) {
+        this.selectedProject = updatedProject;
+      }
+    }
+  }
+
   // =======================================================
   // 子タスク(Task)操作ロジック
   // =======================================================

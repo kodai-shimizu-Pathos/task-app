@@ -1,37 +1,42 @@
-<div class="kanban-wrapper">
-    <!-- 1. 操作用ヘッダーバー (将来の検索窓・ソート・フィルター領域) -->
-    <div class="kanban-header">
-      <div class="header-left">
-        <h3 class="kanban-title">タスク一覧</h3>
-      </div>
-      <div class="header-right">
-        <button class="btn-primary-add" (click)="onAddTask()">
-          ＋ 新規タスク
-        </button>
-      </div>
+<div class="kanban-board-wrapper">
+  <!-- ヘッダー領域（header-left 構造を完全保持） -->
+  <div class="board-header">
+    <div class="header-left">
+      <h2>タスク一覧</h2>
     </div>
-  
-    <!-- 2. カンバンボード本体 (ここだけを横3列のGridにする) -->
-    <div class="kanban-body">
-      <app-kanban-column 
-        title="未着手" 
-        status="todo"
-        [tasks]="todoTasks"
-        (selectTask)="selectTask.emit($event)">
-      </app-kanban-column>
-      
-      <app-kanban-column 
-        title="進行中" 
-        status="in-progress"
-        [tasks]="inProgressTasks"
-        (selectTask)="selectTask.emit($event)">
-      </app-kanban-column>
-      
-      <app-kanban-column 
-        title="完了" 
-        status="done"
-        [tasks]="doneTasks"
-        (selectTask)="selectTask.emit($event)">
-      </app-kanban-column>
-    </div>
+    <button class="btn-primary" (click)="onAddTask()">＋ 新規タスク</button>
   </div>
+
+  <!-- カンバンエリア（kanban-body クラス名を維持したまま cdkDropListGroup を追加） -->
+  <div class="kanban-body" cdkDropListGroup>
+    <!-- 未着手 カラム -->
+    <app-kanban-column
+      status="todo"
+      title="未着手"
+      headerColor="#EF4444"
+      [tasks]="todoTasks"
+      (selectTask)="selectTask.emit($event)"
+      (taskDropped)="onTaskDropped($event, 'todo')">
+    </app-kanban-column>
+
+    <!-- 進行中 カラム -->
+    <app-kanban-column
+      status="in-progress"
+      title="進行中"
+      headerColor="#F59E0B"
+      [tasks]="inProgressTasks"
+      (selectTask)="selectTask.emit($event)"
+      (taskDropped)="onTaskDropped($event, 'in-progress')">
+    </app-kanban-column>
+
+    <!-- 完了 カラム -->
+    <app-kanban-column
+      status="done"
+      title="完了"
+      headerColor="#10B981"
+      [tasks]="doneTasks"
+      (selectTask)="selectTask.emit($event)"
+      (taskDropped)="onTaskDropped($event, 'done')">
+    </app-kanban-column>
+  </div>
+</div>

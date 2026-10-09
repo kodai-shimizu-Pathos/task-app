@@ -39,7 +39,8 @@
       <div class="full-master-pane" *ngIf="!selectedProject">
         <app-master-kanban-board
           [projects]="projects"
-          (selectProject)="onSelectProject($event)">
+          (selectProject)="onSelectProject($event)"
+          (parentTaskUpdated)="onParentTaskUpdated($event)">
         </app-master-kanban-board>
       </div>
 
@@ -61,7 +62,8 @@
             *ngIf="currentMode === 'KANBAN'"
             [tasks]="currentTasks"
             (selectTask)="onSelectTask($event)"
-            (addTask)="onOpenNewTaskForm()">
+            (addTask)="onOpenNewTaskForm()"
+            (taskUpdated)="onTaskUpdated($event)">
           </app-kanban-board>
 
           <div *ngIf="currentMode === 'GANTT'" class="gantt-placeholder">
@@ -76,6 +78,7 @@
     <app-task-form
       *ngIf="isTaskFormOpen"
       [taskToEdit]="taskToEdit"
+      [projects]="projects"
       [projectId]="selectedProject?.id || ''"
       (taskCreated)="onTaskCreated($event)"
       (taskUpdated)="onTaskUpdated($event)"

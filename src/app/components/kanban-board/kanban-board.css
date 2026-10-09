@@ -12,7 +12,32 @@
   box-sizing: border-box;
 }
 
-/* 1. 操作用ヘッダーバー */
+/* 1. ボード操作用ヘッダーバー */
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-left h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* レガシー互換性 */
 .kanban-header {
   display: flex;
   justify-content: space-between;
@@ -36,6 +61,30 @@
   color: var(--text-primary);
 }
 
+/* プライマリボタン（「＋ 新規タスク」） */
+.btn-primary {
+  background-color: #2563EB;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-primary:hover {
+  background-color: #1D4ED8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:active {
+  background-color: #1E40AF;
+}
+
+/* レガシー互換性 */
 .btn-primary-add {
   background-color: var(--accent-color);
   color: #ffffff;
