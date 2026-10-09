@@ -1,65 +1,76 @@
 .master-kanban-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    height: 100%;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-  
-  .master-column {
-    background-color: var(--bg-panel);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    overflow: hidden;
-  }
-  
-  /* ライトモード時のヘッダー色分け対応 */
-  :host-context(body[data-theme="light"]) .master-column.todo .column-header { background-color: #da3633 !important; color: #fff !important; }
-  :host-context(body[data-theme="light"]) .master-column.in-progress .column-header { background-color: #fb8500 !important; color: #fff !important; }
-  :host-context(body[data-theme="light"]) .master-column.done .column-header { background-color: #1a7f37 !important; color: #fff !important; }
-  
-  .column-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    margin-bottom: 16px;
-    border-radius: 8px;
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
-    font-weight: bold;
-  }
-  
-  .column-title {
-    font-size: 15px;
-  }
-  
-  .count-badge {
-    background-color: rgba(255, 255, 255, 0.2);
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-  }
-  
-  .card-list {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding-right: 4px;
-  }
-  
-  .empty-state {
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 13px;
-    padding: 32px 0;
-    border: 2px dashed var(--border-color);
-    border-radius: 8px;
-  }
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.master-column {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  overflow: hidden;
+}
+
+/* ライトモード時のヘッダー色分け対応 */
+:host-context(body[data-theme="light"]) .master-column.todo .column-header {
+  background-color: var(--header-todo-bg) !important;
+  color: var(--header-todo-text) !important;
+}
+
+:host-context(body[data-theme="light"]) .master-column.in-progress .column-header {
+  background-color: var(--header-progress-bg) !important;
+  color: var(--header-progress-text) !important;
+}
+
+:host-context(body[data-theme="light"]) .master-column.done .column-header {
+  background-color: var(--header-done-bg) !important;
+  color: var(--header-done-text) !important;
+}
+
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.column-title {
+  font-size: 15px;
+}
+
+.count-badge {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.card-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 32px 0;
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+}

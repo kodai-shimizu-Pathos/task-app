@@ -4,7 +4,7 @@
   min-height: 0;
 }
 
-/* 🌙 カラム共通基本構造（ダークモード時は落ち着いたダークカラーを維持） */
+/* カラム共通基本構造 */
 .kanban-column {
   background-color: var(--bg-panel);
   border: 1px solid var(--border-color);
@@ -19,7 +19,7 @@
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-/* 🌙 ヘッダー基本形状（ダークモード時） */
+/* ヘッダー基本形状 */
 .column-header {
   flex-shrink: 0;
   display: flex;
@@ -45,38 +45,41 @@
   font-size: 12px;
 }
 
-/* ---------------------------------------------------- */
-/* ☀️ ライトモード時のみ：カラムボックス ＆ ヘッダーの色分け */
-/* ---------------------------------------------------- */
+/* ================================================ */
+/* ライトモード時のみ：カラムボックス ＆ ヘッダーの色分け */
+/* ================================================ */
 
 /* 未着手 (todo) */
 :host-context(body[data-theme="light"]) .kanban-column.todo {
-  background-color: #fef2f2;
-  border-color: #fecaca;
+  background-color: #FEF2F2;
+  border-color: #FECACA;
 }
+
 :host-context(body[data-theme="light"]) .kanban-column.todo .column-header {
-  background-color: #da3633;
-  color: #ffffff;
+  background-color: var(--header-todo-bg);
+  color: var(--header-todo-text);
 }
 
 /* 進行中 (in-progress) */
 :host-context(body[data-theme="light"]) .kanban-column.in-progress {
-  background-color: #fffbf0;
-  border-color: #ffe8cc;
+  background-color: #FFFBF0;
+  border-color: #FFE8CC;
 }
+
 :host-context(body[data-theme="light"]) .kanban-column.in-progress .column-header {
-  background-color: #fb8500;
-  color: #ffffff;
+  background-color: var(--header-progress-bg);
+  color: var(--header-progress-text);
 }
 
 /* 完了 (done) */
 :host-context(body[data-theme="light"]) .kanban-column.done {
-  background-color: #f0fdf4;
-  border-color: #bbf7d0;
+  background-color: #F0FDF4;
+  border-color: #BBF7D0;
 }
+
 :host-context(body[data-theme="light"]) .kanban-column.done .column-header {
-  background-color: #1a7f37;
-  color: #ffffff;
+  background-color: var(--header-done-bg);
+  color: var(--header-done-text);
 }
 
 /* カードリスト領域 */

@@ -1,108 +1,118 @@
 :host {
-    display: block;
-    width: 64px;
-    height: 100vh;
-    flex-shrink: 0;
-    z-index: 100;
-  }
-  
-  .app-shell-sidebar {
-    width: 64px;
-    height: 100%;
-    background-color: var(--bg-sidebar, #1a1d24);
-    border-right: 1px solid var(--border-color, #2d333f);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 0;
-    box-sizing: border-box;
-  }
-  
-  /* アプリロゴ */
-  .shell-logo {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--bg-secondary, #242832);
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 20px;
-  }
-  
-  /* メインナビゲーション */
-  .shell-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-    align-items: center;
-  }
-  
-  .nav-btn, .tool-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    border: none;
-    background: transparent;
-    color: var(--text-muted, #8b949e);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    transition: all 0.2s ease;
-    position: relative;
-  }
-  
-  .nav-btn:hover, .tool-btn:hover {
-    background-color: var(--bg-secondary, #242832);
-    color: var(--text-primary, #ffffff);
-  }
-  
-  /* アクティブビューのハイライト */
-  .nav-btn.active {
-    background-color: var(--accent-color, #2563eb);
-    color: #ffffff;
-    box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
-  }
-  
-  .nav-btn.active::before {
-    content: '';
-    position: absolute;
-    left: -10px;
-    top: 8px;
-    bottom: 8px;
-    width: 4px;
-    background-color: var(--accent-color, #2563eb);
-    border-radius: 0 4px 4px 0;
-  }
-  
-  /* 集中モードボタン用の視覚的強調 */
-  .concentration-btn:hover {
-    background-color: rgba(245, 158, 11, 0.2);
-  }
-  
-  /* 下部エリア */
-  .shell-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
-    width: 100%;
-  }
-  
-  .user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: var(--bg-secondary, #242832);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border: 1px solid var(--border-color, #2d333f);
-    margin-top: 4px;
-  }
+  display: block;
+  width: 64px;
+  height: 100vh;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.app-shell-sidebar {
+  width: 64px;
+  height: 100%;
+  background-color: var(--bg-main);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  box-sizing: border-box;
+}
+
+/* アプリロゴ */
+.shell-logo {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 20px;
+  transition: background-color 0.2s;
+}
+
+.shell-logo:hover {
+  background-color: var(--bg-card);
+}
+
+/* メインナビゲーション */
+.shell-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
+}
+
+.nav-btn, .tool-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nav-btn:hover, .tool-btn:hover {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* アクティブビューのハイライト */
+.nav-btn.active {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+}
+
+.nav-btn.active::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  background-color: var(--accent-color);
+  border-radius: 0 4px 4px 0;
+}
+
+/* 集中モードボタン用の視覚的強調 */
+.concentration-btn:hover {
+  background-color: rgba(245, 158, 11, 0.2);
+}
+
+/* 下部エリア */
+.shell-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  margin-top: 4px;
+  transition: background-color 0.2s;
+}
+
+.user-avatar:hover {
+  background-color: var(--bg-card);
+}

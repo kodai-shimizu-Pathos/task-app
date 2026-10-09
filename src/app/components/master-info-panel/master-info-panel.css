@@ -80,57 +80,7 @@
   color: var(--text-primary);
 }
 
-/* 3. ステータス & 優先度バッジ */
-.meta-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.status-badge,
-.priority-badge {
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.status-badge.todo {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.status-badge.in_progress,
-.status-badge.in-progress {
-  background-color: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.status-badge.done {
-  background-color: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.priority-badge.high {
-  background-color: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-}
-
-.priority-badge.medium {
-  background-color: rgba(245, 158, 11, 0.2);
-  color: #fde68a;
-}
-
-.priority-badge.low {
-  background-color: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
-}
-
-/* 4. タグ一覧 */
+/* 3. タグ一覧 */
 .tags-list,
 .tags-container {
   display: flex;
@@ -138,17 +88,16 @@
   gap: 6px;
 }
 
-.tag-chip,
 .tag-item {
   font-size: 11px;
   color: var(--accent-color);
-  background-color: rgba(59, 130, 246, 0.1);
-  padding: 2px 8px;
+  background-color: rgba(37, 99, 235, 0.08);
+  padding: 3px 8px;
   border-radius: 4px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
-/* 5. 進捗プログレスバー */
+/* 4. 進捗プログレスバー */
 .progress-section {
   display: flex;
   flex-direction: column;
@@ -191,7 +140,7 @@
   transition: width 0.3s ease;
 }
 
-/* 6. 情報ブロック共通 (概要・メモ、スケジュール、関連資料) */
+/* 5. 情報ブロック共通 */
 .info-block,
 .section-block {
   display: flex;
@@ -284,11 +233,11 @@
 .date-chip.deadline .date-value,
 .date-chip.overdue .date-value,
 .deadline-value {
-  color: #f87171;
+  color: var(--priority-high);
   font-weight: bold;
 }
 
-/* 7. 関連資料・リンク */
+/* 6. 関連資料・リンク */
 .links-grid,
 .doc-list {
   display: flex;
@@ -316,5 +265,5 @@
 .doc-link:hover {
   text-decoration: underline;
   border-color: var(--accent-color);
-  background-color: rgba(59, 130, 246, 0.08);
+  background-color: rgba(37, 99, 235, 0.08);
 }

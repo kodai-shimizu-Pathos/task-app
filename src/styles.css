@@ -2,66 +2,66 @@
    1. テーマ変数定義
    ========================================== */
 
-/* 🌙 ダークモード (モダンスレートグレー) */
+/* 🌙 ダークモード (仕様書準拠) */
 body[data-theme="dark"], body {
-  --bg-main: #0f1117;          /* アプリ全体の背景 */
-  --bg-master: #161b22;        /* 左Masterパネル背景 */
-  --bg-panel: #0d1117;         /* 右カンバンカラム背景 */
-  --bg-card: #1c2128;          /* タスクカード背景 */
-  --border-color: #30363d;     /* 枠線・区切り線 */
+  /* ベースカラー */
+  --bg-main: #1A1D24;          /* アプリ全体の背景 */
+  --bg-master: #242832;        /* 左Masterパネル背景 */
+  --bg-panel: #242832;         /* 右カンバンカラム背景 */
+  --bg-card: #2D3139;          /* タスクカード背景 */
+  --border-color: #3B444E;     /* 枠線・区切り線 */
 
-  --text-primary: #e6edf3;     /* メイン文字色 */
-  --text-muted: #8b949e;       /* サブ文字色 */
-  --text-master: #e6edf3;      /* Masterパネル文字色 */
-  --accent-color: #58a6ff;     /* アクセント（GitHub ブルー） */
+  --text-primary: #E8EAEE;     /* メイン文字色 */
+  --text-muted: #9CA3AF;       /* サブ文字色 */
+  --accent-color: #2563EB;     /* アクセント（プライマリブルー） */
+
+  /* セカンダリカラー */
+  --bg-header: #1A1D24;
+  --bg-secondary: #3B444E;
 
   /* カンバンヘッダーカラー */
-  --header-todo-bg: #da3633;
+  --header-todo-bg: #DC2626;
   --header-todo-text: #ffffff;
-  --header-progress-bg: #d29922;
+  --header-progress-bg: #EA580C;
   --header-progress-text: #ffffff;
-  --header-done-bg: #1f6feb;
+  --header-done-bg: #16A34A;
   --header-done-text: #ffffff;
 
   /* 優先度カラー */
-  --priority-high: #f85149;
-  --priority-medium: #d29922;
-  --priority-low: #238636;
-
-  /* ヘッダーとパネルのカラー */
-  --bg-header: #0d1117;
-  --bg-secondary: #161b22;
+  --priority-high: #EF4444;    /* 赤系 */
+  --priority-medium: #F59E0B;  /* 黄系 */
+  --priority-low: #3B82F6;     /* 青系 */
 }
 
 /* ☀️ ライトモード (カラフル・明るい配色) */
 body[data-theme="light"] {
-  --bg-main: #fafbfc;          /* 全体背景 - より明るい */
-  --bg-master: #f0f3f7;        /* 左Masterパネル背景 - 薄い青グレー */
-  --bg-panel: #ffffff;         /* カンバンボード背景 - 白 */
-  --bg-card: #ffffff;          /* タスクカード（白） */
-  --border-color: #d0d7de;     /* 枠線 */
+  /* ベースカラー */
+  --bg-main: #FAFBFC;          /* 全体背景 */
+  --bg-master: #F0F3F7;        /* 左Masterパネル背景 */
+  --bg-panel: #FFFFFF;         /* カンバンボード背景 */
+  --bg-card: #FFFFFF;          /* タスクカード */
+  --border-color: #D0D7DE;     /* 枠線 */
 
-  --text-primary: #24292f;     /* メイン文字色 - ほぼ黒 */
-  --text-muted: #57606a;       /* サブ文字色 */
-  --text-master: #24292f;      /* Masterパネル文字色 */
-  --accent-color: #0969da;     /* アクセント（GitHub ブルー） */
+  --text-primary: #24292F;     /* メイン文字色 */
+  --text-muted: #57606A;       /* サブ文字色 */
+  --accent-color: #0969DA;     /* アクセント（GitHubブルー） */
 
-  /* カンバンヘッダーカラー（ポップな3色） */
-  --header-todo-bg: #da3633;     /* 未着手：赤 */
+  /* セカンダリカラー */
+  --bg-header: #FFFFFF;
+  --bg-secondary: #F6F8FA;
+
+  /* カンバンヘッダーカラー */
+  --header-todo-bg: #DA3633;   /* 未着手：赤 */
   --header-todo-text: #ffffff;
-  --header-progress-bg: #fb8500; /* 進行中：オレンジ */
+  --header-progress-bg: #FB8500; /* 進行中：オレンジ */
   --header-progress-text: #ffffff;
-  --header-done-bg: #1a7f37;     /* 完了：グリーン */
+  --header-done-bg: #1A7F37;   /* 完了：グリーン */
   --header-done-text: #ffffff;
 
   /* 優先度カラー */
-  --priority-high: #da3633;
-  --priority-medium: #fb8500;
-  --priority-low: #1a7f37;
-
-  /* ヘッダーとパネルのカラー */
-  --bg-header: #ffffff;
-  --bg-secondary: #f6f8fa;
+  --priority-high: #DA3633;    /* 赤系 */
+  --priority-medium: #FB8500;  /* 黄系 */
+  --priority-low: #1A7F37;     /* 青系 */
 }
 
 /* ==========================================
@@ -89,129 +89,136 @@ html, body {
   flex-direction: column;
   overflow: hidden;
 }
-  
+
 /* ==========================================
-   優先度チップスタイル
-  ========================================== */
+   3. 優先度バッジ統一スタイル
+   ========================================== */
+
+/* 基本バッジスタイル */
+.badge-priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+/* 高優先度：赤系 */
+.badge-priority.priority-high,
 .badge.priority.high {
   color: var(--priority-high);
-  background-color: rgba(255, 107, 107, 0.15);
-  border: 1px solid var(--priority-high);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 11px;
+  background-color: rgba(239, 68, 68, 0.12);
+  border-color: var(--priority-high);
 }
 
-/* ライトモード時の高優先度 */
+body[data-theme="light"] .badge-priority.priority-high,
 body[data-theme="light"] .badge.priority.high {
-  background-color: #ffebe6;
-  color: #da3633;
-  border-color: #da3633;
+  background-color: #FFEBE6;
 }
 
+/* 中優先度：黄系 */
+.badge-priority.priority-medium,
 .badge.priority.medium {
   color: var(--priority-medium);
-  background-color: rgba(254, 202, 87, 0.15);
-  border: 1px solid var(--priority-medium);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 11px;
+  background-color: rgba(245, 158, 11, 0.12);
+  border-color: var(--priority-medium);
 }
 
-/* ライトモード時の中優先度 */
+body[data-theme="light"] .badge-priority.priority-medium,
 body[data-theme="light"] .badge.priority.medium {
-  background-color: #fff8e6;
-  color: #fb8500;
-  border-color: #fb8500;
+  background-color: #FFF8E6;
 }
 
+/* 低優先度：青系 */
+.badge-priority.priority-low,
 .badge.priority.low {
   color: var(--priority-low);
-  background-color: rgba(29, 209, 161, 0.15);
-  border: 1px solid var(--priority-low);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 11px;
+  background-color: rgba(59, 130, 246, 0.12);
+  border-color: var(--priority-low);
 }
 
-/* ライトモード時の低優先度 */
+body[data-theme="light"] .badge-priority.priority-low,
 body[data-theme="light"] .badge.priority.low {
-  background-color: #dffcf0;
-  color: #1a7f37;
-  border-color: #1a7f37;
+  background-color: #EEF6FF;
 }
 
-  /* ==========================================
-    タグチップスタイル
-    ========================================== */
-  .tag-chip {
-    background-color: var(--border-color);
-    color: var(--accent-color);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 500;
-    display: inline-block;
-  }
+/* ==========================================
+   4. タグチップ統一スタイル
+   ========================================== */
+.tag-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background-color: rgba(37, 99, 235, 0.08);
+  color: var(--accent-color);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  white-space: nowrap;
+}
 
-  /* ライトモード時のタグ */
-  body[data-theme="light"] .tag-chip {
-    background-color: #eaf0ff;
-    color: #0969da;
-  }
+body[data-theme="light"] .tag-chip {
+  background-color: #EAF0FF;
+  border-color: rgba(9, 105, 218, 0.15);
+}
 
-  /* ==========================================
-    日付・期限チップスタイル
-    ========================================== */
-  .date-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    background-color: var(--bg-secondary);
-    color: var(--text-muted);
-    border: 1px solid var(--border-color);
-  }
-  
-  /* 📅 作業予定日（青系トーン） */
-  .date-chip.scheduled {
-    color: var(--accent-color);
-    border-color: var(--accent-color);
-  }
-  
-  body[data-theme="light"] .date-chip.scheduled {
-    background-color: #eaf0ff;
-  }
-  
-  /* ⏰ 最終締切（通常の赤ピンク系トーン） */
-  .date-chip.deadline {
-    color: var(--priority-high);
-    background-color: rgba(218, 54, 51, 0.1);
-    border-color: var(--priority-high);
-  }
-  
-  body[data-theme="light"] .date-chip.deadline {
-    background-color: #ffebe6;
-  }
-  
-  /* 🚨 期限超過アラート（背景赤＋太字で強調） */
-  .date-chip.deadline.overdue {
-    color: #ffffff;
-    background-color: var(--priority-high);
-    font-weight: bold;
-    border-color: var(--priority-high);
-  }
+/* ==========================================
+   5. 日付・期限チップスタイル
+   ========================================== */
+.date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
 
-  /* リンクカラーの共通上書き (ダークモードでの訪問済みリンク紫化を防止) */
+/* 📅 作業予定日（青系トーン） */
+.date-chip.scheduled {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  background-color: rgba(37, 99, 235, 0.08);
+}
+
+body[data-theme="light"] .date-chip.scheduled {
+  background-color: #EAF0FF;
+}
+
+/* ⏰ 最終締切（通常の赤系トーン） */
+.date-chip.deadline {
+  color: var(--priority-high);
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: var(--priority-high);
+}
+
+body[data-theme="light"] .date-chip.deadline {
+  background-color: #FFEBE6;
+}
+
+/* 🚨 期限超過アラート（背景赤＋太字で強調） */
+.date-chip.deadline.overdue {
+  color: #ffffff;
+  background-color: var(--priority-high);
+  border-color: var(--priority-high);
+  font-weight: bold;
+}
+
+/* リンクカラーの統一 */
 a, a:visited {
-  color: var(--accent-color, #60a5fa) !important;
+  color: var(--accent-color) !important;
   text-decoration: none;
   transition: color 0.2s, text-decoration 0.2s;
 }
 
 a:hover {
-  color: #93c5fd !important;
   text-decoration: underline;
 }
