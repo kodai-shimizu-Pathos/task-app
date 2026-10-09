@@ -25,8 +25,8 @@ import { MasterKanbanBoard } from './components/master-kanban-board/master-kanba
   styleUrl: './app.css',
 })
 export class AppComponent implements OnInit {
-  // --- アプリ全体の状態保持 (Single Source of Truth) ---  
-  activeView: MainView = 'kanban';
+  // --- UI状態管理 ---  
+  activeView: MainView = 'kanban'; // 'kanban' | 'gantt' | 'calendar' | 'review'
   currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
   currentTheme: 'dark' | 'light' = 'dark';
 
@@ -52,14 +52,21 @@ export class AppComponent implements OnInit {
     // todo 設定画面の処理を実装
   }
 
-  // 親課題(Project)一覧・選択状態
+  // --- Project・Task データ管理 ---  
   projects: ParentProject[] = [];
   selectedProject: ParentProject | null = null;
 
-  // 子タスク(Task)一覧・選択状態
-  tasks: Task[] = [];
+  // 全タスクを一元管理するマスタ配列
+  allTasks: Task[] = [];
   selectedTask: Task | null = null;
 
+  // 選択中の親課題に紐づく子タスクのみを取得
+  get currentTasks(): Task[] {
+    if (!this.selectedProject) return [];
+    return this.allTasks.filter(task => task.parentId === this.selectedProject?.id);
+  }
+
+  // --- フォーム状態管理 ---
   // 親課題 (Project) フォームの表示状態
   isProjectFormOpen = false;
   projectToEdit?: ParentProject | null = null;  
@@ -68,7 +75,7 @@ export class AppComponent implements OnInit {
   isTaskFormOpen = false;
   taskToEdit: Task | null = null;
 
-  
+  // --- テーマ管理 ---
   // テーマ切り替えハンドラ
   toggleTheme(): void {
     this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
@@ -92,13 +99,11 @@ export class AppComponent implements OnInit {
   // 親課題を選択
   onSelectProject(project: ParentProject): void {
     this.selectedProject = project;
-    this.loadTasksForProject(project.id);
   }
 
   // 一覧へ戻る処理
   onUnselectProject(): void {
     this.selectedProject = null;
-    this.tasks = [];
   }
 
   // 新規の親課題フォームを開く
@@ -125,7 +130,7 @@ export class AppComponent implements OnInit {
   onProjectCreated(newProject: ParentProject): void {
     this.projects.push(newProject);
     this.selectedProject = newProject;
-    this.tasks = [];
+    this.recalculateProgress();
     this.onCloseProjectForm();
   }
 
@@ -143,20 +148,17 @@ export class AppComponent implements OnInit {
 
   // 親課題の削除完了ハンドラ
   onProjectDeleted(projectId: string): void {
-    // プロジェクト一覧から削除
+    // 削除された親課題に紐づく子タスクも一括クリア
     this.projects = this.projects.filter(p => p.id !== projectId);
-
-    // 紐づく子タスクも削除
-    this.tasks = this.tasks.filter(t => t.parentId !== projectId);
+    this.allTasks = this.allTasks.filter(t => t.parentId !== projectId);
 
     // 別のプロジェクトを選択、なければクリア
     if (this.projects.length > 0) {
       this.selectedProject = this.projects[0];
-      this.loadTasksForProject(this.selectedProject.id);
     } else {
       this.selectedProject = null;
-      this.tasks = [];
     }
+    this.recalculateProgress();
     this.onCloseProjectForm();
   }
 
@@ -184,16 +186,20 @@ export class AppComponent implements OnInit {
 
   // タスクの作成完了ハンドラ
   onTaskCreated(newTask: Task): void {
-    this.tasks.push(newTask);
+    if (this.selectedProject) {
+      // 選択中の親課題を設定
+      newTask.parentId = this.selectedProject.id;
+    }
+    this.allTasks.push(newTask);
     this.recalculateProgress();
     this.onCloseTaskForm();
   }
 
   // タスクの更新完了ハンドラ
   onTaskUpdated(updatedTask: Task): void {
-    const index = this.tasks.findIndex(t => t.id === updatedTask.id);
+    const index = this.allTasks.findIndex(t => t.id === updatedTask.id);
     if (index !== -1) {
-      this.tasks[index] = updatedTask;
+      this.allTasks[index] = updatedTask;
       this.recalculateProgress();
     }
     this.onCloseTaskForm();
@@ -201,25 +207,29 @@ export class AppComponent implements OnInit {
 
   // タスクの削除完了ハンドラ
   onTaskDeleted(taskId: string): void {
-    this.tasks = this.tasks.filter(t => t.id !== taskId);
+    this.allTasks = this.allTasks.filter(t => t.id !== taskId);
     this.recalculateProgress();
     this.onCloseTaskForm();
   }
 
   // 進捗率と完了タスク数の自動再計算
   private recalculateProgress(): void {
-    if (!this.selectedProject) return;
-    const total = this.tasks.length;
-    const completed = this.tasks.filter(t => t.status === 'done').length;
-    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-    this.selectedProject.totalTaskCount = total;
-    this.selectedProject.completedTaskCount = completed;
-    this.selectedProject.progressPercentage = percentage;
+    this.projects.forEach(project => {
+      const projectTasks = this.allTasks.filter(t => t.parentId === project.id);
+      const total = projectTasks.length;
+      const completed = projectTasks.filter(t => t.status === 'done').length;
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    // projects 配列内の該当プロジェクトの進捗率を更新
-    const index = this.projects.findIndex(p => p.id === this.selectedProject?.id);
-    if (index !== -1) {
-      this.projects[index] = { ...this.selectedProject };
+      project.totalTaskCount = total;
+      project.completedTaskCount = completed;
+      project.progressPercentage = percentage;
+    });
+
+    if (this.selectedProject) {
+      const updated = this.projects.find(p => p.id === this.selectedProject?.id);
+      if (updated) {
+        this.selectedProject = { ...updated };
+      }
     }
   }
 
@@ -300,7 +310,6 @@ export class AppComponent implements OnInit {
       }
     ];
 
-    this.tasks = sampleTasks;
     this.recalculateProgress();
   }
 }

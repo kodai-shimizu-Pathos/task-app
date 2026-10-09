@@ -59,7 +59,7 @@
         <section class="detail-pane">
           <app-kanban-board 
             *ngIf="currentMode === 'KANBAN'"
-            [tasks]="tasks"
+            [tasks]="currentTasks"
             (selectTask)="onSelectTask($event)"
             (addTask)="onOpenNewTaskForm()">
           </app-kanban-board>
