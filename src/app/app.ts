@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AppShell, MainView } from './components/app-shell/app-shell';
 import { MasterInfoPanel } from './components/master-info-panel/master-info-panel';
 import { KanbanBoard } from './components/kanban-board/kanban-board';
 import { TaskForm } from './components/task-form/task-form';
@@ -17,15 +18,39 @@ import { MasterKanbanBoard } from './components/master-kanban-board/master-kanba
     KanbanBoard, 
     TaskForm,
     ProjectForm,
-    MasterKanbanBoard
+    MasterKanbanBoard,
+    AppShell
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class AppComponent implements OnInit {
   // --- アプリ全体の状態保持 (Single Source of Truth) ---  
-  currentView: 'kanban' | 'gantt' = 'kanban';
+  activeView: MainView = 'kanban';
+  currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
   currentTheme: 'dark' | 'light' = 'dark';
+
+  // メインビュー切替ハンドラ
+  onViewchange(view: MainView): void {
+    this.activeView = view;
+    if (view === 'kanban') {
+      this.currentMode = 'KANBAN';
+    } else if (view === 'gantt') {
+      this.currentMode = 'GANTT';
+    }
+  }
+
+  // 集中モード切替ハンドラ
+  onToggleConcentrationMode(): void {
+    console.log('集中モード起動');
+    // todo 集中モードの処理を実装
+  }
+
+  // 設定モーダルハンドラ
+  onOpenSettings(): void {
+    console.log('設定画面表示');
+    // todo 設定画面の処理を実装
+  }
 
   // 親課題(Project)一覧・選択状態
   projects: ParentProject[] = [];
@@ -51,8 +76,8 @@ export class AppComponent implements OnInit {
   }
 
   // 表示モード切替ハンドラ
-  switchViewMode(view: 'kanban' | 'gantt'): void {
-    this.currentView = view;
+  switchViewMode(view: 'KANBAN' | 'GANTT'): void {
+    this.currentMode = view;
   }
   
   ngOnInit(): void {

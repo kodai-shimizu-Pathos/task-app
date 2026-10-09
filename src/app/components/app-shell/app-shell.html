@@ -1,0 +1,62 @@
+<aside class="app-shell-sidebar">
+    <!-- 1. 最上部：アプリロゴ -->
+    <div class="shell-logo" title="BesideFlow AI">
+        <span class="logo-icon">⚡</span>
+    </div>
+
+    <!-- 2. 中央：メインビューアイコン群 -->
+    <nav class="shell-nav">
+        <button
+            class="nav-btn"
+            [class.active]="activeView === 'kanban'"
+            (click)="onSelectView('kanban')"
+            title="カンバンボード">
+            <span class="icon">📋</span>
+        </button>
+
+        <button
+            class="nav-btn"
+            [class.active]="activeView === 'gantt'"
+            (click)="onSelectView('gantt')"
+            title="ガントチャート">
+            <span class="icon">📊</span>
+        </button>
+
+        <button
+            class="nav-btn"
+            [class.active]="activeView === 'calendar'"
+            (click)="onSelectView('calendar')"
+            title="カレンダー">
+            <span class="icon">📅</span>
+        </button>
+
+        <button
+            class="nav-btn"
+            [class.active]="activeView === 'review'"
+            (click)="onSelectView('review')"
+            title="レビュー">
+            <span class="icon">📝</span>
+        </button>
+    </nav>
+
+    <!-- 3. 下部：補助ツール・環境設定-->
+    <div class="shell-footer">
+        <button
+            class="tool-btn conncentration-btn"
+            (click)="onToggleConcentrationMode()"
+            title="集中モード">
+            <span class="icon">🎯</span>
+        </button>
+
+        <button
+            class="tool-btn settings-btn"
+            (click)="onOpenSettings()"
+            title="環境設定">
+            <span class="icon">⚙️</span>
+        </button>
+
+        <div class="user-avatar" title="ユーザープロフィール">
+            <span class="avatar-icon">👤</span>
+        </div>
+    </div>
+</aside>

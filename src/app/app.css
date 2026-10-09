@@ -1,12 +1,22 @@
 /* アプリ全体の最外枠レイアウト */
-.app-layout {
+.app-container {
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-main, #1a1d24);
+  color: var(--text-primary, #ffffff);
+}
+
+/* メインエリア（ヘッダー ＋ メインコンテンツ） */
+.app-main-layout {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
   height: 100vh;
-  width: 100vw;
   overflow: hidden;
-  background-color: var(--bg-main);
-  color: var(--text-primary);
 }
 
 /* グローバルヘッダー（高さ固定 48px） */

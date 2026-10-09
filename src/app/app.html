@@ -1,85 +1,96 @@
-<div class="app-layout">
-  <!-- グローバルヘッダー -->
-  <header class="app-header">
-    <div class="header-left">
-      <h1 class="app-title">BeSideFlow AI</h1>
-      <button class="btn-add-project" (click)="onOpenNewProjectForm()">
-        ＋ 親課題を追加
-      </button>
-    </div>
+<div class="app-container">
+  <!-- 1. 左固定 App Shell サイドバー-->
+  <app-shell
+    [activeView]="activeView"
+    (viewChange)="onViewchange($event)"
+    (toggleConcentrationMode)="onToggleConcentrationMode()"
+    (openSettings)="onOpenSettings()">
+  </app-shell>
 
-    <div class="header-center">
-      <div class="view-switcher">
-        <button [class.active]="currentView === 'kanban'" (click)="currentView = 'kanban'">カンバン</button>
-        <button [class.active]="currentView === 'gantt'" (click)="currentView = 'gantt'">ガントチャート</button>
+  <!-- 2. 右側 メインエリア-->
+  <div class="app-main-layout">
+    <!-- グローバルヘッダー -->
+    <header class="app-header">
+      <div class="header-left">
+        <h1 class="app-title">BeSideFlow AI</h1>
+        <button class="btn-add-project" (click)="onOpenNewProjectForm()">
+          ＋ 親課題を追加
+        </button>
       </div>
-    </div>
 
-    <div class="header-right">
-      <button class="theme-toggle-btn" (click)="toggleTheme()">
-        {{ currentTheme === 'dark' ? '☀️ ライト' : '🌙 ダーク' }}
-      </button>
-    </div>
-  </header>
-
-  <!-- メインコンテンツ領域 -->
-  <main class="main-content">
-    
-    <!-- パターンA：親課題が未選択の時（全画面 Master UI: SCR-01） -->
-    <div class="full-master-pane" *ngIf="!selectedProject">
-      <app-master-kanban-board
-        [projects]="projects"
-        (selectProject)="onSelectProject($event)">
-      </app-master-kanban-board>
-    </div>
-
-    <!-- パターンB：親課題が選択されている時（Master-Detail UI: SCR-03） -->
-    <ng-container *ngIf="selectedProject">
-      <!-- 左側: Master情報パネル -->
-      <aside class="master-pane">
-        <app-master-info-panel 
-          [project]="selectedProject"
-          (editProject)="onEditProject()"
-          (closePanel)="onUnselectProject()"
-          (addTask)="onOpenNewTaskForm()">
-        </app-master-info-panel>
-      </aside>
-
-      <!-- 右側: Detail表示エリア (子タスク カンバン/ガント) -->
-      <section class="detail-pane">
-        <app-kanban-board 
-          *ngIf="currentView === 'kanban'"
-          [tasks]="tasks"
-          (selectTask)="onSelectTask($event)"
-          (addTask)="onOpenNewTaskForm()">
-        </app-kanban-board>
-
-        <div *ngIf="currentView === 'gantt'" class="gantt-placeholder">
-          <p>ガントチャートモードは準備中です</p>
+      <div class="header-center">
+        <div class="view-switcher">
+          <button [class.active]="currentMode === 'KANBAN'" (click)="currentMode = 'KANBAN'">カンバン</button>
+          <button [class.active]="currentMode === 'GANTT'" (click)="currentMode = 'GANTT'">ガントチャート</button>
         </div>
-      </section>
-    </ng-container>
+      </div>
 
-  </main>
+      <div class="header-right">
+        <button class="theme-toggle-btn" (click)="toggleTheme()">
+          {{ currentTheme === 'dark' ? '☀️ ライト' : '🌙 ダーク' }}
+        </button>
+      </div>
+    </header>
 
-  <!-- 子タスク作成・編集スライドインフォーム -->
-  <app-task-form
-    *ngIf="isTaskFormOpen"
-    [taskToEdit]="taskToEdit"
-    [projectId]="selectedProject?.id || ''"
-    (taskCreated)="onTaskCreated($event)"
-    (taskUpdated)="onTaskUpdated($event)"
-    (taskDeleted)="onTaskDeleted($event)"
-    (closePanel)="onCloseTaskForm()">
-  </app-task-form>
+    <!-- メインコンテンツ領域 -->
+    <main class="main-content">
+      
+      <!-- パターンA：親課題が未選択の時（全画面 Master UI: SCR-01） -->
+      <div class="full-master-pane" *ngIf="!selectedProject">
+        <app-master-kanban-board
+          [projects]="projects"
+          (selectProject)="onSelectProject($event)">
+        </app-master-kanban-board>
+      </div>
 
-  <!-- 親課題（Master）作成・編集モーダルフォーム -->
-  <app-project-form
-    *ngIf="isProjectFormOpen"
-    [projectToEdit]="projectToEdit"
-    (projectCreated)="onProjectCreated($event)"
-    (projectUpdated)="onProjectUpdated($event)"
-    (projectDeleted)="onProjectDeleted($event)"
-    (closeModal)="onCloseProjectForm()">
-  </app-project-form>
+      <!-- パターンB：親課題が選択されている時（Master-Detail UI: SCR-03） -->
+      <ng-container *ngIf="selectedProject">
+        <!-- 左側: Master情報パネル -->
+        <aside class="master-pane">
+          <app-master-info-panel 
+            [project]="selectedProject"
+            (editProject)="onEditProject()"
+            (closePanel)="onUnselectProject()"
+            (addTask)="onOpenNewTaskForm()">
+          </app-master-info-panel>
+        </aside>
+
+        <!-- 右側: Detail表示エリア (子タスク カンバン/ガント) -->
+        <section class="detail-pane">
+          <app-kanban-board 
+            *ngIf="currentMode === 'KANBAN'"
+            [tasks]="tasks"
+            (selectTask)="onSelectTask($event)"
+            (addTask)="onOpenNewTaskForm()">
+          </app-kanban-board>
+
+          <div *ngIf="currentMode === 'GANTT'" class="gantt-placeholder">
+            <p>ガントチャートモードは準備中です</p>
+          </div>
+        </section>
+      </ng-container>
+
+    </main>
+
+    <!-- 子タスク作成・編集スライドインフォーム -->
+    <app-task-form
+      *ngIf="isTaskFormOpen"
+      [taskToEdit]="taskToEdit"
+      [projectId]="selectedProject?.id || ''"
+      (taskCreated)="onTaskCreated($event)"
+      (taskUpdated)="onTaskUpdated($event)"
+      (taskDeleted)="onTaskDeleted($event)"
+      (closePanel)="onCloseTaskForm()">
+    </app-task-form>
+
+    <!-- 親課題（Master）作成・編集モーダルフォーム -->
+    <app-project-form
+      *ngIf="isProjectFormOpen"
+      [projectToEdit]="projectToEdit"
+      (projectCreated)="onProjectCreated($event)"
+      (projectUpdated)="onProjectUpdated($event)"
+      (projectDeleted)="onProjectDeleted($event)"
+      (closeModal)="onCloseProjectForm()">
+    </app-project-form>
+  </div>
 </div>
