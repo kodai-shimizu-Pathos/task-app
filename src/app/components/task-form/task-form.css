@@ -1,177 +1,21 @@
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(4px);
-  }
-  
-  .modal-content {
-    background-color: var(--bg-master);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    width: 90%;
-    max-width: 520px;
-    padding: 24px;
-    color: var(--text-primary);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 12px;
-  }
-  
-  .modal-header h2 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: bold;
-    color: var(--text-primary);
-  }
-  
-  .close-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 18px;
-    cursor: pointer;
-  }
-  
-  .close-btn:hover { color: var(--priority-high); }
-  
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 16px;
-  }
-  
-  .form-row {
-    display: flex;
-    gap: 16px;
-  }
-  
-  .form-row .form-group { flex: 1; }
-  
-  label {
-    font-size: 12px;
-    margin-bottom: 6px;
-    color: var(--text-muted);
-  }
-  
-  .required { color: var(--priority-high); }
-  
-  input[type="text"],
-  input[type="date"],
-  select,
-  textarea {
-    background-color: #ffffff;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 10px 12px;
-    color: var(--text-primary);
-    font-size: 14px;
-    font-family: inherit;
-  }
-  
-  /* ダークモード対応 */
-  body[data-theme="dark"] input[type="text"],
-  body[data-theme="dark"] input[type="date"],
-  body[data-theme="dark"] select,
-  body[data-theme="dark"] textarea {
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
-  }
-  
-  /* ライトモード対応 */
-  body[data-theme="light"] input[type="text"],
-  body[data-theme="light"] input[type="date"],
-  body[data-theme="light"] select,
-  body[data-theme="light"] textarea {
-    background-color: #ffffff;
-    color: var(--text-primary);
-  }
-  
-  textarea {
-    resize: vertical;
-    min-height: 70px;
-  }
-  
-  input[type="text"]:focus,
-  input[type="date"]:focus,
-  select:focus,
-  textarea:focus {
-    outline: none;
-    border-color: var(--accent-color);
-  }
-  
-  /* 日付入力欄のカレンダーアイコン・タップエリア調整 */
-  input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(0.8);
-    cursor: pointer;
-  }
-  
-  .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-color);
-  }
-  
-  .btn-cancel {
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    padding: 10px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  
-  .btn-submit {
-    background-color: var(--accent-color);
-    color: var(--bg-main);
-    border: none;
-    font-weight: bold;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  
-  .btn-submit:hover { opacity: 0.8; }
-
-/* 右側背景マスク（Masterエリアは隠さない） */
 .side-panel-backdrop {
   position: fixed;
   top: 48px;
-  left: 496px;
+  left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 900;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
   display: flex;
   justify-content: flex-end;
 }
 
-/* スライドインコンテナ本体 */
 .side-panel-container {
-  width: 480px;
+  width: 520px;
   max-width: 100%;
   height: 100%;
-  background-color: var(--bg-master); /* styles.css の変数参照 */
-  color: var(--text-primary);         /* styles.css の変数参照 */
+  background-color: var(--bg-master);
+  color: var(--text-primary);
   border-left: 1px solid var(--border-color);
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
   display: flex;
@@ -184,7 +28,6 @@
   to { transform: translateX(0); }
 }
 
-/* ヘッダー */
 .panel-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-color);
@@ -207,6 +50,7 @@
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
+  transition: background-color 0.2s;
 }
 
 .close-btn:hover {
@@ -214,7 +58,6 @@
   color: var(--text-primary);
 }
 
-/* フォームボディ */
 .panel-body {
   padding: 20px;
   flex: 1;
@@ -233,7 +76,7 @@
 .form-group label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-muted); /* ラベル用文字色 */
+  color: var(--text-muted);
 }
 
 .required {
@@ -249,21 +92,39 @@
   flex: 1;
 }
 
-/* 🔴 フォーム入力全般 (入力背景色と文字色を明示して白地に白文字を解消) */
+/* 🔴 フォーム入力全般：視認性向上 */
 input[type="text"],
 input[type="date"],
-textarea,
-select {
+select,
+textarea {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  background-color: var(--bg-secondary); /* テーマ連動の入力背景 */
-  color: var(--text-primary);           /* テーマ連動の文字色 */
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   font-size: 0.9rem;
   box-sizing: border-box;
   font-family: inherit;
   transition: border-color 0.2s, background-color 0.2s;
+}
+
+/* ダークモード特別対応：背景を見やすく */
+body[data-theme="dark"] input[type="text"],
+body[data-theme="dark"] input[type="date"],
+body[data-theme="dark"] select,
+body[data-theme="dark"] textarea {
+  background-color: #3B444E;
+  color: #E8EAEE;
+}
+
+/* ライトモード対応 */
+body[data-theme="light"] input[type="text"],
+body[data-theme="light"] input[type="date"],
+body[data-theme="light"] select,
+body[data-theme="light"] textarea {
+  background-color: #FFFFFF;
+  color: #24292F;
 }
 
 input:focus,
@@ -292,6 +153,8 @@ textarea {
   justify-content: space-between;
   align-items: center;
   background-color: var(--bg-master);
+  flex-shrink: 0;
+  margin-top: auto;
 }
 
 .footer-right {
@@ -308,10 +171,26 @@ textarea {
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
+  transition: opacity 0.2s;
 }
 
 .btn-submit:hover {
   opacity: 0.85;
+}
+
+.btn-cancel {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: var(--border-color);
 }
 
 .btn-delete {
@@ -322,6 +201,7 @@ textarea {
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
+  transition: opacity 0.2s;
 }
 
 .btn-delete:hover {
