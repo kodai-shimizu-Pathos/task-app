@@ -179,8 +179,10 @@ export class AppComponent implements OnInit {
 
   // タスク選択時 (カードクリック)
   onSelectTask(task: Task): void {
-    this.taskToEdit = task? { ...task } : null;
+    if (task) {
+      this.taskToEdit = { ...task };
     this.isTaskFormOpen = true;
+    }
   }
 
   // 新規タスク追加フォームを開く

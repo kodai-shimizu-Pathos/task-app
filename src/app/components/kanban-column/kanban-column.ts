@@ -18,13 +18,17 @@ export class KanbanColumn {
   @Input() status!: Status;
 
   @Output() selectTask = new EventEmitter<Task>();
+
+  // カードがクリックされたら受け取ったtaskをそのままemitする
+  onSelectTask(task: Task): void {
+    if (task) {
+      this.selectTask.emit(task);
+    }
+  }
+
   @Output() taskDropped = new EventEmitter<CdkDragDrop<Task[]>>();
 
   onDrop(event: CdkDragDrop<Task[]>): void {
     this.taskDropped.emit(event);
-  }
-
-  onSelectTask(task: Task): void {
-    this.selectTask.emit(task);
   }
 }

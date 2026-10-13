@@ -1,11 +1,60 @@
 <div class="kanban-board-wrapper">
-  <!-- ヘッダー領域（header-left 構造を完全保持） -->
+  <!-- ヘッダー領域（タイトル＆フィルターバー＆新規作成ボタン） -->
   <div class="board-header">
     <div class="header-left">
       <h2>タスク一覧</h2>
-    </div>
-    <button class="btn-primary" (click)="onAddTask()">＋ 新規タスク</button>
-  </div>
+
+      <!-- フィルター・ソートコントロールバー-->
+       <div class="filter-bar">
+        <!-- キーワード検索 -->
+         <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            [(ngModel)]="searchKeyword"
+            placeholder="タイトルや説明を検索..."
+            class="filter-input-text" />
+         </div>
+
+         <!-- 優先度フィルター-->
+          <select [(ngModel)]="priorityFilter" class="filter-select">
+            <option value="ALL">優先度： すべて</option>
+            <option value="HIGH">高</option>
+            <option value="MEDIUM">中</option>
+            <option value="LOW">低</option>
+          </select>
+
+           <!-- タグフィルター-->
+           <select [(ngModel)]="selectedTag" class="filter-select" (change)="onFilterChange()">
+            <option value="ALL">タグ： すべて</option>
+            <option *ngFor="let tag of availableTags" [value]="tag">#{{ tag }}</option>
+           </select>
+
+          <!-- ソート項目-->
+          <select [(ngModel)]="sortBy" class="filter-select">
+            <option value="createdAt">作成日順</option>
+            <option value="deadline">最終期限順</option>
+            <option value="priority">優先度順</option>
+          </select>
+
+          <!-- 昇順/降順ボタン-->
+          <button class="btn-sort-order" (click)="toggleSortOrder()" [title]="sortOrder === 'asc' ? '降順' : '昇順'">
+            {{ sortOrder === 'asc' ? '▼' : '▲' }}
+          </button>
+
+          <!-- フィルターリセットボタン-->
+          <button
+           *ngIf="searchKeyword || priorityFilter !== 'ALL' || sortBy !== 'createdAt'"
+           class="btn-reset-filter"
+           (click)="resetFilters()"
+           title="フィルター条件をリセット">
+          <span class="reset-icon">✕ クリア</span>
+          </button>
+       </div>
+     </div>
+    
+     <button class="btn-primary" (click)="onAddTask()">＋ 新規タスク</button>
+   </div>
 
   <!-- カンバンエリア（kanban-body クラス名を維持したまま cdkDropListGroup を追加） -->
   <div class="kanban-body" cdkDropListGroup>

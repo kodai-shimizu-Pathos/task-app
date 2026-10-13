@@ -9,6 +9,7 @@
     class="column-droplist"
     cdkDropList
     [id]="status"
+    [cdkDropListConnectedTo]="['todo', 'in-progress', 'done']"
     [cdkDropListData]="tasks"
     (cdkDropListDropped)="onDrop($event)">
     
@@ -17,11 +18,10 @@
       *ngFor="let task of tasks"
       cdkDrag
       [cdkDragData]="task"
-      class="draggable-task-wrapper">
-      <app-task-card
-        [task]="task"
-        (click)="onSelectTask(task)">
-      </app-task-card>
+      class="draggable-task-wrapper"
+      (click)="onSelectTask(task)">
+
+      <app-task-card [task]="task"></app-task-card>
     </div>
 
     <!-- カラムが空の時のプレースホルダー -->

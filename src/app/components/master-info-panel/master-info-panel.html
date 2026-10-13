@@ -56,6 +56,12 @@
             </a>
         </div>
     </div>
+
+    <!-- 概要・説明-->
+    <div class="info-block" *ngIf="project.description">
+        <h4>📝 概要・説明</h4>
+        <p class="description-text">{{ project.description }}</p>
+    </div>
     
     <!-- メモ・履歴 -->
     <div class="info-block memo-block" *ngIf="project.memos?.length">

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core'; 
+import { Component, EventEmitter, Input, OnInit, Output, SimpleChanges, OnChanges} from '@angular/core'; 
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms'; // フォームのバリデーションを行うために使用
 import { Task, PriorityLevel, Status } from '../../models/task.model';
@@ -11,7 +11,7 @@ import { ParentProject } from '../../models/project.model';
   templateUrl: './task-form.html',
   styleUrl: './task-form.css',
 })
-export class TaskForm implements OnInit {
+export class TaskForm implements OnInit, OnChanges {
   @Input() projectId: string = '';
   @Input() projects: ParentProject[] = [];
   @Input() taskToEdit?: Task | null = null;
@@ -33,37 +33,84 @@ export class TaskForm implements OnInit {
     scheduledEndDate: '',
     deadline: '',
     description: '',
-    tags: []
   };
 
+  tagsInput: string = '';
+  
   ngOnInit(): void {
-    if (this.taskToEdit) {
-      // 編集モード：既存のタスク情報をセットする
-      this.taskData = { ...this.taskToEdit };
-    } else {
-      // 新規モード：現在選択中の親課題IDを初期値にセット
-      this.taskData.parentId = this.projectId;
+    this.populateForm();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['taskToEdit'] || changes['projectId']) {
+      this.populateForm();
     }
+  }
+
+  private populateForm(): void {
+    if (this.taskToEdit) {
+      // 編集モード
+      this.taskData = {...this.taskToEdit};
+      // タグはカンマ区切りの文字列から配列に変換
+      this.tagsInput = Array.isArray(this.taskToEdit.tags) ? this.taskToEdit.tags.join(', '): '';
+    } else {
+      // 新規作成モード：初期化
+      this.resetForm();
+    }
+  }
+
+  private resetForm(): void {
+    this.taskData = {
+      parentId: this.projectId,
+      title: '',
+      status: 'todo',
+      priority: 'medium',
+      description: '',
+      scheduledStartDate: '',
+      scheduledEndDate: '',
+      deadline: '',
+    };
+    this.tagsInput = '';
+  }
+
+  // カンマ区切りの文字列を string[]に分解するヘルパー
+  private parseTags(input: string): string[] {
+    if (!input || !input.trim()) return [];
+    return input.split(',').map(tag => tag.trim().replace(/^#/, '')).filter(tag => tag.length > 0);
   }
 
   // フォーム送信 (タスク作成ボタン押下時)
   onSubmit(): void {
-    if (!this.taskData.title || !this.taskData.parentId) return;
+    if (!this.taskData.title?.trim() || !this.taskData.parentId) {
+      alert('タスク名と親課題を選択してください');
+      return;
+    }
+
+    const parsedTags = this.parseTags(this.tagsInput);
 
     if (this.taskToEdit) {
-      this.taskUpdated.emit(this.taskData as Task);
+      // 更新処理
+      const updatedTask: Task = {
+        ...(this.taskToEdit),
+        ...(this.taskData as Task),
+        tags: parsedTags,
+        progress: this.taskData.status === 'done' ? 100 : (this.taskData.status === 'in-progress' ? 50 :0),
+        updatedAt: new Date().toISOString()
+      };
+      this.taskUpdated.emit(updatedTask);
     } else {
+      // 新規作成処理
       const newTask: Task = {
         id: `task-${Date.now()}`, // 簡易的な一意のID (タイムスタンプ)
         parentId: this.projectId,
-        title: this.taskData.title,
-        status: this.taskData.status as Status,
-        priority: this.taskData.priority as PriorityLevel,
-        scheduledStartDate: this.taskData.scheduledStartDate || undefined,
-        scheduledEndDate: this.taskData.scheduledEndDate || undefined,
-        deadline: this.taskData.deadline || undefined,
-        description: this.taskData.description || undefined,
-        tags: this.taskData.tags || [],
+        title: this.taskData.title!,
+        status: this.taskData.status || 'todo',
+        priority: this.taskData.priority || 'medium',
+        scheduledStartDate: this.taskData.scheduledStartDate,
+        scheduledEndDate: this.taskData.scheduledEndDate,
+        deadline: this.taskData.deadline,
+        description: this.taskData.description,
+        tags: parsedTags,
         progress: this.taskData.status === 'done' ? 100 : (this.taskData.status === 'in-progress' ? 50 : 0),
         createdAt: new Date().toISOString()
       };
