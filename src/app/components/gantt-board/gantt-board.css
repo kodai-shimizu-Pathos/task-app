@@ -1,0 +1,300 @@
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+  }
+  
+  .gantt-board-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background-color: var(--bg-main);
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  /* ヘッダーバー */
+  .gantt-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+  }
+  
+  .gantt-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--text-primary);
+  }
+  
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  /* 表示単位切替 */
+  .scale-switcher {
+    display: flex;
+    background-color: var(--bg-secondary);
+    border-radius: 6px;
+    padding: 2px;
+    border: 1px solid var(--border-color);
+  }
+  
+  .scale-switcher button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .scale-switcher button.active {
+    background-color: var(--accent-color);
+    color: #ffffff;
+    font-weight: bold;
+  }
+  
+  /* イナズマ線ボタン */
+  .toggle-inazuma-btn {
+    background-color: var(--bg-secondary);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .toggle-inazuma-btn.active {
+    color: #F59E0B;
+    border-color: #F59E0B;
+    background-color: rgba(245, 158, 11, 0.1);
+    font-weight: bold;
+  }
+  
+  .btn-primary {
+    background-color: #2563EB;
+    color: #ffffff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  /* メイン分割表示コンテナ */
+  .gantt-main-container {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* 左列: WBS領域 */
+  .wbs-pane {
+    width: 320px;
+    min-width: 280px;
+    background-color: var(--bg-panel);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  
+  .wbs-header {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text-muted);
+    padding: 0 12px;
+  }
+  
+  .col-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .col-progress { width: 50px; text-align: right; }
+  .col-priority { width: 60px; text-align: center; }
+  
+  .wbs-body {
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  .wbs-row {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+  
+  .wbs-row:hover {
+    background-color: var(--bg-secondary);
+  }
+  
+  .tree-indent {
+    color: var(--text-muted);
+    margin-right: 4px;
+  }
+  
+  .done-text {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+  
+  /* 右列: タイムライン領域 */
+  .timeline-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-x: auto;
+    position: relative;
+  }
+  
+  .timeline-header {
+    height: 36px;
+    display: flex;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+  }
+  
+  .date-col-header {
+    flex: 1;
+    min-width: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--border-color);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  
+  .today-col {
+    background-color: rgba(37, 99, 235, 0.15);
+    color: var(--accent-color);
+    font-weight: bold;
+  }
+  
+  .timeline-body {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  /* 背景格子グリッド */
+  .timeline-row {
+    height: 44px;
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+  }
+  
+  .grid-cell {
+    flex: 1;
+    min-width: 48px;
+    border-right: 1px solid var(--border-color);
+    box-sizing: border-box;
+  }
+  
+  .grid-cell.today-cell {
+    background-color: rgba(37, 99, 235, 0.04);
+  }
+  
+  /* ガントバー */
+  .gantt-bar {
+    position: absolute;
+    top: 8px;
+    height: 28px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    z-index: 2;
+    transition: transform 0.15s;
+  }
+  
+  .gantt-bar:hover {
+    transform: translateY(-1px);
+    z-index: 3;
+  }
+  
+  .gantt-bar-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(37, 99, 235, 0.3);
+    z-index: 1;
+  }
+  
+  .bar-label {
+    position: relative;
+    z-index: 2;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .deadline-marker {
+    position: relative;
+    z-index: 2;
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--priority-high);
+  }
+  
+  /* ステータス別バーカラー */
+  .gantt-bar.in-progress { border-left: 4px solid #F59E0B; }
+  .gantt-bar.done { border-left: 4px solid #10B981; opacity: 0.8; }
+  .gantt-bar.todo { border-left: 4px solid #EF4444; }
+  
+  /* イナズマ線 SVG レイヤー */
+  .inazuma-svg-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+  }
+  
+  .inazuma-polyline {
+    fill: none;
+    stroke: #EF4444;
+    stroke-width: 3;
+    stroke-dasharray: 4 2;
+    filter: drop-shadow(0px 0px 3px rgba(239, 68, 68, 0.8));
+  }
+  
+  .empty-wbs {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+  }

@@ -66,9 +66,15 @@
             (taskUpdated)="onTaskUpdated($event)">
           </app-kanban-board>
 
-          <div *ngIf="currentMode === 'GANTT'" class="gantt-placeholder">
-            <p>ガントチャートモードは準備中です</p>
-          </div>
+          <app-gantt-board
+            *ngIf="currentMode === 'GANTT'"
+            [tasks]="currentTasks"
+            [project]="selectedProject"
+            [projects]="projects"
+            (selectTask)="onSelectTask($event)"
+            (addTask)="onOpenNewTaskForm()"
+            (taskUpdated)="onTaskUpdated($event)">
+          </app-gantt-board>
         </section>
       </ng-container>
 

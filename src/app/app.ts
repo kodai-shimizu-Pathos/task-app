@@ -9,6 +9,7 @@ import { ParentProject } from './models/project.model';
 import { Task } from './models/task.model';
 import { ProjectForm } from './components/project-form/project-form';
 import { MasterKanbanBoard } from './components/master-kanban-board/master-kanban-board';
+import { GanttBoard } from './components/gantt-board/gantt-board';
 
 @Component({
   selector: 'app-root',
@@ -20,6 +21,7 @@ import { MasterKanbanBoard } from './components/master-kanban-board/master-kanba
     TaskForm,
     ProjectForm,
     MasterKanbanBoard,
+    GanttBoard,
     AppShell,
   ],
   templateUrl: './app.html',
