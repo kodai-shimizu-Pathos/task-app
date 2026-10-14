@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppShell, MainView } from './components/app-shell/app-shell';
 import { MasterInfoPanel } from './components/master-info-panel/master-info-panel';
 import { KanbanBoard } from './components/kanban-board/kanban-board';
 import { TaskForm } from './components/task-form/task-form';
+import { TaskDataService } from './services/task-data';
 import { ParentProject } from './models/project.model';
 import { Task } from './models/task.model';
 import { ProjectForm } from './components/project-form/project-form';
@@ -19,12 +20,14 @@ import { MasterKanbanBoard } from './components/master-kanban-board/master-kanba
     TaskForm,
     ProjectForm,
     MasterKanbanBoard,
-    AppShell
+    AppShell,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class AppComponent implements OnInit {
+  private dataService = inject(TaskDataService);
+
   // --- UI状態管理 ---  
   activeView: MainView = 'kanban'; // 'kanban' | 'gantt' | 'calendar' | 'review'
   currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
@@ -89,19 +92,34 @@ export class AppComponent implements OnInit {
   
   ngOnInit(): void {
     document.body.setAttribute('data-theme', this.currentTheme);
-    this.loadInitialData();
+
+    // 1. Firestoreから親課題をリアルタイム受信
+    this.dataService.getProjects().subscribe(projects => {
+      this.projects = projects;
+      // 選択中の親課題があれば最新状態に同期
+      if (this.selectedProject) {
+        const updated = projects.find(p => p.id === this.selectedProject?.id);
+        this.selectedProject = updated || null;
+      }
+      this.recalculateProgress();
+    });
+
+    // 2. Firestoreから子タスクをリアルタイム受信
+    this.dataService.getTasks().subscribe(tasks => {
+      this.allTasks = tasks;
+      this.recalculateProgress();
+    });
   }
 
   // =======================================================
   // 親課題(Project)操作ロジック
   // =======================================================
-
   // 親課題を選択
   onSelectProject(project: ParentProject): void {
     this.selectedProject = project;
   }
-
-  // 一覧へ戻る処理
+  
+  // 親課題を解除
   onUnselectProject(): void {
     this.selectedProject = null;
   }
@@ -126,51 +144,69 @@ export class AppComponent implements OnInit {
     this.projectToEdit = null;
   }
 
-  // 親課題の作成完了ハンドラ
+  // 親課題の新規作成
   onProjectCreated(newProject: ParentProject): void {
-    this.projects.push(newProject);
-    this.selectedProject = newProject;
-    this.recalculateProgress();
+    const { id, ...projectData } = newProject;
+    this.dataService.addProject(projectData);
     this.onCloseProjectForm();
   }
 
-  // 親課題の更新完了ハンドラ
+  // 親課題の更新
   onProjectUpdated(updatedProject: ParentProject): void {
-    const index = this.projects.findIndex(p => p.id === updatedProject.id);
-    if (index !== -1) {
-      this.projects[index] = updatedProject;
-      if (this.selectedProject?.id === updatedProject.id) {
-        this.selectedProject = updatedProject;
-      }
+    if (this.selectedProject?.id === updatedProject.id) {
+      const { id, ...projectData } = updatedProject;
+      this.dataService.updateProject(id, projectData);
     }
     this.onCloseProjectForm();
+  }
+
+  // 親課題のステータス更新
+  onParentTaskUpdated(updatedProject: ParentProject | string): void {
+    // 1. 引数が文字列(ID)の場合、projectsから対象親課題を検索
+    let project: ParentProject | null = null;
+    if (typeof updatedProject === 'string') {
+      project = this.projects.find(p => p.id === updatedProject) || null;
+      if (!project) {
+        console.error('更新対象の親課題IDが存在しません:', updatedProject);
+        return;
+      }
+    } else {
+      project = updatedProject;
+      if (!project || !project.id) {
+        console.error('更新対象の親課題IDが存在しません:', updatedProject?.id);
+        return;
+      }
+    }
+
+    // 2. projectsのローカル配列を即座に更新
+    const index = this.projects.findIndex(p => p.id === project!.id);
+    if (index !== -1) {
+      this.projects[index] = { ...project };
+    }
+
+    // 3. 選択中の親課題も同時に更新
+    if (this.selectedProject?.id === project.id) {
+      this.selectedProject = { ...project };
+    }
+
+    // 4. 進捗率を再計算
+    this.recalculateProgress();
+
+    // 5. Firestoreデータベースを更新
+    const { id, ...projectData } = project;
+    this.dataService.updateProject(id, projectData)
+    .then(() => console.log('親課題更新完了:', id))
+    .catch(err => console.error('親課題更新エラー:', err));
   }
 
   // 親課題の削除完了ハンドラ
   onProjectDeleted(projectId: string): void {
     // 削除された親課題に紐づく子タスクも一括クリア
-    this.projects = this.projects.filter(p => p.id !== projectId);
-    this.allTasks = this.allTasks.filter(t => t.parentId !== projectId);
-
-    // 別のプロジェクトを選択、なければクリア
-    if (this.projects.length > 0) {
-      this.selectedProject = this.projects[0];
-    } else {
+    this.dataService.deleteProject(projectId);
+    if (this.selectedProject?.id === projectId) {
       this.selectedProject = null;
     }
-    this.recalculateProgress();
     this.onCloseProjectForm();
-  }
-
-  // 親課題のステータス変更ハンドラ（カンバンボードのドラッグ&ドロップ時）
-  onParentTaskUpdated(updatedProject: ParentProject): void {
-    const index = this.projects.findIndex(p => p.id === updatedProject.id);
-    if (index !== -1) {
-      this.projects[index] = updatedProject;
-      if (this.selectedProject?.id === updatedProject.id) {
-        this.selectedProject = updatedProject;
-      }
-    }
   }
 
   // =======================================================
@@ -199,130 +235,107 @@ export class AppComponent implements OnInit {
 
   // タスクの作成完了ハンドラ
   onTaskCreated(newTask: Task): void {
+    // 親課題が選択されていない場合は警告を出して処理を止める
     if (this.selectedProject) {
-      // 選択中の親課題を設定
       newTask.parentId = this.selectedProject.id;
-    }
-    this.allTasks.push(newTask);
-    this.recalculateProgress();
+    }  
+    const { id, ...taskData } = newTask;
+    this.dataService.addTask(taskData);
     this.onCloseTaskForm();
   }
 
   // タスクの更新完了ハンドラ
-  onTaskUpdated(updatedTask: Task): void {
-    const index = this.allTasks.findIndex(t => t.id === updatedTask.id);
-    if (index !== -1) {
-      this.allTasks[index] = updatedTask;
-      this.recalculateProgress();
+  onTaskUpdated(updatedTask: Task | string): void {
+    // 1. 引数が文字列(ID)の場合、allTasksから対象タスクを検索
+    let task: Task | null = null;
+    if (typeof updatedTask === 'string') {
+      task = this.allTasks.find(t => t.id === updatedTask) || null;
+      if (!task) {
+        console.error('更新対象のタスクIDが存在しません:', updatedTask);
+        return;
+      }
+    } else {
+      task = updatedTask;
+      if (!task || !task.id) {
+        console.error('更新対象のタスクIDが存在しません:', updatedTask?.id);
+        return;
+      }
     }
+
+    // 2. allTasksを即座に更新して画面と進捗率に反映
+    const index = this.allTasks.findIndex(t => t.id === task!.id);
+    if (index !== -1) {
+      this.allTasks[index] = { ...task };
+    }
+    this.recalculateProgress();
+
+    // 3. Firestoreデータベースを更新
+    const { id, ...taskData } = task;
+    this.dataService.updateTask(id, taskData)
+    .then(() => console.log('タスク更新完了:', id))
+    .catch(err => console.error('タスク更新エラー:', err));
+
     this.onCloseTaskForm();
   }
 
   // タスクの削除完了ハンドラ
   onTaskDeleted(taskId: string): void {
-    this.allTasks = this.allTasks.filter(t => t.id !== taskId);
-    this.recalculateProgress();
+    this.dataService.deleteTask(taskId);
     this.onCloseTaskForm();
   }
 
   // 進捗率と完了タスク数の自動再計算
   private recalculateProgress(): void {
-    this.projects.forEach(project => {
+    if (!this.projects || this.projects.length === 0) return;
+
+    // 変更が必要なプロジェクトを追跡
+    let hasChanges = false;
+
+    // 1. .map() を使って、各プロジェクトに対して、子タスクの数と完了数をカウント
+    const updatedProjects = this.projects.map(project => {
       const projectTasks = this.allTasks.filter(t => t.parentId === project.id);
       const total = projectTasks.length;
       const completed = projectTasks.filter(t => t.status === 'done').length;
       const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-      project.totalTaskCount = total;
-      project.completedTaskCount = completed;
-      project.progressPercentage = percentage;
+      // 値に変更があった場合のみ、新しい参照を作成して更新フラグを立てる
+      if (
+        project.totalTaskCount !== total ||
+        project.completedTaskCount !== completed ||
+        project.progressPercentage !== percentage
+      ) {
+        hasChanges = true;
+        
+        // Firestoreも更新
+        this.dataService.updateProject(project.id, {
+          totalTaskCount: total,
+          completedTaskCount: completed,
+          progressPercentage: percentage,
+        }).catch(err => console.error('進捗率Firestore更新エラー:', err));
+
+        // 新しい参照を持つオブジェクトを返す
+        return {
+          ...project,
+          totalTaskCount: total,
+          completedTaskCount: completed,
+          progressPercentage: percentage,
+        };
+      }
+
+      return project;
     });
 
+    // 2. 変更があった場合のみprojectsを更新
+    if (hasChanges) {
+      this.projects = updatedProjects;
+    }
+
+    // 3. 選択中の親課題オブジェクトも新しい参照で更新
     if (this.selectedProject) {
       const updated = this.projects.find(p => p.id === this.selectedProject?.id);
       if (updated) {
         this.selectedProject = { ...updated };
       }
     }
-  }
-
-  // ==========================================
-  // 初期データロード処理
-  // ==========================================
-
-  private loadInitialData(): void {
-    // サンプル親課題データ
-    const sampleProject: ParentProject = {
-      id: 'proj-1',
-      title: 'BeSideFlow AI 開発フェーズ1',
-      description: 'デスクトップ常駐型タスクパートナーアプリの基礎設計とMaster-Detail UIの実装。',
-      
-      // 🔴 不足していた必須プロパティを追加
-      status: 'in-progress',
-      priority: 'high',
-      tags: ['開発', 'UI'],
-
-      scheduledStartDate: '2026-10-01',
-      scheduledEndDate: '2026-10-31',
-      deadline: '2026-11-15',
-      progressPercentage: 0,
-      completedTaskCount: 0,
-      totalTaskCount: 0,
-      docLinks: [
-        { title: '仕様書 v1.1', url: 'https://example.com/spec' },
-        { title: 'UIレイアウト仕様書', url: 'https://example.com/ui-spec' }
-      ],
-      createdAt: new Date().toISOString()
-    };
-
-    this.projects = [sampleProject];
-    this.selectedProject = sampleProject;
-
-    // サンプル子タスクのロード
-    this.loadTasksForProject(sampleProject.id);
-  }
-
-  private loadTasksForProject(projectId: string): void {
-    // サンプル子タスク一覧
-    const sampleTasks: Task[] = [
-      {
-        id: 'task-1',
-        parentId: projectId,
-        title: 'Master-Detail UI のレイアウト構築',
-        description: '左側にMasterエリア、右側にカンバンボードを配置するレイアウトの実装。',
-        status: 'done',
-        priority: 'high',
-        progress: 100, // 🔴 追加 (完了なので100%)
-        tags: ['UI', 'レイアウト'], // 🔴 追加
-        deadline: '2026-10-05',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'task-2',
-        parentId: projectId,
-        title: 'テーマ切り替え機能（ダーク/ライト）の実装',
-        description: 'styles.cssのCSS変数とbodyタグのdata-theme属性によるテーマ切り替え。',
-        status: 'in-progress',
-        priority: 'medium',
-        progress: 50, // 🔴 追加 (進行中なので50%)
-        tags: ['CSS', 'テーマ'], // 🔴 追加
-        deadline: '2026-10-10',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'task-3',
-        parentId: projectId,
-        title: 'ガントチャート表示モードの構築',
-        description: 'SCR-04 ガントチャートモード画面コンポーネントの作成とデータ連動。',
-        status: 'todo',
-        priority: 'low',
-        progress: 0, // 🔴 追加 (未着手なので0%)
-        tags: ['機能開発'], // 🔴 追加
-        deadline: '2026-10-25',
-        createdAt: new Date().toISOString()
-      }
-    ];
-
-    this.recalculateProgress();
   }
 }

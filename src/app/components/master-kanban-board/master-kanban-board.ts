@@ -157,25 +157,53 @@ export class MasterKanbanBoard implements OnChanges {
       // 同一カラム内での順番入れ替え
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
-      // 異なるカラム間での移動 (ステータスの変更)
-      const project = event.previousContainer.data[event.previousIndex];
+      // 1. ドラッグデータを取得
+      let projectId: string | null = null;
+      const itemData = event.item.data;
 
-      const updatedProject: ParentProject = {
-        ...project,
-        status: targetStatus,
-        updatedAt: new Date().toISOString(),
-      };
+      // 分岐A：cdkDragDataからオブジェクトが取得できた場合
+      if (typeof itemData === 'object' && itemData != null && itemData['id']) {
+        projectId = itemData.id;
+      }
+      // 分岐B：cdkDragDataからID文字列が取得できた場合
+      else if (typeof itemData === 'string') {
+        projectId = itemData;
+      }
+      // 分岐C：previousContainerから復元を試みる
+      else {
+        const previousData = event.previousContainer.data;
+        if (Array.isArray(previousData) && event.previousIndex >= 0 && previousData[event.previousIndex]) {
+          const prevProject = previousData[event.previousIndex];
+          if (prevProject && typeof prevProject === 'object' && prevProject.id) {
+            projectId = prevProject.id;
+          }
+        }
+      }
 
-      // CDK の配列間データ移動処理
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex,
-      );
+      // IDが取得できなかった場合はエラー
+      if (!projectId) {
+        console.error('更新対象の親課題IDが見つかりません:', itemData);
+        return;
+      }
 
-      // 親コンポーネントに更新された親課題を通知
-      this.parentTaskUpdated.emit(updatedProject);
+      // 2. this.projects配列から親課題オブジェクトを取得・復元
+      const projectIndex = this.projects.findIndex(p => p.id === projectId);
+      if (projectIndex === -1) {
+        console.error('親課題が配列に見つかりません:', projectId);
+        return;
+      }
+
+      const project = this.projects[projectIndex];
+
+      // 3. 親課題のプロパティを更新
+      project.status = targetStatus;
+      project.updatedAt = new Date().toISOString();
+
+      // 4. 配列も更新
+      this.projects[projectIndex] = { ...project };
+
+      // 5. 親コンポーネントに更新された親課題を通知
+      this.parentTaskUpdated.emit({ ...project });
     }
   }
 }

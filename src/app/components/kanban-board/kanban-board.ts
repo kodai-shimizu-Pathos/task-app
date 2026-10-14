@@ -183,29 +183,58 @@ export class KanbanBoard implements OnChanges {
       // 同一カラム内での順番入れ替え
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
-      // 異なるカラム間での移動 (ステータス＆進捗率の変更が走る)
-      const task = event.previousContainer.data[event.previousIndex];
+      // 1. ドラッグデータを取得
+      let taskId: string | null = null;
+      const itemData = event.item.data;
+
+      // 分岐A：cdkDragDataからオブジェクトが取得できた場合
+      if (typeof itemData === 'object' && itemData != null && itemData['id']) {
+        taskId = itemData.id;
+      }
+      // 分岐B：cdkDragDataからID文字列が取得できた場合
+      else if (typeof itemData === 'string') {
+        taskId = itemData;
+      }
+      // 分岐C：previousContainerから復元を試みる
+      else {
+        const previousData = event.previousContainer.data;
+        if (Array.isArray(previousData) && event.previousIndex >= 0 && previousData[event.previousIndex]) {
+          const prevTask = previousData[event.previousIndex];
+          if (prevTask && typeof prevTask === 'object' && prevTask.id) {
+            taskId = prevTask.id;
+          }
+        }
+      }
+
+      // IDが取得できなかった場合はエラー
+      if (!taskId) {
+        console.error('更新対象のタスクIDが見つかりません:', itemData);
+        return;
+      }
+
+      // 2. this.tasks配列からタスクオブジェクトを取得・復元
+      const taskIndex = this.tasks.findIndex(t => t.id === taskId);
+      if (taskIndex === -1) {
+        console.error('タスクが配列に見つかりません:', taskId);
+        return;
+      }
+
+      const task = this.tasks[taskIndex];
+
+      // 3. タスクのプロパティを更新
       const newProgress = targetStatus === 'done' ? 100 : (targetStatus === 'in-progress' ? 50 : 0);
+      task.status = targetStatus;
+      task.progress = newProgress;
+      task.updatedAt = new Date().toISOString();
 
-      const updatedTask: Task = {
-        ...task,
-        status: targetStatus,
-        progress: newProgress,
-        updatedAt: new Date().toISOString(),
-      };
+      // 4. 配列も更新
+      this.tasks[taskIndex] = { ...task };
 
-      // CDKの配列間データ移動処理
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex,
-      );
-
-      // 親コンポーネントに更新されたタスクを通知
-      this.taskUpdated.emit(updatedTask);
+      // 5. 親コンポーネントに更新されたタスクを通知
+      this.taskUpdated.emit({ ...task });
     } 
   }
+
   onAddTask(): void {
     this.addTask.emit();
   }
