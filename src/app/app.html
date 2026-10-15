@@ -12,7 +12,12 @@
     <!-- グローバルヘッダー -->
     <header class="app-header">
       <div class="header-left">
-        <h1 class="app-title">BeSideFlow AI</h1>
+        <h1 class="app-title" *ngIf="!selectedProject">BeSideFlow AI</h1>
+        <div class="breadcrumb" *ngIf="selectedProject">
+          <button class="btn-back" (click)="onUnselectProject()">← プロジェクト一覧</button>
+          <span class="separator">></span>
+          <span class="current-project">{{ selectedProject.title }}</span>
+        </div>
         <button type="button" class="btn-add-project" (click)="onOpenNewProjectForm()">
           ＋ 親課題を追加
         </button>
@@ -58,11 +63,12 @@
       <!-- パターンB：親課題が選択されている時（Master-Detail UI: SCR-03 / SCR-04） -->
       <ng-container *ngIf="selectedProject">
         <!-- 左側: Master情報パネル -->
-        <aside class="master-pane">
+        <aside class="master-pane" [class.collapsed]="isMasterPanelCollapsed">
           <app-master-info-panel 
             [project]="selectedProject"
+            [isCollapsed]="isMasterPanelCollapsed"
+            (toggleCollapse)="toggleMasterPanel()"
             (editProject)="onEditProject()"
-            (closePanel)="onUnselectProject()"
             (addTask)="onOpenNewTaskForm()">
           </app-master-info-panel>
         </aside>

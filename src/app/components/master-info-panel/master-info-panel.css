@@ -267,3 +267,67 @@
   border-color: var(--accent-color);
   background-color: rgba(37, 99, 235, 0.08);
 }
+
+/* =========================================
+   折りたたみ機能用の追加スタイル
+   ========================================= */
+
+/* 展開時の◀ボタン */
+.collapse-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.collapse-btn:hover {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* 折りたたみ時 (細いバー) の全体コンテナ */
+.master-panel-collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding: 16px 0;
+  gap: 24px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  /* 親の余白を打ち消してバー全体をクリック可能にする */
+  margin: -16px; 
+  padding-top: 24px;
+}
+.master-panel-collapsed:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* 折りたたみ時の▶ボタン */
+.expand-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--text-muted);
+  cursor: pointer;
+  pointer-events: none; /* クリック判定を親の .master-panel-collapsed に任せる */
+}
+.master-panel-collapsed:hover .expand-btn {
+  color: var(--accent-color);
+}
+
+/* 折りたたみ時の縦書きタイトル */
+.vertical-title {
+  writing-mode: vertical-rl; /* 縦書き指定 */
+  text-orientation: mixed;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 80%; /* 画面の下にはみ出さないように制限 */
+}

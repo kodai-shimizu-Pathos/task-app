@@ -11,12 +11,18 @@ import { ParentProject } from '../../models/project.model';
 })
 export class MasterInfoPanel {
   @Input() project!: ParentProject;
+  @Input() isCollapsed: boolean = false;
   @Output() editProject = new EventEmitter<void>();
+  @Output() toggleCollapse = new EventEmitter<void>();
 
   onEdit(): void {
     this.editProject.emit();
-
   }
+
+  onToggle():void {
+    this.toggleCollapse.emit();
+  }
+
   @Output() closePanel = new EventEmitter<void>();
 
   onClose(): void {

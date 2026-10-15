@@ -78,11 +78,42 @@
 
             <div class="timeline-body">
                 <!-- 親課題行 (背景) -->
+                <!-- 親課題ガントバ(背景行)ー -->
                 <div class="timeline-row parent-row" *ngIf="project">
-                    <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday"></div>
+                    <div
+                        *ngFor="let col of timelineColumns"
+                        class="grid-cell"
+                        [style.width.px]="columnWidth"
+                        [class.today-cell]="col.isToday">
+                    </div>
+                    
+                    <!-- 【追加】親課題用のガントバー -->
+                    <ng-container *ngIf="getTaskBarPositionPx($any(project)) as bar">
+                        <div
+                            *ngIf="bar.visible"
+                            class="gantt-bar parent-bar"
+                            [ngClass]="[project.status, 'priority-' + (project.priority | lowercase)]"
+                            [class.is-overdue]="isTaskOverdue($any(project))"
+                            [style.left.px]="bar.left"
+                            [style.width.px]="bar.width">
+
+                            <span class="bar-label">📁 {{ project.title }}</span>
+
+                            <span 
+                                *ngIf="project.scheduledEndDate"
+                                class="scheduled-end-marker"
+                                [style.left.px]="getScheduledEndPositionPx($any(project)) - bar.left"
+                                title="完了予定日： {{ project.scheduledEndDate }}">
+                                🚩
+                            </span>
+                            <span *ngIf="project.deadline" class="deadline-marker" title="最終期限： {{ project.deadline }}">
+                                ⏰ {{ project.deadline | date:'MM/dd' }}
+                            </span>
+                        </div>
+                    </ng-container>
                 </div>
 
-                <!-- 子タスク行 -->
+                <!-- 子タスクガントバー行 -->
                 <div *ngFor="let task of tasks" class="timeline-row task-row" (click)="onTaskClick(task, $event)">
                     <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday"></div>
 

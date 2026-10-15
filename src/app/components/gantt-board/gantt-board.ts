@@ -376,11 +376,11 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  getTaskBarPositionPx(task: Task): { left: number; width: number; visible: boolean } {
+  getTaskBarPositionPx(item: Task | ParentProject): { left: number; width: number; visible: boolean } {
     // スケジュール開始日と終了日がない場合は、期限があれば期限によって位置を計算
-    if (!task.scheduledStartDate || !task.scheduledEndDate) {
-      if (task.deadline) {
-        const dl = new Date(task.deadline);
+    if (!item.scheduledStartDate || !item.scheduledEndDate) {
+      if (item.deadline) {
+        const dl = new Date(item.deadline);
         dl.setHours(0, 0, 0, 0);
         const deadlineIndex = Math.floor((dl.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
         const left = deadlineIndex * this.columnWidth;
@@ -389,10 +389,10 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
       return { left: 0, width: 0, visible: false };
     }
 
-    const start = new Date(task.scheduledStartDate);
+    const start = new Date(item.scheduledStartDate);
     start.setHours(0, 0, 0, 0);
 
-    const targetEnddate = task.deadline ? task.deadline : task.scheduledEndDate;
+    const targetEnddate = item.deadline ? item.deadline : item.scheduledEndDate;
     const end = new Date(targetEnddate);
     end.setHours(23, 59, 59, 999);
 
@@ -406,20 +406,20 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   }
 
   // スケジュール終了日の位置を取得
-  getScheduledEndPositionPx(task: Task): number {
-    if (!task.scheduledEndDate) return 0;
-    const end = new Date(task.scheduledEndDate);
+  getScheduledEndPositionPx(item: Task | ParentProject): number {
+    if (!item.scheduledEndDate) return 0;
+    const end = new Date(item.scheduledEndDate);
     end.setHours(23, 59, 59, 999);
     const endIndex = Math.floor((end.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
     return (endIndex * this.columnWidth) + (this.columnWidth / 2);
   }
 
   // タスクが期限切れかどうかを判定
-  isTaskOverdue(task: Task): boolean {
-    if (task.status === 'done') return false;
+  isTaskOverdue(item: Task | ParentProject): boolean {
+    if (item.status === 'done') return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const targetDate = task.deadline || task.scheduledEndDate;
+    const targetDate = item.deadline || item.scheduledEndDate;
     if (!targetDate) return false;
     const target = new Date(targetDate);
     target.setHours(0, 0, 0, 0);

@@ -35,6 +35,14 @@ export class AppComponent implements OnInit {
   currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
   currentTheme: 'dark' | 'light' = 'dark';
 
+  // 親課題パネルの折り畳み状態
+  isMasterPanelCollapsed: boolean = false;
+
+  // 親課題パネル折り畳みトグル
+  toggleMasterPanel(): void {
+    this.isMasterPanelCollapsed = !this.isMasterPanelCollapsed;
+  }
+
   // メインビュー切替ハンドラ
   onViewchange(view: MainView): void {
     this.activeView = view;
@@ -119,11 +127,13 @@ export class AppComponent implements OnInit {
   // 親課題を選択
   onSelectProject(project: ParentProject): void {
     this.selectedProject = project;
+    this.isMasterPanelCollapsed = false; // 新しい親課題を開いたときは必ず親課題パネルを展開状態にする
   }
   
   // 親課題を解除
   onUnselectProject(): void {
     this.selectedProject = null;
+    this.isMasterPanelCollapsed = false;
   }
 
   // 新規の親課題フォームを開く

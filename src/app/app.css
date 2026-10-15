@@ -98,7 +98,7 @@
   cursor: pointer;
 }
 
-/* 🔴 ヘッダー直下のメインコンテンツ領域 (横並びFlex) */
+/* ヘッダー直下のメインコンテンツ領域 (横並びFlex) */
 .main-content {
   flex: 1;
   display: flex;
@@ -115,7 +115,7 @@
   overflow: hidden;
 }
 
-/* 🔴 パターンB-1：左側 Master 情報パネル (幅固定で横並び) */
+/* パターンB-1：左側 Master 情報パネル (幅固定で横並び) */
 .master-pane {
   width: 480px; /* 固定幅 */
   min-width: 380px;
@@ -127,9 +127,20 @@
   overflow-y: auto;
   box-sizing: border-box;
   flex-shrink: 0; /* 横幅が潰れないように設定 */
+  transition: width 0.2s ease, min-width 0.2s ease, max-width 0.2s ease, padding 0.2s ease;
 }
 
-/* 🔴 パターンB-2：右側 Detail 子タスク表示エリア (残り幅を全開に使用) */
+/* パターンB-1：左側 Master 情報パネル (折り畳み状態) */
+.master-pane.collapsed {
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+  padding: 0px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* パターンB-2：右側 Detail 子タスク表示エリア (残り幅を全開に使用) */
 .detail-pane {
   flex: 1;
   height: 100%;
@@ -147,4 +158,38 @@
   align-items: center;
   height: 100%;
   color: var(--text-muted);
+}
+
+/* パンくずリスト */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.btn-back:hover {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.separator {
+  color: var(--border-color);
+}
+
+.current-project {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
 }
