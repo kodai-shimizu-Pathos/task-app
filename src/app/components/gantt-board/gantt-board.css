@@ -221,6 +221,11 @@
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
+    width: max-content;
+    min-width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
   
   .date-col-header {
@@ -232,6 +237,7 @@
     font-size: 11px;
     color: var(--text-muted);
     box-sizing: border-box;
+    flex-shrink: 0;
   }
   
   .today-col {
@@ -242,8 +248,10 @@
   
   .timeline-body {
     flex: 1;
-    overflow-y: auto;
+    overflow: visible;
     position: relative;
+    width: max-content;
+    min-width: 100%;
   }
   
   /* 背景格子グリッド */
@@ -252,15 +260,27 @@
     display: flex;
     border-bottom: 1px solid var(--border-color);
     position: relative;
+    width: 100%;
   }
   
   .grid-cell {
     border-right: 1px solid var(--border-color);
     box-sizing: border-box;
+    flex-shrink: 0;
   }
   
+  /* ベースのハイライト（ダークモード・デフォルト状態） */
   .grid-cell.today-cell {
-    background-color: rgba(37, 99, 235, 0.04);
+    background-color: rgba(37, 99, 235, 0.15); /* 元の0.04から透過率を上げる */
+    border-left: 1px solid rgba(37, 99, 235, 0.5); /* 左に縦線 */
+    border-right: 1px solid rgba(37, 99, 235, 0.5); /* 右に縦線 */
+  }
+
+  /* ライトモード用のハイライト（明るい背景に合わせて少し色を抑える） */
+  :host-context(body[data-theme="light"]) .grid-cell.today-cell {
+    background-color: rgba(37, 99, 235, 0.08); 
+    border-left: 1px solid rgba(37, 99, 235, 0.3);
+    border-right: 1px solid rgba(37, 99, 235, 0.3);
   }
   
   /* ガントバー */

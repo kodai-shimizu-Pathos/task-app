@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Task, PriorityLevel } from '../../models/task.model';
@@ -20,7 +20,7 @@ export interface TimelineColumn {
   templateUrl: './gantt-board.html',
   styleUrl: './gantt-board.css',
 })
-export class GanttBoard implements OnInit, OnChanges {
+export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   @Input() tasks: Task[] = [];
   @Input() project?: ParentProject | null = null;
   @Input() projects: ParentProject[] = [];
@@ -63,10 +63,25 @@ export class GanttBoard implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['tasks'] && this.tasks) {
+      this.tasks.sort((a, b) => {
+        const dateA = new Date(a.scheduledStartDate || a.deadline || '9999-12-31').getTime();
+        const dateB = new Date(b.scheduledStartDate || b.deadline || '9999-12-31').getTime();
+        return dateA - dateB;
+      });
+    }
     if (changes['tasks'] || changes['project']) {
       this.calculateTimelineRange();
     }
   }
+
+  // ビューが初期化された後に今日の日付にスクロール
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.onScrollToToday();
+    }, 0);
+  }
+
 
   onViewScaleChange(scale: 'day' | 'week' | 'month'): void {
     this.viewScale = scale;
@@ -75,38 +90,74 @@ export class GanttBoard implements OnInit, OnChanges {
   }
 
   private calculateTimelineRange(): void {
+    // 1. タスクが1つもない場合は、今日を基準に前後30日を表示
+    if (!this.tasks || this.tasks.length === 0) {
+      const today = new Date();
+      this.timelineStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
+      const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+      this.generateTimelineColumns(this.timelineStartDate, endDate);
+      return;
+    }
+
+    // 2. 全タスクの中から「最小の開始日」と「最大の終了日(期限)」を求める
+    let minDateMs = new Date('9999-12-31').getTime();
+    let maxDateMs = new Date('1970-01-01').getTime();
+
+    this.tasks.forEach(task => {
+      const start = task.scheduledStartDate ? new Date(task.scheduledStartDate).getTime() : null;
+      // 終了日はdeadlineを優先、なければscheduledEndDateを使用
+      const targetEndDate = task.deadline ? task.deadline : task.scheduledEndDate;
+      const end = targetEndDate ? new Date(targetEndDate).getTime() : null;
+
+      if (start && start < minDateMs) minDateMs = start;
+      if (end && end > maxDateMs) maxDateMs = end;
+    });
+
+    // 3. タイムラインの始点と終点を設定
+    const startDate = new Date(minDateMs);
+    startDate.setDate(startDate.getDate() -30);
+    this.timelineStartDate = startDate; // getTaskBarPositionPx()で使用
+
+    const endDate = new Date(maxDateMs);
+    endDate.setDate(endDate.getDate() + 30);
+
+    // 4. 始点から終点までの日付配列を生成
+    this.generateTimelineColumns(this.timelineStartDate, endDate);
+  }
+
+  // 日付の配列を作る処理
+  generateTimelineColumns(start: Date, end: Date): void {
+    const columns = [];
+    let currentDate = new Date(start);
+
+    // 今日の日付判定用
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    const start = new Date(today);
-    start.setDate(today.getDate() - 3);
-    this.timelineStartDate = start;
-
-    const end = new Date(start);
-    end.setDate(start.getDate() + this.totalDays - 1);
-    this.timelineEndDate = end;
-
-    const days: TimelineColumn[] = [];
     const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
-    for (let i = 0; i < this.totalDays; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-
+    // 開始日から終了日まで1日ずつループして配列に詰める
+    while (currentDate <= end) {
+      const d = new Date(currentDate);
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
+      const dateString = `${yyyy}-${mm}-${dd}`;
+      const dayNum = d.getDay();
 
-      days.push({
+      columns.push({
         date: d,
-        dateString: `${yyyy}-${mm}-${dd}`,
-        label: `${d.getMonth() + 1}/${d.getDate()}`,
-        dayOfWeek: `(${dayNames[d.getDay()]})`,
+        dateString: dateString,
+        label: `${mm}/${dd}`,
+        dayOfWeek: `(${dayNames[dayNum]})`,
         isToday: d.getTime() === today.getTime(),
-        isWeekend: d.getDay() === 0 || d.getDay() === 6,
+        isWeekend: dayNum === 0 || dayNum === 6,
       });
+
+      // 日付を1日進める
+      currentDate.setDate(currentDate.getDate() + 1);
     }
-    this.timelineColumns = days;
+
+    this.timelineColumns = columns;
   }
 
   onTaskClick(task: Task, event: Event): void {
@@ -183,12 +234,15 @@ export class GanttBoard implements OnInit, OnChanges {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // 今日の日付がタイムラインのどの位置にあるかを計算
     const todayIndex = Math.floor(
       (today.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000)
     );
 
+    // タイムラインのスクロール位置を計算
     if (this.timelinePane && this.timelinePane.nativeElement) {
-      const scrollLeft = todayIndex * this.columnWidth - (this.timelinePane.nativeElement.clientWidth / 2 - this.columnWidth / 2);
+      const offset = (this.timelinePane.nativeElement.clientWidth / 4) - (this.columnWidth / 2);
+      const scrollLeft = todayIndex * this.columnWidth - offset;
       this.timelinePane.nativeElement.scrollLeft = Math.max(0, scrollLeft);
     }
   }
@@ -323,19 +377,23 @@ export class GanttBoard implements OnInit, OnChanges {
   }
 
   getTaskBarPositionPx(task: Task): { left: number; width: number; visible: boolean } {
+    // スケジュール開始日と終了日がない場合は、期限があれば期限によって位置を計算
     if (!task.scheduledStartDate || !task.scheduledEndDate) {
       if (task.deadline) {
         const dl = new Date(task.deadline);
         dl.setHours(0, 0, 0, 0);
         const deadlineIndex = Math.floor((dl.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
-        return { left: deadlineIndex * this.columnWidth, width: this.columnWidth, visible: true };
+        const left = deadlineIndex * this.columnWidth;
+        return { left, width: this.columnWidth, visible: true };
       }
       return { left: 0, width: 0, visible: false };
     }
 
     const start = new Date(task.scheduledStartDate);
     start.setHours(0, 0, 0, 0);
-    const end = new Date(task.scheduledEndDate);
+
+    const targetEnddate = task.deadline ? task.deadline : task.scheduledEndDate;
+    const end = new Date(targetEnddate);
     end.setHours(23, 59, 59, 999);
 
     const startIndex = Math.floor((start.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
@@ -347,14 +405,16 @@ export class GanttBoard implements OnInit, OnChanges {
     return { left: Math.max(0, left), width: Math.max(this.columnWidth, width), visible: width > 0 };
   }
 
+  // スケジュール終了日の位置を取得
   getScheduledEndPositionPx(task: Task): number {
     if (!task.scheduledEndDate) return 0;
     const end = new Date(task.scheduledEndDate);
     end.setHours(23, 59, 59, 999);
     const endIndex = Math.floor((end.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
-    return endIndex * this.columnWidth;
+    return (endIndex * this.columnWidth) + (this.columnWidth / 2);
   }
 
+  // タスクが期限切れかどうかを判定
   isTaskOverdue(task: Task): boolean {
     if (task.status === 'done') return false;
     const today = new Date();

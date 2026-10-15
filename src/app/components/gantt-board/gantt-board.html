@@ -6,13 +6,6 @@
         </div>
 
         <div class="header-controls">
-            <!-- 表示単位切替 -->
-            <div class="scale-switcher">
-                <button [class.active]="viewScale === 'day'" (click)="onViewScaleChange('day')">日</button>
-                <button [class.active]="viewScale === 'week'" (click)="onViewScaleChange('week')">週</button>
-                <button [class.active]="viewScale === 'month'" (click)="onViewScaleChange('month')">月</button>
-            </div>
-
             <!-- ズーム機能 -->
             <div class="zoom-controls">
                 <button type="button" class="zoom-btn" (click)="onZoomOut()" title="ズームアウト">➖</button>
