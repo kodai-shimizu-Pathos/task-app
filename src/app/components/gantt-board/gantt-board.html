@@ -1,79 +1,66 @@
 <div class="gantt-board-wrapper">
-    <!-- ヘッダーコントロールバー-->
+    <!-- ヘッダーコントロールバー -->
     <div class="gantt-header-bar">
         <div class="header-left">
-            <h3 class="gantt-title">
-                📁 {{ project ? '課題: ' + project.title : '全プロジェクト・ガントチャート'}}
-            </h3>
+            <h3 class="gantt-title">📊 ガントチャート</h3>
         </div>
 
-        <div class="header-contorols">
-            <!-- 表示単位切替-->
-             <div class="scale-switcher">
-                <button [class.active]="viewScale ==='day'"
-                    (click)="onViewScaleChange('day')">日
-                </button>
-                <button [class.active]="viewScale === 'week'"
-                    (Click)="onViewScaleChange('week')">週
-                </button>
-                <button [class.active]="viewScale === 'month'"
-                    (click)="onViewScaleChange('month')">月
-                </button>
-             </div>
+        <div class="header-controls">
+            <!-- 表示単位切替 -->
+            <div class="scale-switcher">
+                <button [class.active]="viewScale === 'day'" (click)="onViewScaleChange('day')">日</button>
+                <button [class.active]="viewScale === 'week'" (click)="onViewScaleChange('week')">週</button>
+                <button [class.active]="viewScale === 'month'" (click)="onViewScaleChange('month')">月</button>
+            </div>
 
-             <!-- イナズマ線トグル -->
-              <button
-                class="toggle-inazuma-btn"
-                [class.active]="showInazumaLine"
-                (click)="showInazumaLine = !showInazumaLine">
-                ⚡ イナズマ線： {{ showInazumaLine ? 'ON' : 'OFF' }}
-            </button>
+            <!-- ズーム機能 -->
+            <div class="zoom-controls">
+                <button type="button" class="zoom-btn" (click)="onZoomOut()" title="ズームアウト">➖</button>
+                <span class="zoom-label">{{ columnWidth }}px</span>
+                <button type="button" class="zoom-btn" (click)="onZoomIn()" title="ズームイン">➕</button>
+            </div>
 
-            <!-- 新規タスク追加-->
-             <button class="btn-primary" (click)="onAddTask()">＋ 新規タスク</button>
+            <!-- 今日へのスクロールボタン -->
+            <button type="button" class="btn-today" (click)="onScrollToToday()" title="本日の位置へスクロール">📍 今日</button>
+
+            <!-- 新規タスク追加 -->
+            <button type="button" class="btn-primary" (click)="onAddNewTask()">＋ 新規タスク</button>
         </div>
     </div>
 
-    <!-- ガントメイン表示エリア (左右分割)-->
-     <div class="gantt-main-container">
-
-        <!-- 左列：WBS (階層型タスク一覧)-->
-         <div class="wbs-pane">
+    <!-- メイン表示エリア -->
+    <div class="gantt-main-container">
+        <!-- 左列: WBS領域 -->
+        <div class="wbs-pane" [style.width.px]="wbsWidth">
             <div class="wbs-header">
                 <div class="col-title">課題 / タスク名（WBS）</div>
-                <div class="col-progress">進捗</div>
                 <div class="col-priority">優先度</div>
             </div>
 
             <div class="wbs-body">
-                <!-- 親課題行 -->
-                 <div class="wbs-row parent-row" *ngIf="project">
+                <!-- 親課題行（クリックで選択可能） -->
+                <div class="wbs-row parent-row" *ngIf="project" (click)="onProjectClick(project, $event)">
                     <div class="col-title">
                         <span class="tree-icon">📂</span>
                         <span class="title-text">{{ project.title }}</span>
                     </div>
-                    <div class="col-progress">{{ project.progressPercentage || 0}}%</div>
                     <div class="col-priority">
                         <span class="badge-priority" [ngClass]="'priority-' + (project.priority | lowercase)">
-                            ● {{ project.priority | uppercase }}
+                            {{ getPriorityLabel(project.priority) }}
                         </span>
                     </div>
-                 </div>
-                 <!-- 子タスク行一覧 -->
-                  <div
-                    *ngFor="let task of tasks"
-                    class="wbs-row task-row"
-                    (click)="onSelectTask(task)">
+                </div>
+
+                <!-- 子タスク行一覧 -->
+                <div *ngFor="let task of tasks" class="wbs-row task-row" [class.is-overdue]="isTaskOverdue(task)" (click)="onTaskClick(task, $event)">
                     <div class="col-title">
                         <span class="tree-indent"> └ ♦ </span>
-                        <span class="title-text" [class.done-text]="task.status === 'done'">
-                            {{ task.title }}
-                        </span>
+                        <span class="title-text" [class.done-text]="task.status === 'done'">{{ task.title }}</span>
+                        <span *ngIf="isTaskOverdue(task)" class="overdue-alert" title="期限超過">⚠️</span>
                     </div>
-                    <div class="col-progress">{{ task.progress || 0 }}%</div>
                     <div class="col-priority">
                         <span class="badge-priority" [ngClass]="'priority-' + (task.priority | lowercase)">
-                            ● {{ task.priority | uppercase }}
+                            {{ getPriorityLabel(task.priority) }}
                         </span>
                     </div>
                 </div>
@@ -84,73 +71,50 @@
             </div>
         </div>
 
-        <!-- 右列：タイムライン (バー＆イナズマ線)-->
-        <div class="timeline-pane">
-            <!-- カレンダー日付ヘッダー-->
+        <!-- スプリッター（WBS と Timeline の可動境界線） -->
+        <div class="splitter" (mousedown)="onSplitterMouseDown($event)" [class.active]="isResizing" title="ドラッグして WBS の幅を変更"></div>
+
+        <!-- 右列: タイムライン領域 -->
+        <div class="timeline-pane" #timelinePane (wheel)="onTimelineWheel($event)" (scroll)="onTimelineScroll($event)">
             <div class="timeline-header">
-                <div
-                    *ngFor="let col of timelineColumns"
-                    class="date-col-header"
-                    [class.today-col]="col.isToday"
-                    [class.weekend-col]="col.isWeekend">
+                <div *ngFor="let col of timelineColumns" class="date-col-header" [style.width.px]="columnWidth" [class.today-col]="col.isToday">
                     <span class="date-label">{{ col.label }}</span>
                     <span class="day-of-week">{{ col.dayOfWeek }}</span>
                 </div>
             </div>
 
-            <!-- タイムライングリッド＆バー描画部 -->
             <div class="timeline-body">
-                <!-- イナズマ線 -->
-                <svg *ngIf="showInazumaLine && tasks.length > 0" class="inazuma-svg-layer">
-                    <polyline
-                        [attr.points]="getInazumaPoints()"
-                        class="inazuma-polyline" />
-                </svg>
-
-                <!-- 親課題ガントバ(背景行)ー -->
+                <!-- 親課題行 (背景) -->
                 <div class="timeline-row parent-row" *ngIf="project">
-                    <div
-                        *ngFor="let col of timelineColumns"
-                        class="gird-cell"
-                        [class.today-cell]="col.isToday">
-                    </div>
+                    <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday"></div>
                 </div>
 
-                <!-- 子タスクガントバ描画 -->
-                <div
-                    *ngFor="let task of tasks"
-                    class="timeline-row task-row"
-                    (click)="onSelectTask(task)">
+                <!-- 子タスク行 -->
+                <div *ngFor="let task of tasks" class="timeline-row task-row" (click)="onTaskClick(task, $event)">
+                    <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday"></div>
 
-                    <!-- 背景グリッド線 -->
-                    <div
-                        *ngFor="let col of timelineColumns"
-                        class="gird-cell"
-                        [class.today-cell]="col.isToday">
-                    </div>
-
-                    <!-- ガントバー -->
-                    <ng-container *ngIf="getTaskBarPosition(task) as bar">
-                        <div
-                            *ngIf="bar.visible"
+                    <ng-container *ngIf="getTaskBarPositionPx(task) as bar">
+                        <div *ngIf="bar.visible"
                             class="gantt-bar"
                             [ngClass]="[task.status, 'priority-' + (task.priority | lowercase)]"
-                            [style.left.%]="bar.left"
-                            [style.width.%]="bar.width">
-                        
-                        <!-- 完了率オーバーレイ -->
-                        <div
-                            class="gantt-bar-fill"
-                            [style.width.%]="task.progress || 0">
-                        </div>
+                            [class.is-overdue]="isTaskOverdue(task)"
+                            [style.left.px]="bar.left"
+                            [style.width.px]="bar.width"
+                            (mousedown)="onBarMouseDown(task, $event, 'move')">
+                            
+                            <!-- バー左端のリサイズハンドル -->
+                            <div class="resize-handle resize-left" (mousedown)="onBarMouseDown(task, $event, 'resize-left')" title="ドラッグして開始日を変更"></div>
 
-                        <!-- バーないテキスト -->
-                        <span class="bar-label">{{ task.title }}</span>
+                            <span class="bar-label">{{ task.title }}</span>
 
-                        <!-- デッドラインインジケーター -->
-                        <span *ngIf="task.deadline" class="deadline-marker" title="最終期限： {{ task.deadline }}">
-                            ⏰ {{ task.deadline | date:'MM/dd' }}
-                        </span>
+                            <!-- 完了予定日フラグマーカー -->
+                            <span *ngIf="task.scheduledEndDate" class="scheduled-end-marker"
+                                [style.left.px]="getScheduledEndPositionPx(task) - bar.left"
+                                (mousedown)="onFlagMouseDown(task, $event)"
+                                title="ドラッグして完了予定日を変更： {{ task.scheduledEndDate }}">🚩</span>
+
+                            <!-- バー右端のリサイズハンドル -->
+                            <div class="resize-handle resize-right" (mousedown)="onBarMouseDown(task, $event, 'resize-right')" title="ドラッグして期限を変更"></div>
                         </div>
                     </ng-container>
                 </div>

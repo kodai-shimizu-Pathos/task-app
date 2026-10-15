@@ -1,6 +1,6 @@
-import { Component, EventEmitter, Input, OnInit, Output, SimpleChanges, OnChanges} from '@angular/core'; 
+import { Component, EventEmitter, Input, OnInit, Output, SimpleChanges, OnChanges } from '@angular/core'; 
 import { CommonModule } from '@angular/common'; 
-import { FormsModule } from '@angular/forms'; // フォームのバリデーションを行うために使用
+import { FormsModule } from '@angular/forms';
 import { Task, PriorityLevel, Status } from '../../models/task.model';
 import { ParentProject } from '../../models/project.model';
 
@@ -16,14 +16,11 @@ export class TaskForm implements OnInit, OnChanges {
   @Input() projects: ParentProject[] = [];
   @Input() taskToEdit?: Task | null = null;
 
-  @Output() taskCreated = new EventEmitter<Task>(); // 新規タスク作成時のイベント
-  @Output() taskUpdated = new EventEmitter<Task>(); // タスク更新時のイベント
-  @Output() taskDeleted = new EventEmitter<string>(); // タスク削除時のイベント
-
-  // モーダルを閉じるイベント
+  @Output() taskCreated = new EventEmitter<Task>();
+  @Output() taskUpdated = new EventEmitter<Task>();
+  @Output() taskDeleted = new EventEmitter<string>();
   @Output() closePanel = new EventEmitter<void>();
 
-  // フォーム用モデル
   taskData: Partial<Task> = {
     title: '',
     status: 'todo',
@@ -42,26 +39,31 @@ export class TaskForm implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['taskToEdit'] || changes['projectId']) {
+    if (changes['taskToEdit'] || changes['projectId'] || changes['projects']) {
       this.populateForm();
     }
   }
 
   private populateForm(): void {
+    // 親課題IDのデフォルト値を設定（渡されたprojectId、またはprojectsの先頭要素のID）
+    const defaultParentId = this.projectId || (this.projects && this.projects.length > 0 ? this.projects[0].id : '');
+
     if (this.taskToEdit) {
       // 編集モード
-      this.taskData = {...this.taskToEdit};
-      // タグはカンマ区切りの文字列から配列に変換
-      this.tagsInput = Array.isArray(this.taskToEdit.tags) ? this.taskToEdit.tags.join(', '): '';
+      this.taskData = { ...this.taskToEdit };
+      if (!this.taskData.parentId) {
+        this.taskData.parentId = defaultParentId;
+      }
+      this.tagsInput = Array.isArray(this.taskToEdit.tags) ? this.taskToEdit.tags.join(', ') : '';
     } else {
-      // 新規作成モード：初期化
-      this.resetForm();
+      // 新規作成モード
+      this.resetForm(defaultParentId);
     }
   }
 
-  private resetForm(): void {
+  private resetForm(defaultParentId: string): void {
     this.taskData = {
-      parentId: this.projectId,
+      parentId: defaultParentId,
       title: '',
       status: 'todo',
       priority: 'medium',
@@ -73,13 +75,11 @@ export class TaskForm implements OnInit, OnChanges {
     this.tagsInput = '';
   }
 
-  // カンマ区切りの文字列を string[]に分解するヘルパー
   private parseTags(input: string): string[] {
     if (!input || !input.trim()) return [];
     return input.split(',').map(tag => tag.trim().replace(/^#/, '')).filter(tag => tag.length > 0);
   }
 
-  // フォーム送信 (タスク作成ボタン押下時)
   onSubmit(): void {
     if (!this.taskData.title?.trim() || !this.taskData.parentId) {
       alert('タスク名と親課題を選択してください');
@@ -89,27 +89,25 @@ export class TaskForm implements OnInit, OnChanges {
     const parsedTags = this.parseTags(this.tagsInput);
 
     if (this.taskToEdit) {
-      // 更新処理
       const updatedTask: Task = {
-        ...(this.taskToEdit),
+        ...this.taskToEdit,
         ...(this.taskData as Task),
         tags: parsedTags,
-        progress: this.taskData.status === 'done' ? 100 : (this.taskData.status === 'in-progress' ? 50 :0),
+        progress: this.taskData.status === 'done' ? 100 : (this.taskData.status === 'in-progress' ? 50 : 0),
         updatedAt: new Date().toISOString()
       };
       this.taskUpdated.emit(updatedTask);
     } else {
-      // 新規作成処理
       const newTask: Task = {
-        id: `task-${Date.now()}`, // 簡易的な一意のID (タイムスタンプ)
-        parentId: this.projectId,
+        id: 'task-' + Date.now(),
+        parentId: this.taskData.parentId,
         title: this.taskData.title!,
         status: this.taskData.status || 'todo',
         priority: this.taskData.priority || 'medium',
-        scheduledStartDate: this.taskData.scheduledStartDate,
-        scheduledEndDate: this.taskData.scheduledEndDate,
-        deadline: this.taskData.deadline,
-        description: this.taskData.description,
+        scheduledStartDate: this.taskData.scheduledStartDate || '',
+        scheduledEndDate: this.taskData.scheduledEndDate || '',
+        deadline: this.taskData.deadline || '',
+        description: this.taskData.description || '',
         tags: parsedTags,
         progress: this.taskData.status === 'done' ? 100 : (this.taskData.status === 'in-progress' ? 50 : 0),
         createdAt: new Date().toISOString()
@@ -118,7 +116,7 @@ export class TaskForm implements OnInit, OnChanges {
     }
     this.onClose();
   }
-  // タスク削除ボタン押下時
+
   onDelete(): void {
     if (this.taskToEdit && confirm(`タスク「${this.taskToEdit.title}」を削除しますか？`)) {
       this.taskDeleted.emit(this.taskToEdit.id);
@@ -126,7 +124,6 @@ export class TaskForm implements OnInit, OnChanges {
     }
   }
 
-  // モーダルを閉じるメソッド
   onClose(): void {
     this.closePanel.emit();
   }

@@ -28,4 +28,14 @@ export class TaskCard {
     
     return deadlineDate < today;
   }
+
+  // 優先度を日本語ラベルに変換
+  getPriorityLabel(priority?: string): string {
+    if (!priority) return '中';
+    const lower = priority.toLowerCase();
+    if (lower === 'high') return '高';
+    if (lower === 'medium') return '中';
+    if (lower === 'low') return '低';
+    return '中';
+  }
 }

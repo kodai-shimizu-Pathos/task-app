@@ -2,7 +2,7 @@
     <!-- ヘッダー：優先度バッジ -->
     <div class="card-header">
       <span class="badge-priority" [ngClass]="'priority-' + project.priority.toLowerCase()">
-        ● {{ project.priority | uppercase }}
+        {{ getPriorityLabel(project.priority) }}
       </span>
       <span class="status-label" *ngIf="project.status === 'done'">✅ 完了</span>
     </div>

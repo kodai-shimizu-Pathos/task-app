@@ -2,7 +2,7 @@
     <!-- ヘッダー：優先度バッジ-->
     <div class="card-header">
         <span class="badge-priority" [ngClass]="'priority-' + task.priority.toLowerCase()">
-            ● {{ task.priority | uppercase}}
+            {{ getPriorityLabel(task.priority) }}
         </span>
     </div>
      

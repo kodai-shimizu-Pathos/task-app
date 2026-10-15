@@ -1,5 +1,5 @@
 <div class="app-container">
-  <!-- 1. 左固定 App Shell サイドバー-->
+  <!-- 1. 左固定 App Shell サイドバー -->
   <app-shell
     [activeView]="activeView"
     (viewChange)="onViewchange($event)"
@@ -7,26 +7,26 @@
     (openSettings)="onOpenSettings()">
   </app-shell>
 
-  <!-- 2. 右側 メインエリア-->
+  <!-- 2. 右側 メインエリア -->
   <div class="app-main-layout">
     <!-- グローバルヘッダー -->
     <header class="app-header">
       <div class="header-left">
         <h1 class="app-title">BeSideFlow AI</h1>
-        <button class="btn-add-project" (click)="onOpenNewProjectForm()">
+        <button type="button" class="btn-add-project" (click)="onOpenNewProjectForm()">
           ＋ 親課題を追加
         </button>
       </div>
 
       <div class="header-center">
         <div class="view-switcher">
-          <button [class.active]="currentMode === 'KANBAN'" (click)="currentMode = 'KANBAN'">カンバン</button>
-          <button [class.active]="currentMode === 'GANTT'" (click)="currentMode = 'GANTT'">ガントチャート</button>
+          <button type="button" [class.active]="currentMode === 'KANBAN'" (click)="currentMode = 'KANBAN'">カンバン</button>
+          <button type="button" [class.active]="currentMode === 'GANTT'" (click)="currentMode = 'GANTT'">ガントチャート</button>
         </div>
       </div>
 
       <div class="header-right">
-        <button class="theme-toggle-btn" (click)="toggleTheme()">
+        <button type="button" class="theme-toggle-btn" (click)="toggleTheme()">
           {{ currentTheme === 'dark' ? '☀️ ライト' : '🌙 ダーク' }}
         </button>
       </div>
@@ -35,16 +35,27 @@
     <!-- メインコンテンツ領域 -->
     <main class="main-content">
       
-      <!-- パターンA：親課題が未選択の時（全画面 Master UI: SCR-01） -->
+      <!-- パターンA：親課題が未選択の時（全画面 Master UI: SCR-01 / SCR-02） -->
       <div class="full-master-pane" *ngIf="!selectedProject">
         <app-master-kanban-board
+          *ngIf="currentMode === 'KANBAN'"
           [projects]="projects"
           (selectProject)="onSelectProject($event)"
           (parentTaskUpdated)="onParentTaskUpdated($event)">
         </app-master-kanban-board>
+
+        <app-gantt-board
+          *ngIf="currentMode === 'GANTT'"
+          [tasks]="allTasks"
+          [projects]="projects"
+          (selectTask)="onSelectTask($event)"
+          (selectProject)="onSelectProject($event)"
+          (addTask)="onOpenNewTaskForm()"
+          (taskUpdated)="onTaskUpdated($event)">
+        </app-gantt-board>
       </div>
 
-      <!-- パターンB：親課題が選択されている時（Master-Detail UI: SCR-03） -->
+      <!-- パターンB：親課題が選択されている時（Master-Detail UI: SCR-03 / SCR-04） -->
       <ng-container *ngIf="selectedProject">
         <!-- 左側: Master情報パネル -->
         <aside class="master-pane">
@@ -72,6 +83,7 @@
             [project]="selectedProject"
             [projects]="projects"
             (selectTask)="onSelectTask($event)"
+            (selectProject)="onSelectProject($event)"
             (addTask)="onOpenNewTaskForm()"
             (taskUpdated)="onTaskUpdated($event)">
           </app-gantt-board>
