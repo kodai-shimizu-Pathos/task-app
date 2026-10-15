@@ -77,8 +77,7 @@
             </div>
 
             <div class="timeline-body">
-                <!-- 親課題行 (背景) -->
-                <!-- 親課題ガントバ(背景行)ー -->
+                <!-- 親課題ガントバー(背景行) -->
                 <div class="timeline-row parent-row" *ngIf="project">
                     <div
                         *ngFor="let col of timelineColumns"
@@ -87,7 +86,7 @@
                         [class.today-cell]="col.isToday">
                     </div>
                     
-                    <!-- 【追加】親課題用のガントバー -->
+                    <!-- 親課題用のガントバー -->
                     <ng-container *ngIf="getTaskBarPositionPx($any(project)) as bar">
                         <div
                             *ngIf="bar.visible"
@@ -95,10 +94,19 @@
                             [ngClass]="[project.status, 'priority-' + (project.priority | lowercase)]"
                             [class.is-overdue]="isTaskOverdue($any(project))"
                             [style.left.px]="bar.left"
-                            [style.width.px]="bar.width">
+                            [style.width.px]="bar.width"
+                            (mousedown)="onBarMouseDown($any(project), $event, 'move')">
+
+                            <!-- バー左端のリサイズハンドル -->
+                            <div class="resize-handle resize-left"
+                                (mousedown)="onBarMouseDown($any(project), $event, 'resize-left')"
+                                (click)="$event.stopPropagation()"
+                                title="ドラッグして開始日を変更">
+                            </div>
 
                             <span class="bar-label">📁 {{ project.title }}</span>
 
+                            <!-- 完了予定日フラグマーカー -->
                             <span 
                                 *ngIf="project.scheduledEndDate"
                                 class="scheduled-end-marker"
@@ -106,9 +114,16 @@
                                 title="完了予定日： {{ project.scheduledEndDate }}">
                                 🚩
                             </span>
+                            <!-- 最終期限マーカー -->
                             <span *ngIf="project.deadline" class="deadline-marker" title="最終期限： {{ project.deadline }}">
                                 ⏰ {{ project.deadline | date:'MM/dd' }}
                             </span>
+                            <!-- バー右端のリサイズハンドル -->
+                            <div class="resize-handle resize-right"
+                            (mousedown)="onBarMouseDown($any(project), $event, 'resize-right')"
+                            (click)="$event.stopPropagation()"
+                            title="ドラッグして期限を変更">
+                            </div>
                         </div>
                     </ng-container>
                 </div>

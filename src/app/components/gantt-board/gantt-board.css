@@ -398,3 +398,31 @@
     color: var(--text-muted);
     font-size: 12px;
   }
+
+  /* =========================================
+  親課題ガントバーの特別スタイル
+  ========================================= */
+  .gantt-bar.parent-bar {
+    background-color: rgba(37, 99, 235, 0.05); /* 少し透かした背景 */
+    border: 2px dashed var(--accent-color);    /* 青色の破線で「枠」を表現 */
+    box-shadow: none;                          /* 影を消して平坦に */
+    height: 24px;                              /* 子タスク(28px)より少し細くする */
+    top: 10px;                                 /* 縦位置の微調整 */
+    /* pointer-events: none; */
+  }
+
+  /* ライトモード用の微調整 */
+  body[data-theme="light"] .gantt-bar.parent-bar {
+    background-color: rgba(9, 105, 218, 0.05);
+  }
+
+  .gantt-bar.parent-bar .bar-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+    opacity: 0.8;
+  }
+
+  .gantt-bar.parent-bar .deadline-marker {
+    opacity: 0.7; /* 期限アイコンも少し薄く */
+  }

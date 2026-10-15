@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Task, PriorityLevel } from '../../models/task.model';
@@ -29,6 +29,7 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   @Output() selectProject = new EventEmitter<ParentProject>();
   @Output() addTask = new EventEmitter<void>();
   @Output() taskUpdated = new EventEmitter<Task>();
+  @Output() projectUpdated = new EventEmitter<any>();
 
   @ViewChild('timelinePane', { static: false }) timelinePane?: ElementRef<HTMLDivElement>;
 
@@ -46,7 +47,8 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   columnWidth: number = 48;
   timelineScrollLeft: number = 0;
 
-  draggedTask: Task | null = null;
+  // 【修正】draggedItem に統一
+  draggedItem: Task | ParentProject | null = null;
   dragType: 'move' | 'resize-left' | 'resize-right' | 'flag' | null = null;
   dragStartX: number = 0;
   dragHasMoved: boolean = false;
@@ -55,6 +57,7 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   dragStartScheduledEnd?: string;
   dragStartDeadline?: string;
 
+  // 【追加】スプリッターとフラグの手動ドラッグ用にプロパティを復活
   private boundMouseMove?: (e: MouseEvent) => void;
   private boundMouseUp?: () => void;
 
@@ -75,13 +78,11 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-  // ビューが初期化された後に今日の日付にスクロール
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.onScrollToToday();
     }, 0);
   }
-
 
   onViewScaleChange(scale: 'day' | 'week' | 'month'): void {
     this.viewScale = scale;
@@ -90,7 +91,6 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   }
 
   private calculateTimelineRange(): void {
-    // 1. タスクが1つもない場合は、今日を基準に前後30日を表示
     if (!this.tasks || this.tasks.length === 0) {
       const today = new Date();
       this.timelineStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
@@ -99,13 +99,11 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
       return;
     }
 
-    // 2. 全タスクの中から「最小の開始日」と「最大の終了日(期限)」を求める
     let minDateMs = new Date('9999-12-31').getTime();
     let maxDateMs = new Date('1970-01-01').getTime();
 
     this.tasks.forEach(task => {
       const start = task.scheduledStartDate ? new Date(task.scheduledStartDate).getTime() : null;
-      // 終了日はdeadlineを優先、なければscheduledEndDateを使用
       const targetEndDate = task.deadline ? task.deadline : task.scheduledEndDate;
       const end = targetEndDate ? new Date(targetEndDate).getTime() : null;
 
@@ -113,29 +111,24 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
       if (end && end > maxDateMs) maxDateMs = end;
     });
 
-    // 3. タイムラインの始点と終点を設定
     const startDate = new Date(minDateMs);
-    startDate.setDate(startDate.getDate() -30);
-    this.timelineStartDate = startDate; // getTaskBarPositionPx()で使用
+    startDate.setDate(startDate.getDate() - 30);
+    this.timelineStartDate = startDate; 
 
     const endDate = new Date(maxDateMs);
     endDate.setDate(endDate.getDate() + 30);
 
-    // 4. 始点から終点までの日付配列を生成
     this.generateTimelineColumns(this.timelineStartDate, endDate);
   }
 
-  // 日付の配列を作る処理
   generateTimelineColumns(start: Date, end: Date): void {
     const columns = [];
     let currentDate = new Date(start);
 
-    // 今日の日付判定用
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
-    // 開始日から終了日まで1日ずつループして配列に詰める
     while (currentDate <= end) {
       const d = new Date(currentDate);
       const yyyy = d.getFullYear();
@@ -153,16 +146,13 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
         isWeekend: dayNum === 0 || dayNum === 6,
       });
 
-      // 日付を1日進める
       currentDate.setDate(currentDate.getDate() + 1);
     }
-
     this.timelineColumns = columns;
   }
 
   onTaskClick(task: Task, event: Event): void {
     event.stopPropagation();
-    console.log('🔍 [4] GanttBoard onTaskClick 発火:', task);
     if (task && task.id) {
       this.selectTask.emit(task);
     }
@@ -234,12 +224,10 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // 今日の日付がタイムラインのどの位置にあるかを計算
     const todayIndex = Math.floor(
       (today.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000)
     );
 
-    // タイムラインのスクロール位置を計算
     if (this.timelinePane && this.timelinePane.nativeElement) {
       const offset = (this.timelinePane.nativeElement.clientWidth / 4) - (this.columnWidth / 2);
       const scrollLeft = todayIndex * this.columnWidth - offset;
@@ -254,27 +242,26 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-  onBarMouseDown(task: Task, event: MouseEvent, dragType: 'move' | 'resize-left' | 'resize-right'): void {
+  // ========================================
+  // ガントバーのドラッグ制御 (@HostListener を使用)
+  // ========================================
+  onBarMouseDown(item: Task | ParentProject, event: MouseEvent, dragType: 'move' | 'resize-left' | 'resize-right'): void {
     event.stopPropagation();
 
-    this.draggedTask = task;
+    this.draggedItem = item;
     this.dragType = dragType;
     this.dragStartX = event.clientX;
     this.dragHasMoved = false;
 
-    this.dragStartScheduledStart = task.scheduledStartDate;
-    this.dragStartScheduledEnd = task.scheduledEndDate;
-    this.dragStartDeadline = task.deadline;
-
-    this.boundMouseMove = this.onBarMouseMove.bind(this);
-    this.boundMouseUp = this.onBarMouseUp.bind(this);
-
-    document.addEventListener('mousemove', this.boundMouseMove);
-    document.addEventListener('mouseup', this.boundMouseUp);
+    this.dragStartScheduledStart = item.scheduledStartDate;
+    this.dragStartScheduledEnd = item.scheduledEndDate;
+    this.dragStartDeadline = item.deadline;
   }
 
+  @HostListener('document:mousemove', ['$event'])
   onBarMouseMove(event: MouseEvent): void {
-    if (!this.draggedTask || !this.dragType) return;
+    // スプリッターやフラグなど、バー以外のドラッグ中の場合は処理しない
+    if (!this.draggedItem || !this.dragType || this.dragType === 'flag') return;
 
     const diffPixels = event.clientX - this.dragStartX;
     if (Math.abs(diffPixels) > 3) {
@@ -285,57 +272,102 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
 
     const diffDays = Math.round(diffPixels / (this.columnWidth || 48));
 
+    // 【修正】this.draggedTask を this.draggedItem に統一
     if (this.dragType === 'move') {
       if (this.dragStartScheduledStart) {
         const start = new Date(this.dragStartScheduledStart);
         start.setDate(start.getDate() + diffDays);
-        this.draggedTask.scheduledStartDate = this.formatDateString(start);
+        this.draggedItem.scheduledStartDate = this.formatDateString(start);
       }
       if (this.dragStartScheduledEnd) {
         const end = new Date(this.dragStartScheduledEnd);
         end.setDate(end.getDate() + diffDays);
-        this.draggedTask.scheduledEndDate = this.formatDateString(end);
+        this.draggedItem.scheduledEndDate = this.formatDateString(end);
       }
       if (this.dragStartDeadline) {
         const deadline = new Date(this.dragStartDeadline);
         deadline.setDate(deadline.getDate() + diffDays);
-        this.draggedTask.deadline = this.formatDateString(deadline);
+        this.draggedItem.deadline = this.formatDateString(deadline);
       }
     } else if (this.dragType === 'resize-left') {
       if (this.dragStartScheduledStart) {
         const start = new Date(this.dragStartScheduledStart);
         start.setDate(start.getDate() + diffDays);
-        this.draggedTask.scheduledStartDate = this.formatDateString(start);
+        this.draggedItem.scheduledStartDate = this.formatDateString(start);
       }
     } else if (this.dragType === 'resize-right') {
       if (this.dragStartDeadline) {
         const deadline = new Date(this.dragStartDeadline);
         deadline.setDate(deadline.getDate() + diffDays);
-        this.draggedTask.deadline = this.formatDateString(deadline);
+        this.draggedItem.deadline = this.formatDateString(deadline);
       }
     }
   }
 
-  onBarMouseUp(): void {
-    if (this.draggedTask) {
-      if (this.dragHasMoved) {
-        console.log('🔍 [2-A] GanttBoard ドラッグ移動完了:', this.draggedTask);
-        this.taskUpdated.emit(this.draggedTask);
+  @HostListener('document:mouseup', ['$event'])
+  onBarMouseUp(event: MouseEvent): void {
+    // バー以外のドラッグ（フラグなど）の場合はここで抜ける
+    if (!this.draggedItem || !this.dragType || this.dragType === 'flag') return;
+
+    const diffPixels = event.clientX - this.dragStartX;
+    const diffDays = Math.round(diffPixels / this.columnWidth);
+
+    const isProject = 'totalTaskCount' in this.draggedItem;
+
+    if (diffDays !== 0 && this.dragHasMoved) {
+      if (isProject) {
+        // 親課題をドラッグした場合
+        this.projectUpdated.emit(this.draggedItem);
+
+        // 移動(move)の場合のみ子タスクも連動スライドさせる
+        if (this.dragType === 'move') {
+          this.tasks.forEach(task => {
+            this.shiftTaskDates(task, diffDays);
+            this.taskUpdated.emit(task);
+          });
+        }
       } else {
-        // ドラッグ移動しなかった場合はクリック（詳細画面オープン）
-        console.log('🔍 [2-B] GanttBoard バークリック (選択):', this.draggedTask);
-        this.selectTask.emit(this.draggedTask);
+        // 子タスクをドラッグした場合
+        this.taskUpdated.emit(this.draggedItem as Task);
       }
     }
-    this.draggedTask = null;
-    this.dragType = null;
-    if (this.boundMouseMove) document.removeEventListener('mousemove', this.boundMouseMove);
-    if (this.boundMouseUp) document.removeEventListener('mouseup', this.boundMouseUp);
+
+    // ドラッグ状態をリセット
+    this.resetDragState();
   }
 
+  private resetDragState(): void {
+    this.draggedItem = null;
+    this.dragType = null;
+    this.dragStartX = 0;
+    this.dragHasMoved = false;
+    this.dragStartScheduledStart = undefined;
+    this.dragStartScheduledEnd = undefined;
+    this.dragStartDeadline = undefined;
+  }
+
+  private shiftTaskDates(task: any, diffDays: number): void {
+    const shiftDate = (dateStr?: string) => {
+      if (!dateStr) return dateStr;
+      const d = new Date(dateStr.replace(/-/g, '/'));
+      d.setDate(d.getDate() + diffDays);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    task.scheduledStartDate = shiftDate(task.scheduledStartDate);
+    task.scheduledEndDate = shiftDate(task.scheduledEndDate);
+    task.deadline = shiftDate(task.deadline);
+  }
+
+  // ========================================
+  // 完了予定日フラグ（🚩）のドラッグ制御
+  // ========================================
   onFlagMouseDown(task: Task, event: MouseEvent): void {
     event.stopPropagation();
-    this.draggedTask = task;
+    this.draggedItem = task; // 【修正】draggedItem に統一
     this.dragType = 'flag';
     this.dragStartX = event.clientX;
     this.dragStartScheduledEnd = task.scheduledEndDate;
@@ -348,22 +380,22 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   }
 
   onFlagMouseMove(event: MouseEvent): void {
-    if (!this.draggedTask || this.dragType !== 'flag') return;
+    if (!this.draggedItem || this.dragType !== 'flag') return;
     const diffPixels = event.clientX - this.dragStartX;
     const diffDays = Math.round(diffPixels / (this.columnWidth || 48));
 
     if (this.dragStartScheduledEnd) {
       const end = new Date(this.dragStartScheduledEnd);
       end.setDate(end.getDate() + diffDays);
-      this.draggedTask.scheduledEndDate = this.formatDateString(end);
+      this.draggedItem.scheduledEndDate = this.formatDateString(end); // 【修正】
     }
   }
 
   onFlagMouseUp(): void {
-    if (this.draggedTask) {
-      this.taskUpdated.emit(this.draggedTask);
+    if (this.draggedItem) {
+      this.taskUpdated.emit(this.draggedItem as Task);
     }
-    this.draggedTask = null;
+    this.draggedItem = null;
     this.dragType = null;
     if (this.boundMouseMove) document.removeEventListener('mousemove', this.boundMouseMove);
     if (this.boundMouseUp) document.removeEventListener('mouseup', this.boundMouseUp);
@@ -377,7 +409,6 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   }
 
   getTaskBarPositionPx(item: Task | ParentProject): { left: number; width: number; visible: boolean } {
-    // スケジュール開始日と終了日がない場合は、期限があれば期限によって位置を計算
     if (!item.scheduledStartDate || !item.scheduledEndDate) {
       if (item.deadline) {
         const dl = new Date(item.deadline);
@@ -405,7 +436,6 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     return { left: Math.max(0, left), width: Math.max(this.columnWidth, width), visible: width > 0 };
   }
 
-  // スケジュール終了日の位置を取得
   getScheduledEndPositionPx(item: Task | ParentProject): number {
     if (!item.scheduledEndDate) return 0;
     const end = new Date(item.scheduledEndDate);
@@ -414,7 +444,6 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     return (endIndex * this.columnWidth) + (this.columnWidth / 2);
   }
 
-  // タスクが期限切れかどうかを判定
   isTaskOverdue(item: Task | ParentProject): boolean {
     if (item.status === 'done') return false;
     const today = new Date();

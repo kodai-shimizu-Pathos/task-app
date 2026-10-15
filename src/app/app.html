@@ -51,12 +51,13 @@
 
         <app-gantt-board
           *ngIf="currentMode === 'GANTT'"
-          [tasks]="allTasks"
+          [tasks]="currentTasks"
+          [project]="selectedProject"
           [projects]="projects"
           (selectTask)="onSelectTask($event)"
-          (selectProject)="onSelectProject($event)"
           (addTask)="onOpenNewTaskForm()"
-          (taskUpdated)="onTaskUpdated($event)">
+          (taskUpdated)="onTaskUpdated($event)"
+          (projectUpdated)="onParentTaskUpdated($event)">
         </app-gantt-board>
       </div>
 
