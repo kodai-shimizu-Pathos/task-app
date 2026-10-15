@@ -1,8 +1,16 @@
 import { Injectable, inject, Injector } from '@angular/core';
 import { Firestore, collection, collectionData, doc, addDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { ParentProject } from '../models/project.model';
 import { Task } from '../models/task.model';
+
+// サイドポケットメモの型定義
+export interface SidePocketMemo {
+  id: string;
+  content: string;
+  createdAt: string;
+  parentProjectId?: string; // オプション：特定の親課題に関連付ける場合
+}
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +27,10 @@ export class TaskDataService {
   readonly projects$!: Observable<ParentProject[]>;
   readonly tasks$!: Observable<Task[]>;
 
+  // サイドポケットメモ状態管理 (RxJS BehaviorSubject)
+  private sidePocketMemosSubject = new BehaviorSubject<SidePocketMemo[]>([]);
+  public sidePocketMemos$ = this.sidePocketMemosSubject.asObservable();
+
   constructor() {
     // Injection context が確立されている状態で初期化
     this.projectsCollection = collection(this.firestore, 'projects');
@@ -27,6 +39,7 @@ export class TaskDataService {
     this.tasks$ = collectionData(this.tasksCollection, { idField: 'id' }) as Observable<Task[]>;
   }
 
+  // --- データの取得 ---
   getProjects(): Observable<ParentProject[]> {
     return this.projects$;
   }
@@ -35,7 +48,7 @@ export class TaskDataService {
     return this.tasks$;
   }
 
-  // --- CRUD処理 ---
+  // --- Project CRUD処理 ---
   async addProject(project: Omit<ParentProject, 'id'>): Promise<string> {
     const cleaned = JSON.parse(JSON.stringify(project));
     const docRef = await addDoc(this.projectsCollection, cleaned);
@@ -60,6 +73,7 @@ export class TaskDataService {
     await deleteDoc(docRef);
   }
 
+  // --- Task CRUD処理 ---
   async addTask(task: Omit<Task, 'id'>): Promise<string> {
     const cleaned = JSON.parse(JSON.stringify(task));
     const docRef = await addDoc(this.tasksCollection, cleaned);
@@ -82,5 +96,25 @@ export class TaskDataService {
   async deleteTask(id: string): Promise<void> {
     const docRef = doc(this.firestore, `tasks/${id}`);
     await deleteDoc(docRef);
+  }
+
+  // --- サイドポケット (集中モード) メモ操作 ---
+  addSidePocketMemo(memoData: { content: string; createdAt: string; parentProjectId?: string }): void {
+    const newMemo: SidePocketMemo = {
+      id: 'memo_' + Date.now(),
+      content: memoData.content,
+      createdAt: memoData.createdAt,
+      parentProjectId: memoData.parentProjectId
+    };
+
+    const currentMemos = this.sidePocketMemosSubject.getValue();
+    this.sidePocketMemosSubject.next([newMemo, ...currentMemos]);
+
+    console.log('Side Pocket Memo Added:', newMemo);
+  }
+
+  removeSidePocketMemo(id: string): void {
+    const currentMemos = this.sidePocketMemosSubject.getValue();
+    this.sidePocketMemosSubject.next(currentMemos.filter(m => m.id !== id));
   }
 }

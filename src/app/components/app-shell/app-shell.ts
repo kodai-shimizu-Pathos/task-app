@@ -28,5 +28,6 @@ export class AppShell {
 
   onOpenSettings(): void {
     this.openSettings.emit();
+
   }
 }

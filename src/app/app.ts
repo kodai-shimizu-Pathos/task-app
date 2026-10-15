@@ -10,6 +10,7 @@ import { Task } from './models/task.model';
 import { ProjectForm } from './components/project-form/project-form';
 import { MasterKanbanBoard } from './components/master-kanban-board/master-kanban-board';
 import { GanttBoard } from './components/gantt-board/gantt-board';
+import { PipService } from './services/pip';
 
 @Component({
   selector: 'app-root',
@@ -29,6 +30,7 @@ import { GanttBoard } from './components/gantt-board/gantt-board';
 })
 export class AppComponent implements OnInit {
   private dataService = inject(TaskDataService);
+  private pipService = inject(PipService);
 
   // --- UI状態管理 ---  
   activeView: MainView = 'kanban'; // 'kanban' | 'gantt' | 'calendar' | 'review'
@@ -56,7 +58,7 @@ export class AppComponent implements OnInit {
   // 集中モード切替ハンドラ
   onToggleConcentrationMode(): void {
     console.log('集中モード起動');
-    // todo 集中モードの処理を実装
+    this.pipService.togglePip();
   }
 
   // 設定モーダルハンドラ
