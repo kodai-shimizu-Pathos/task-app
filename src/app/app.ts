@@ -12,6 +12,7 @@ import { Task } from './models/task.model';
 import { ProjectForm } from './components/project-form/project-form';
 import { MasterKanbanBoard } from './components/master-kanban-board/master-kanban-board';
 import { GanttBoard } from './components/gantt-board/gantt-board';
+import { ArchiveModal } from './components/archive-modal/archive-modal';
 import { PipService } from './services/pip';
 
 @Component({
@@ -27,6 +28,7 @@ import { PipService } from './services/pip';
     MasterKanbanBoard,
     GanttBoard,
     AppShell,
+    ArchiveModal,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -34,6 +36,23 @@ import { PipService } from './services/pip';
 export class AppComponent implements OnInit {
   private dataService = inject(TaskDataService);
   private pipService = inject(PipService);
+
+  // --- モーダル表示フラグ ---
+  isArchiveModalOpen = false;
+
+  // --- アーカイブデータ取得プロパティ ---
+  get archivedProjects(): ParentProject[] {
+    return this.projects.filter(p => p.status === 'archived');
+  }
+
+  get archivedTasks(): Task[] {
+    return this.allTasks.filter(t => t.status === 'archived');
+  }
+
+  // --- 通常表示用のフィルタ済みプロパティ ---
+  get activeProjects(): ParentProject[] {
+    return this.projects.filter(p => p.status !== 'archived');
+  }
 
   // --- UI状態管理 ---  
   /** サイドパネル用：'tasks'(課題管理メイン) | 'review'(AIレビュー) */
@@ -396,5 +415,37 @@ export class AppComponent implements OnInit {
 
     // サイドポケットから消化・削除
     this.dataService.deleteSidePocketMemo(event.memo.id);
+  }
+
+    // =======================================================
+  // アーカイブ操作ロジック
+  // =======================================================
+  onOpenArchiveModal(): void {
+    this.isArchiveModalOpen = true;
+  }
+
+  onCloseArchiveModal(): void {
+    this.isArchiveModalOpen = false;
+  }
+
+  // 親課題の復元（status を 'in-progress' に変更して保存）
+  onRestoreProject(project: ParentProject): void {
+    const updated = { ...project, status: 'in-progress' as const };
+    const { id, ...projectData } = updated;
+    this.dataService.updateProject(id, projectData);
+
+    if (this.selectedProject?.id === id) {
+      this.selectedProject = { ...updated };
+    }
+    this.recalculateProgress();
+  }
+
+  // 子タスクの復元（status を 'todo' に変更して保存）
+  onRestoreTask(task: Task): void {
+    const updated = { ...task, status: 'todo' as const };
+    const { id, ...taskData } = updated;
+    this.dataService.updateTask(id, taskData);
+
+    this.recalculateProgress();
   }
 }
