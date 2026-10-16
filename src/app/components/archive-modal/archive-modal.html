@@ -1,55 +1,26 @@
 <div class="modal-overlay" (click)="onClose()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>📦 アーカイブ一覧</h3>
+        <h3>📦 アーカイブ済みの親課題</h3>
         <button type="button" class="btn-close" (click)="onClose()">✕</button>
       </div>
   
-      <!-- タブ切り替え -->
-      <div class="modal-tabs">
-        <button 
-          type="button" 
-          [class.active]="activeTab === 'projects'" 
-          (click)="activeTab = 'projects'">
-          📁 親課題 ({{ archivedProjects.length }})
-        </button>
-        <button 
-          type="button" 
-          [class.active]="activeTab === 'tasks'" 
-          (click)="activeTab = 'tasks'">
-          ♦ 子タスク ({{ archivedTasks.length }})
-        </button>
-      </div>
-  
       <div class="modal-body">
-        <!-- 親課題一覧 -->
-        <div *ngIf="activeTab === 'projects'" class="archive-list">
+        <div class="archive-list">
           <div *ngFor="let proj of archivedProjects" class="archive-item">
             <div class="item-info">
               <span class="item-title">📁 {{ proj.title }}</span>
-              <span class="item-sub">進捗: {{ proj.progressPercentage }}% ({{ proj.completedTaskCount }}/{{ proj.totalTaskCount }})</span>
+              <span class="item-sub">進捗: {{ proj.progressPercentage || 0 }}% ({{ proj.completedTaskCount || 0 }}/{{ proj.totalTaskCount || 0 }})</span>
             </div>
             <div class="item-actions">
               <button type="button" class="btn-action btn-restore" (click)="onRestoreProject(proj)" title="復元">↩️ 復元</button>
               <button type="button" class="btn-action btn-delete" (click)="onDeleteProject(proj.id)" title="削除">🗑️ 削除</button>
             </div>
           </div>
-          <div *ngIf="archivedProjects.length === 0" class="empty-msg">アーカイブされた親課題はありません</div>
-        </div>
-  
-        <!-- 子タスク一覧 -->
-        <div *ngIf="activeTab === 'tasks'" class="archive-list">
-          <div *ngFor="let task of archivedTasks" class="archive-item">
-            <div class="item-info">
-              <span class="item-title">♦ {{ task.title }}</span>
-              <span class="item-sub" *ngIf="task.deadline">期限: {{ task.deadline }}</span>
-            </div>
-            <div class="item-actions">
-              <button type="button" class="btn-action btn-restore" (click)="onRestoreTask(task)" title="復元">↩️ 復元</button>
-              <button type="button" class="btn-action btn-delete" (click)="onDeleteTask(task.id)" title="削除">🗑️ 削除</button>
-            </div>
+          
+          <div *ngIf="archivedProjects.length === 0" class="empty-msg">
+            アーカイブされた親課題はありません
           </div>
-          <div *ngIf="archivedTasks.length === 0" class="empty-msg">アーカイブされたタスクはありません</div>
         </div>
       </div>
     </div>

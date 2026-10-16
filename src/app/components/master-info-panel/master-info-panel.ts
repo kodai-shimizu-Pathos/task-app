@@ -34,6 +34,13 @@ export class MasterInfoPanel {
     this.addTask.emit();
   }
 
+  @Output() archiveProject = new EventEmitter<void>();
+  onArchiveProject(): void {
+    if (confirm('この親課題をアーカイブしますか？')) {
+      this.archiveProject.emit();
+    }
+  }
+
   // 期限超過チェック
   isOverdue(deadline?: string): boolean {
     // 締切なしもしくはステータスが「完了」の場合は期限超過とみなさない

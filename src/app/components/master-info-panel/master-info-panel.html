@@ -7,6 +7,7 @@
             <h3 class="panel-title">{{ project.title }}</h3>
             <div class="header-actions">
                 <button class="edit-btn" (click)="onEdit()">📝 編集</button>
+                <button class="edit-btn" (click)="onArchiveProject()" title="アーカイブへ移動">📦 アーカイブ</button>
                 <button class="collapse-btn" (click)="onToggle()" title="パネルを折りたたむ">◀</button>
             </div>
         </div>

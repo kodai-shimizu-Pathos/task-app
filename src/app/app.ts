@@ -45,10 +45,6 @@ export class AppComponent implements OnInit {
     return this.projects.filter(p => p.status === 'archived');
   }
 
-  get archivedTasks(): Task[] {
-    return this.allTasks.filter(t => t.status === 'archived');
-  }
-
   // --- 通常表示用のフィルタ済みプロパティ ---
   get activeProjects(): ParentProject[] {
     return this.projects.filter(p => p.status !== 'archived');
@@ -417,9 +413,7 @@ export class AppComponent implements OnInit {
     this.dataService.deleteSidePocketMemo(event.memo.id);
   }
 
-    // =======================================================
-  // アーカイブ操作ロジック
-  // =======================================================
+  // --- アーカイブ操作ハンドラ ---
   onOpenArchiveModal(): void {
     this.isArchiveModalOpen = true;
   }
@@ -428,7 +422,19 @@ export class AppComponent implements OnInit {
     this.isArchiveModalOpen = false;
   }
 
-  // 親課題の復元（status を 'in-progress' に変更して保存）
+  // 選択中の親課題をアーカイブへ移動
+  onArchiveSelectedProject(): void {
+    if (!this.selectedProject) return;
+
+    const updated = { ...this.selectedProject, status: 'archived' as const };
+    const { id, ...projectData } = updated;
+    this.dataService.updateProject(id, projectData);
+
+    this.selectedProject = null; // 一覧画面へ戻る
+    this.recalculateProgress();
+  }
+
+  // 親課題の復元
   onRestoreProject(project: ParentProject): void {
     const updated = { ...project, status: 'in-progress' as const };
     const { id, ...projectData } = updated;
@@ -437,15 +443,6 @@ export class AppComponent implements OnInit {
     if (this.selectedProject?.id === id) {
       this.selectedProject = { ...updated };
     }
-    this.recalculateProgress();
-  }
-
-  // 子タスクの復元（status を 'todo' に変更して保存）
-  onRestoreTask(task: Task): void {
-    const updated = { ...task, status: 'todo' as const };
-    const { id, ...taskData } = updated;
-    this.dataService.updateTask(id, taskData);
-
     this.recalculateProgress();
   }
 }
