@@ -1,8 +1,38 @@
+<!-- gantt-board.html -->
 <div class="gantt-board-wrapper">
     <!-- ヘッダーコントロールバー -->
     <div class="gantt-header-bar">
         <div class="header-left">
             <h3 class="gantt-title">📊 ガントチャート</h3>
+
+            <!-- 🔍 フィルターコントロール領域 -->
+            <div class="gantt-filter-bar">
+                <!-- キーワード検索 -->
+                <input type="text" [(ngModel)]="searchQuery" placeholder="🔍 検索..." class="filter-input" />
+
+                <!-- ステータス絞り込み -->
+                <select [(ngModel)]="selectedStatus" class="filter-select">
+                    <option value="all">すべてのステータス</option>
+                    <option value="exclude-done">⚡ 完了以外</option>
+                    <option value="todo">🔴 未着手</option>
+                    <option value="in-progress">🟡 進行中</option>
+                    <option value="done">🟢 完了</option>
+                </select>
+
+                <!-- 優先度絞り込み -->
+                <select [(ngModel)]="selectedPriority" class="filter-select">
+                    <option value="all">すべての優先度</option>
+                    <option value="high">🔴 高</option>
+                    <option value="medium">🟡 中</option>
+                    <option value="low">🔵 低</option>
+                </select>
+
+                <!-- 表示期間絞り込み -->
+                <select [(ngModel)]="dateFilter" class="filter-select">
+                    <option value="all">全期間表示</option>
+                    <option value="today-onwards">📅 今日以降</option>
+                </select>
+            </div>
         </div>
 
         <div class="header-controls">
@@ -31,7 +61,7 @@
             </div>
 
             <div class="wbs-body">
-                <!-- パターン1：単一親課題（Master-Detail時） -->
+                <!-- パターン1：単一親課題 -->
                 <div class="wbs-row parent-row" *ngIf="project" (click)="onProjectClick(project, $event)">
                     <div class="col-title">
                         <span class="tree-icon">📂</span>
@@ -44,9 +74,9 @@
                     </div>
                 </div>
 
-                <!-- パターン2：親課題一覧表示（全画面 Master Gantt時） -->
+                <!-- パターン2：親課題一覧表示（projects を filteredProjects に変更） -->
                 <ng-container *ngIf="!project">
-                    <div *ngFor="let proj of projects" class="wbs-row parent-row" (click)="onProjectClick(proj, $event)">
+                    <div *ngFor="let proj of filteredProjects" class="wbs-row parent-row" (click)="onProjectClick(proj, $event)">
                         <div class="col-title">
                             <span class="tree-icon">📁</span>
                             <span class="title-text">{{ proj.title }}</span>
@@ -60,8 +90,8 @@
                     </div>
                 </ng-container>
 
-                <!-- 子タスク行一覧（Detail時） -->
-                <div *ngFor="let task of tasks" class="wbs-row task-row" [class.is-overdue]="isTaskOverdue(task)" (click)="onTaskClick(task, $event)">
+                <!-- 子タスク行一覧（tasks を filteredTasks に変更） -->
+                <div *ngFor="let task of filteredTasks" class="wbs-row task-row" [class.is-overdue]="isTaskOverdue(task)" (click)="onTaskClick(task, $event)">
                     <div class="col-title">
                         <span class="tree-indent"> └ ♦ </span>
                         <span class="title-text" [class.done-text]="task.status === 'done'">{{ task.title }}</span>
@@ -74,12 +104,12 @@
                     </div>
                 </div>
 
-                <!-- 空表示 -->
-                <div *ngIf="!project && projects.length === 0" class="empty-wbs">
-                    親課題が登録されていません
+                <!-- 該当なし表示 -->
+                <div *ngIf="!project && filteredProjects.length === 0" class="empty-wbs">
+                    条件に一致する親課題がありません
                 </div>
-                <div *ngIf="project && tasks.length === 0" class="empty-wbs">
-                    子タスクが登録されていません
+                <div *ngIf="project && filteredTasks.length === 0" class="empty-wbs">
+                    条件に一致する子タスクがありません
                 </div>
             </div>
         </div>
@@ -90,81 +120,58 @@
         <!-- 右列: タイムライン領域 -->
         <div class="timeline-pane" #timelinePane (wheel)="onTimelineWheel($event)" (scroll)="onTimelineScroll($event)">
             <div class="timeline-header">
-                <!-- 上段: 年月行 -->
                 <div class="month-header-row">
-                    <div *ngFor="let m of monthGroups" 
-                        class="month-col-header" 
-                        [style.width.px]="m.daysCount * columnWidth">
+                    <div *ngFor="let m of monthGroups" class="month-col-header" [style.width.px]="m.daysCount * columnWidth">
                         {{ m.label }}
                     </div>
                 </div>
-
-                <!-- 下段: 日付行 (数字のみ) -->
                 <div class="day-header-row">
-                    <div *ngFor="let col of timelineColumns" 
-                        class="date-col-header" 
-                        [style.width.px]="columnWidth" 
-                        [class.today-col]="col.isToday"
-                        [class.holiday-col]="col.isWeekend || col.isHoliday">
+                    <div *ngFor="let col of timelineColumns" class="date-col-header" [style.width.px]="columnWidth" [class.today-col]="col.isToday" [class.holiday-col]="col.isWeekend || col.isHoliday">
                         <span class="date-label">{{ col.dayNumber }}</span>
                     </div>
                 </div>
             </div>
 
             <div class="timeline-body">
-                <!-- 背景格子グリッド (各行の格子セル部分) -->
-                <!-- 例: 親課題行 / 子タスク行の grid-cell に [class.holiday-cell] を追加 -->
+                <!-- 単一親課題ガントバー -->
                 <div class="timeline-row parent-row" *ngIf="project">
-                    <div *ngFor="let col of timelineColumns" 
-                         class="grid-cell" 
-                         [style.width.px]="columnWidth" 
-                         [class.today-cell]="col.isToday"
-                         [class.holiday-cell]="col.isWeekend || col.isHoliday">
-                    </div>
-                    
+                    <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday" [class.holiday-cell]="col.isWeekend || col.isHoliday"></div>
                     <ng-container *ngIf="getTaskBarPositionPx($any(project)) as bar">
                         <div *ngIf="bar.visible" class="gantt-bar parent-bar" [ngClass]="[project.status, 'priority-' + (project.priority | lowercase)]" [class.is-overdue]="isTaskOverdue($any(project))" [style.left.px]="bar.left" [style.width.px]="bar.width" (mousedown)="onBarMouseDown($any(project), $event, 'move')">
-                            <div class="resize-handle resize-left" (mousedown)="onBarMouseDown($any(project), $event, 'resize-left')" (click)="$event.stopPropagation()" title="ドラッグして開始日を変更"></div>
+                            <div class="resize-handle resize-left" (mousedown)="onBarMouseDown($any(project), $event, 'resize-left')" (click)="$event.stopPropagation()"></div>
                             <span class="bar-label">📁 {{ project.title }}</span>
-                            <span *ngIf="project.scheduledEndDate" class="scheduled-end-marker" [style.left.px]="getScheduledEndPositionPx($any(project)) - bar.left" title="完了予定日： {{ project.scheduledEndDate }}">🚩</span>
-                            <span *ngIf="project.deadline" class="deadline-marker" title="最終期限： {{ project.deadline }}">⏰ {{ project.deadline | date:'MM/dd' }}</span>
-                            <div class="resize-handle resize-right" (mousedown)="onBarMouseDown($any(project), $event, 'resize-right')" (click)="$event.stopPropagation()" title="ドラッグして期限を変更"></div>
+                            <span *ngIf="project.scheduledEndDate" class="scheduled-end-marker" [style.left.px]="getScheduledEndPositionPx($any(project)) - bar.left">🚩</span>
+                            <span *ngIf="project.deadline" class="deadline-marker">⏰ {{ project.deadline | date:'MM/dd' }}</span>
+                            <div class="resize-handle resize-right" (mousedown)="onBarMouseDown($any(project), $event, 'resize-right')" (click)="$event.stopPropagation()"></div>
                         </div>
                     </ng-container>
                 </div>
 
-                <!-- 2. 全親課題ガントバー一覧 (Master Gantt時) -->
+                <!-- 親課題一覧ガントバー（projects を filteredProjects に変更） -->
                 <ng-container *ngIf="!project">
-                    <div *ngFor="let proj of projects" class="timeline-row parent-row" (click)="onProjectClick(proj, $event)">
+                    <div *ngFor="let proj of filteredProjects" class="timeline-row parent-row" (click)="onProjectClick(proj, $event)">
                         <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday"></div>
-
                         <ng-container *ngIf="getTaskBarPositionPx($any(proj)) as bar">
                             <div *ngIf="bar.visible" class="gantt-bar parent-bar" [ngClass]="[proj.status, 'priority-' + (proj.priority | lowercase)]" [class.is-overdue]="isTaskOverdue($any(proj))" [style.left.px]="bar.left" [style.width.px]="bar.width" (mousedown)="onBarMouseDown($any(proj), $event, 'move')">
-                                <div class="resize-handle resize-left" (mousedown)="onBarMouseDown($any(proj), $event, 'resize-left')" (click)="$event.stopPropagation()" title="ドラッグして開始日を変更"></div>
+                                <div class="resize-handle resize-left" (mousedown)="onBarMouseDown($any(proj), $event, 'resize-left')" (click)="$event.stopPropagation()"></div>
                                 <span class="bar-label">📁 {{ proj.title }}</span>
-                                <span *ngIf="proj.scheduledEndDate" class="scheduled-end-marker" [style.left.px]="getScheduledEndPositionPx($any(proj)) - bar.left" title="完了予定日： {{ proj.scheduledEndDate }}">🚩</span>
-                                <span *ngIf="proj.deadline" class="deadline-marker" title="最終期限： {{ proj.deadline }}">⏰ {{ proj.deadline | date:'MM/dd' }}</span>
-                                <div class="resize-handle resize-right" (mousedown)="onBarMouseDown($any(proj), $event, 'resize-right')" (click)="$event.stopPropagation()" title="ドラッグして期限を変更"></div>
+                                <span *ngIf="proj.scheduledEndDate" class="scheduled-end-marker" [style.left.px]="getScheduledEndPositionPx($any(proj)) - bar.left">🚩</span>
+                                <span *ngIf="proj.deadline" class="deadline-marker">⏰ {{ proj.deadline | date:'MM/dd' }}</span>
+                                <div class="resize-handle resize-right" (mousedown)="onBarMouseDown($any(proj), $event, 'resize-right')" (click)="$event.stopPropagation()"></div>
                             </div>
                         </ng-container>
                     </div>
                 </ng-container>
 
-                <!-- 3. 子タスクガントバー行 (Detail時) -->
-                <div *ngFor="let task of tasks" class="timeline-row task-row" (click)="onTaskClick(task, $event)">
-                    <div *ngFor="let col of timelineColumns" 
-                         class="grid-cell" 
-                         [style.width.px]="columnWidth" 
-                         [class.today-cell]="col.isToday"
-                         [class.holiday-cell]="col.isWeekend || col.isHoliday">
-                    </div>
-
+                <!-- 子タスクガントバー一覧（tasks を filteredTasks に変更） -->
+                <div *ngFor="let task of filteredTasks" class="timeline-row task-row" (click)="onTaskClick(task, $event)">
+                    <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday" [class.holiday-cell]="col.isWeekend || col.isHoliday"></div>
                     <ng-container *ngIf="getTaskBarPositionPx(task) as bar">
                         <div *ngIf="bar.visible" class="gantt-bar" [ngClass]="[task.status, 'priority-' + (task.priority | lowercase)]" [class.is-overdue]="isTaskOverdue(task)" [style.left.px]="bar.left" [style.width.px]="bar.width" (mousedown)="onBarMouseDown(task, $event, 'move')">
-                            <div class="resize-handle resize-left" (mousedown)="onBarMouseDown(task, $event, 'resize-left')" title="ドラッグして開始日を変更"></div>
+                            <div class="resize-handle resize-left" (mousedown)="onBarMouseDown(task, $event, 'resize-left')"></div>
                             <span class="bar-label">{{ task.title }}</span>
-                            <span *ngIf="task.scheduledEndDate" class="scheduled-end-marker" [style.left.px]="getScheduledEndPositionPx(task) - bar.left" (mousedown)="onFlagMouseDown(task, $event)" title="ドラッグして完了予定日を変更： {{ task.scheduledEndDate }}">🚩</span>
-                            <div class="resize-handle resize-right" (mousedown)="onBarMouseDown(task, $event, 'resize-right')" title="ドラッグして期限を変更"></div>
+                            <span *ngIf="task.scheduledEndDate" class="scheduled-end-marker" [style.left.px]="getScheduledEndPositionPx(task) - bar.left" (mousedown)="onFlagMouseDown(task, $event)">🚩</span>
+                            <div class="resize-handle resize-right" (mousedown)="onBarMouseDown(task, $event, 'resize-right')"></div>
                         </div>
                     </ng-container>
                 </div>

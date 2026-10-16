@@ -63,6 +63,78 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   dragStartScheduledEnd?: string;
   dragStartDeadline?: string;
 
+  searchQuery: string = '';
+  selectedStatus: string = 'all';    // 'all' | 'exclude-done' | 'todo' | 'in-progress' | 'done'
+  selectedPriority: string = 'all';  // 'all' | 'high' | 'medium' | 'low'
+  dateFilter: string = 'all';        // 'all' | 'today-onwards'
+
+  get filteredTasks(): Task[] {
+    if (!this.tasks) return [];
+    return this.tasks.filter(task => {
+      // 1. キーワード検索（タイトル）
+      if (this.searchQuery && !task.title.toLowerCase().includes(this.searchQuery.toLowerCase())) {
+        return false;
+      }
+      // 2. ステータス絞り込み（完了以外 / 各ステータス）
+      if (this.selectedStatus === 'exclude-done' && task.status === 'done') {
+        return false;
+      }
+      if (this.selectedStatus !== 'all' && this.selectedStatus !== 'exclude-done' && task.status !== this.selectedStatus) {
+        return false;
+      }
+      // 3. 優先度絞り込み
+      if (this.selectedPriority !== 'all' && (task.priority || 'medium').toLowerCase() !== this.selectedPriority) {
+        return false;
+      }
+      // 4. 日付絞り込み（今日以降）
+      if (this.dateFilter === 'today-onwards') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const targetDateStr = task.deadline || task.scheduledEndDate || task.scheduledStartDate;
+        if (targetDateStr) {
+          const targetDate = new Date(targetDateStr.replace(/-/g, '/'));
+          targetDate.setHours(0, 0, 0, 0);
+          if (targetDate < today) return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  // 【追加】フィルタリング済み親課題一覧（全画面 Master Gantt時）
+  get filteredProjects(): ParentProject[] {
+    if (!this.projects) return [];
+    return this.projects.filter(proj => {
+      // 1. キーワード検索
+      if (this.searchQuery && !proj.title.toLowerCase().includes(this.searchQuery.toLowerCase())) {
+        return false;
+      }
+      // 2. ステータス絞り込み
+      if (this.selectedStatus === 'exclude-done' && proj.status === 'done') {
+        return false;
+      }
+      if (this.selectedStatus !== 'all' && this.selectedStatus !== 'exclude-done' && proj.status !== this.selectedStatus) {
+        return false;
+      }
+      // 3. 優先度絞り込み
+      if (this.selectedPriority !== 'all' && (proj.priority || 'medium').toLowerCase() !== this.selectedPriority) {
+        return false;
+      }
+      // 4. 日付絞り込み（今日以降）
+      if (this.dateFilter === 'today-onwards') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const targetDateStr = proj.deadline || proj.scheduledEndDate || proj.scheduledStartDate;
+        if (targetDateStr) {
+          const targetDate = new Date(targetDateStr.replace(/-/g, '/'));
+          targetDate.setHours(0, 0, 0, 0);
+          if (targetDate < today) return false;
+        }
+      }
+      return true;
+    });
+  }
+
   // 【追加】スプリッターとフラグの手動ドラッグ用にプロパティを復活
   private boundMouseMove?: (e: MouseEvent) => void;
   private boundMouseUp?: () => void;
