@@ -112,17 +112,17 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   
     // 1. 各タスクの最小・最大日付を取得
     if (this.project) {
-      const pStart = this.project.scheduledStartDate ? new Date(this.project.scheduledStartDate).getTime() : null;
-      const pEnd = (this.project.deadline || this.project.scheduledEndDate) ? new Date(this.project.deadline || this.project.scheduledEndDate!).getTime() : null;
+      const pStart = this.project.scheduledStartDate ? new Date(this.project.scheduledStartDate.replace(/-/g, '/')).getTime() : null;
+      const pEnd = (this.project.deadline || this.project.scheduledEndDate) ? new Date((this.project.deadline || this.project.scheduledEndDate!).replace(/-/g, '/')).getTime() : null;
       if (pStart && pStart < minDateMs) minDateMs = pStart;
       if (pEnd && pEnd > maxDateMs) maxDateMs = pEnd;
     }
   
     if (hasTasks) {
       this.tasks.forEach(task => {
-        const start = task.scheduledStartDate ? new Date(task.scheduledStartDate).getTime() : null;
+        const start = task.scheduledStartDate ? new Date(task.scheduledStartDate.replace(/-/g, '/')).getTime() : null;
         const targetEndDate = task.deadline ? task.deadline : task.scheduledEndDate;
-        const end = targetEndDate ? new Date(targetEndDate).getTime() : null;
+        const end = targetEndDate ? new Date(targetEndDate.replace(/-/g, '/')).getTime() : null;
         if (start && start < minDateMs) minDateMs = start;
         if (end && end > maxDateMs) maxDateMs = end;
       });
@@ -130,9 +130,9 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   
     if (hasProjects) {
       this.projects.forEach(proj => {
-        const start = proj.scheduledStartDate ? new Date(proj.scheduledStartDate).getTime() : null;
+        const start = proj.scheduledStartDate ? new Date(proj.scheduledStartDate.replace(/-/g, '/')).getTime() : null;
         const targetEndDate = proj.deadline ? proj.deadline : proj.scheduledEndDate;
-        const end = targetEndDate ? new Date(targetEndDate).getTime() : null;
+        const end = targetEndDate ? new Date(targetEndDate.replace(/-/g, '/')).getTime() : null;
         if (start && start < minDateMs) minDateMs = start;
         if (end && end > maxDateMs) maxDateMs = end;
       });
@@ -141,24 +141,25 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     if (minDateMs === new Date('9999-12-31').getTime()) minDateMs = today.getTime();
     if (maxDateMs === new Date('1970-01-01').getTime()) maxDateMs = today.getTime();
   
-    // 2. 基本バッファの計算（過去14日〜未来60日）
+    // 2. タイムライン表示範囲の計算
+    // ★修正：タイムライン開始日を常に「月の1日」に固定し、ドラッグ時のグリッド揺れを完全防止
     const startDate = new Date(Math.min(minDateMs, today.getTime()));
-    startDate.setDate(startDate.getDate() - 14);
+    startDate.setDate(1); // 月の1日に固定
+    startDate.setHours(0, 0, 0, 0);
   
     const minFutureDate = new Date(today);
     minFutureDate.setDate(minFutureDate.getDate() + 60);
   
     let endDate = new Date(Math.max(maxDateMs, minFutureDate.getTime()));
     endDate.setDate(endDate.getDate() + 30);
+    endDate.setHours(23, 59, 59, 999);
   
-    // 【★ セイフティキャップ制御 ★】
-    // 生成する最大日数を 365日（1年間）に制限し、DOM要素の激増を防ぐ
+    // セイフティキャップ制御（最大1年間）
     const MAX_SPAN_DAYS = 365;
     const diffTime = endDate.getTime() - startDate.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
     if (diffDays > MAX_SPAN_DAYS) {
-      console.warn(`[Gantt] タイムライン表示期間が上限(${MAX_SPAN_DAYS}日)を超えたため制限しました。`);
       endDate = new Date(startDate.getTime() + MAX_SPAN_DAYS * 24 * 60 * 60 * 1000);
     }
   
@@ -364,8 +365,11 @@ private checkJapaneseHoliday(date: Date): boolean {
     }
   }
 
+  // 【追加】親課題ドラッグ開始時の各子タスクの初期日付を保持するマップ
+  private childTaskStartDates: Map<string, { start?: string; end?: string; deadline?: string }> = new Map();
+
   // ========================================
-  // ガントバーのドラッグ制御 (@HostListener を使用)
+  // ガントバーのドラッグ制御
   // ========================================
   onBarMouseDown(item: Task | ParentProject, event: MouseEvent, dragType: 'move' | 'resize-left' | 'resize-right'): void {
     event.stopPropagation();
@@ -378,11 +382,23 @@ private checkJapaneseHoliday(date: Date): boolean {
     this.dragStartScheduledStart = item.scheduledStartDate;
     this.dragStartScheduledEnd = item.scheduledEndDate;
     this.dragStartDeadline = item.deadline;
+
+    // 【追加】親課題を移動ドラッグする場合、配下の子タスクの「ドラッグ開始前日付」を保持
+    const isProject = 'totalTaskCount' in item;
+    if (isProject && dragType === 'move') {
+      this.childTaskStartDates.clear();
+      this.tasks.forEach(task => {
+        this.childTaskStartDates.set(task.id, {
+          start: task.scheduledStartDate,
+          end: task.scheduledEndDate,
+          deadline: task.deadline
+        });
+      });
+    }
   }
 
   @HostListener('document:mousemove', ['$event'])
   onBarMouseMove(event: MouseEvent): void {
-    // スプリッターやフラグなど、バー以外のドラッグ中の場合は処理しない
     if (!this.draggedItem || !this.dragType || this.dragType === 'flag') return;
 
     const diffPixels = event.clientX - this.dragStartX;
@@ -394,32 +410,66 @@ private checkJapaneseHoliday(date: Date): boolean {
 
     const diffDays = Math.round(diffPixels / (this.columnWidth || 48));
 
-    // 【修正】this.draggedTask を this.draggedItem に統一
     if (this.dragType === 'move') {
-      if (this.dragStartScheduledStart) {
-        const start = new Date(this.dragStartScheduledStart);
+      // 1. 親課題 / タスク自身の移動 (開始予定日が未設定の場合は完了予定日・期限からフォールバック計算)
+      const baseStart = this.dragStartScheduledStart || this.dragStartScheduledEnd || this.dragStartDeadline;
+      if (baseStart) {
+        const start = new Date(baseStart.replace(/-/g, '/'));
         start.setDate(start.getDate() + diffDays);
         this.draggedItem.scheduledStartDate = this.formatDateString(start);
       }
       if (this.dragStartScheduledEnd) {
-        const end = new Date(this.dragStartScheduledEnd);
+        const end = new Date(this.dragStartScheduledEnd.replace(/-/g, '/'));
         end.setDate(end.getDate() + diffDays);
         this.draggedItem.scheduledEndDate = this.formatDateString(end);
       }
       if (this.dragStartDeadline) {
-        const deadline = new Date(this.dragStartDeadline);
+        const deadline = new Date(this.dragStartDeadline.replace(/-/g, '/'));
         deadline.setDate(deadline.getDate() + diffDays);
         this.draggedItem.deadline = this.formatDateString(deadline);
       }
+
+      // 2. 配下の子タスクのリアルタイム連動移動
+      const isProject = 'totalTaskCount' in this.draggedItem;
+      if (isProject) {
+        this.tasks.forEach(task => {
+          const initial = this.childTaskStartDates.get(task.id);
+          if (initial) {
+            if (initial.start) {
+              const d = new Date(initial.start.replace(/-/g, '/'));
+              d.setDate(d.getDate() + diffDays);
+              task.scheduledStartDate = this.formatDateString(d);
+            }
+            if (initial.end) {
+              const d = new Date(initial.end.replace(/-/g, '/'));
+              d.setDate(d.getDate() + diffDays);
+              task.scheduledEndDate = this.formatDateString(d);
+            }
+            if (initial.deadline) {
+              const d = new Date(initial.deadline.replace(/-/g, '/'));
+              d.setDate(d.getDate() + diffDays);
+              task.deadline = this.formatDateString(d);
+            }
+          }
+        });
+      }
     } else if (this.dragType === 'resize-left') {
-      if (this.dragStartScheduledStart) {
-        const start = new Date(this.dragStartScheduledStart);
+      // 3. 左端の伸縮処理 (開始予定日の伸縮)
+      const baseStart = this.dragStartScheduledStart || this.dragStartScheduledEnd || this.dragStartDeadline;
+      if (baseStart) {
+        const start = new Date(baseStart.replace(/-/g, '/'));
         start.setDate(start.getDate() + diffDays);
         this.draggedItem.scheduledStartDate = this.formatDateString(start);
       }
     } else if (this.dragType === 'resize-right') {
+      // 4. 右端の伸縮処理 (完了予定日・期限の伸縮)
+      if (this.dragStartScheduledEnd) {
+        const end = new Date(this.dragStartScheduledEnd.replace(/-/g, '/'));
+        end.setDate(end.getDate() + diffDays);
+        this.draggedItem.scheduledEndDate = this.formatDateString(end);
+      }
       if (this.dragStartDeadline) {
-        const deadline = new Date(this.dragStartDeadline);
+        const deadline = new Date(this.dragStartDeadline.replace(/-/g, '/'));
         deadline.setDate(deadline.getDate() + diffDays);
         this.draggedItem.deadline = this.formatDateString(deadline);
       }
@@ -428,34 +478,37 @@ private checkJapaneseHoliday(date: Date): boolean {
 
   @HostListener('document:mouseup', ['$event'])
   onBarMouseUp(event: MouseEvent): void {
-    // バー以外のドラッグ（フラグなど）の場合はここで抜ける
     if (!this.draggedItem || !this.dragType || this.dragType === 'flag') return;
 
-    const diffPixels = event.clientX - this.dragStartX;
-    const diffDays = Math.round(diffPixels / this.columnWidth);
+    try {
+      const diffPixels = event.clientX - this.dragStartX;
+      const diffDays = Math.round(diffPixels / (this.columnWidth || 48));
 
-    const isProject = 'totalTaskCount' in this.draggedItem;
+      const isProject = 'totalTaskCount' in this.draggedItem;
 
-    if (diffDays !== 0 && this.dragHasMoved) {
-      if (isProject) {
-        // 親課題をドラッグした場合
-        this.projectUpdated.emit(this.draggedItem);
+      if (diffDays !== 0 && this.dragHasMoved) {
+        if (isProject) {
+          // 1. 親課題の更新を保存
+          this.projectUpdated.emit(this.draggedItem);
 
-        // 移動(move)の場合のみ子タスクも連動スライドさせる
-        if (this.dragType === 'move') {
-          this.tasks.forEach(task => {
-            this.shiftTaskDates(task, diffDays);
-            this.taskUpdated.emit(task);
-          });
+          // 2. 移動(move)の場合、子タスクは onBarMouseMove で既に日付が正しく更新されているため、
+          //    ここでは二重にシフトせず、更新イベントの通知(emit)のみ行う
+          if (this.dragType === 'move') {
+            this.tasks.forEach(task => {
+              this.taskUpdated.emit(task);
+            });
+          }
+        } else {
+          // 子タスク単体をドラッグした場合
+          this.taskUpdated.emit(this.draggedItem as Task);
         }
-      } else {
-        // 子タスクをドラッグした場合
-        this.taskUpdated.emit(this.draggedItem as Task);
       }
+    } catch (error) {
+      console.error('ドラッグ終了時の保存処理でエラーが発生しました:', error);
+    } finally {
+      // ★何が発生しても必ずドラッグ状態（掴んでいる状態）を確実に解除する！
+      this.resetDragState();
     }
-
-    // ドラッグ状態をリセット
-    this.resetDragState();
   }
 
   private resetDragState(): void {
@@ -466,22 +519,7 @@ private checkJapaneseHoliday(date: Date): boolean {
     this.dragStartScheduledStart = undefined;
     this.dragStartScheduledEnd = undefined;
     this.dragStartDeadline = undefined;
-  }
-
-  private shiftTaskDates(task: any, diffDays: number): void {
-    const shiftDate = (dateStr?: string) => {
-      if (!dateStr) return dateStr;
-      const d = new Date(dateStr.replace(/-/g, '/'));
-      d.setDate(d.getDate() + diffDays);
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    };
-
-    task.scheduledStartDate = shiftDate(task.scheduledStartDate);
-    task.scheduledEndDate = shiftDate(task.scheduledEndDate);
-    task.deadline = shiftDate(task.deadline);
+    this.childTaskStartDates.clear(); // 【追加】マップをクリア
   }
 
   // ========================================
@@ -531,45 +569,43 @@ private checkJapaneseHoliday(date: Date): boolean {
   }
 
   getTaskBarPositionPx(item: Task | ParentProject): { left: number; width: number; visible: boolean } {
-    if (!item.scheduledStartDate || !item.scheduledEndDate) {
+    const targetEndDate = item.scheduledEndDate || item.deadline;
+    
+    if (!item.scheduledStartDate || !targetEndDate) {
       if (item.deadline) {
-        const dl = new Date(item.deadline);
+        const dl = new Date(item.deadline.replace(/-/g, '/'));
         dl.setHours(0, 0, 0, 0);
-  
-        // タイムライン表示範囲外の場合は非表示
+
         if (dl < this.timelineStartDate || dl > this.timelineEndDate) {
           return { left: 0, width: 0, visible: false };
         }
-  
+
         const deadlineIndex = Math.floor((dl.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
         const left = deadlineIndex * this.columnWidth;
         return { left, width: this.columnWidth, visible: true };
       }
       return { left: 0, width: 0, visible: false };
     }
-  
-    const start = new Date(item.scheduledStartDate);
+
+    const start = new Date(item.scheduledStartDate.replace(/-/g, '/'));
     start.setHours(0, 0, 0, 0);
-  
-    const targetEnddate = item.deadline ? item.deadline : item.scheduledEndDate;
-    const end = new Date(targetEnddate);
+
+    const end = new Date(targetEndDate.replace(/-/g, '/'));
     end.setHours(23, 59, 59, 999);
-  
-    // 1. タイムライン表示範囲外（完全にはみ出している場合）は非表示
+
     if (end < this.timelineStartDate || start > this.timelineEndDate) {
       return { left: 0, width: 0, visible: false };
     }
-  
-    // 2. ★ガード適用：開始日・終了日をタイムライン描画範囲内 (timelineStartDate ～ timelineEndDate) にクランプ
+
     const clampedStart = new Date(Math.max(start.getTime(), this.timelineStartDate.getTime()));
     const clampedEnd = new Date(Math.min(end.getTime(), this.timelineEndDate.getTime()));
-  
+
     const startIndex = Math.floor((clampedStart.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
     const endIndex = Math.ceil((clampedEnd.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
-  
+
     const left = startIndex * this.columnWidth;
     const width = (endIndex - startIndex) * this.columnWidth;
-  
+
     return { left: Math.max(0, left), width: Math.max(this.columnWidth, width), visible: width > 0 };
   }
   
