@@ -90,16 +90,37 @@
         <!-- 右列: タイムライン領域 -->
         <div class="timeline-pane" #timelinePane (wheel)="onTimelineWheel($event)" (scroll)="onTimelineScroll($event)">
             <div class="timeline-header">
-                <div *ngFor="let col of timelineColumns" class="date-col-header" [style.width.px]="columnWidth" [class.today-col]="col.isToday">
-                    <span class="date-label">{{ col.label }}</span>
-                    <span class="day-of-week">{{ col.dayOfWeek }}</span>
+                <!-- 上段: 年月行 -->
+                <div class="month-header-row">
+                    <div *ngFor="let m of monthGroups" 
+                        class="month-col-header" 
+                        [style.width.px]="m.daysCount * columnWidth">
+                        {{ m.label }}
+                    </div>
+                </div>
+
+                <!-- 下段: 日付行 (数字のみ) -->
+                <div class="day-header-row">
+                    <div *ngFor="let col of timelineColumns" 
+                        class="date-col-header" 
+                        [style.width.px]="columnWidth" 
+                        [class.today-col]="col.isToday"
+                        [class.holiday-col]="col.isWeekend || col.isHoliday">
+                        <span class="date-label">{{ col.dayNumber }}</span>
+                    </div>
                 </div>
             </div>
 
             <div class="timeline-body">
-                <!-- 1. 単一親課題ガントバー (Master-Detail時) -->
+                <!-- 背景格子グリッド (各行の格子セル部分) -->
+                <!-- 例: 親課題行 / 子タスク行の grid-cell に [class.holiday-cell] を追加 -->
                 <div class="timeline-row parent-row" *ngIf="project">
-                    <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday"></div>
+                    <div *ngFor="let col of timelineColumns" 
+                         class="grid-cell" 
+                         [style.width.px]="columnWidth" 
+                         [class.today-cell]="col.isToday"
+                         [class.holiday-cell]="col.isWeekend || col.isHoliday">
+                    </div>
                     
                     <ng-container *ngIf="getTaskBarPositionPx($any(project)) as bar">
                         <div *ngIf="bar.visible" class="gantt-bar parent-bar" [ngClass]="[project.status, 'priority-' + (project.priority | lowercase)]" [class.is-overdue]="isTaskOverdue($any(project))" [style.left.px]="bar.left" [style.width.px]="bar.width" (mousedown)="onBarMouseDown($any(project), $event, 'move')">
@@ -131,7 +152,12 @@
 
                 <!-- 3. 子タスクガントバー行 (Detail時) -->
                 <div *ngFor="let task of tasks" class="timeline-row task-row" (click)="onTaskClick(task, $event)">
-                    <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday"></div>
+                    <div *ngFor="let col of timelineColumns" 
+                         class="grid-cell" 
+                         [style.width.px]="columnWidth" 
+                         [class.today-cell]="col.isToday"
+                         [class.holiday-cell]="col.isWeekend || col.isHoliday">
+                    </div>
 
                     <ng-container *ngIf="getTaskBarPositionPx(task) as bar">
                         <div *ngIf="bar.visible" class="gantt-bar" [ngClass]="[task.status, 'priority-' + (task.priority | lowercase)]" [class.is-overdue]="isTaskOverdue(task)" [style.left.px]="bar.left" [style.width.px]="bar.width" (mousedown)="onBarMouseDown(task, $event, 'move')">

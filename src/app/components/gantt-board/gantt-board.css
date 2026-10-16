@@ -215,9 +215,11 @@
     position: relative;
   }
   
+  /* タイムラインヘッダー (2段構成) */
   .timeline-header {
-    height: 36px;
+    height: 48px;
     display: flex;
+    flex-direction: column;
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
@@ -227,23 +229,92 @@
     top: 0;
     z-index: 10;
   }
-  
-  .date-col-header {
+
+  /* 上段: 年月行 */
+  .month-header-row {
+    height: 22px;
     display: flex;
-    flex-direction: column;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .month-col-header {
+    display: flex;
     align-items: center;
     justify-content: center;
     border-right: 1px solid var(--border-color);
     font-size: 11px;
+    font-weight: bold;
+    color: var(--text-primary);
+    box-sizing: border-box;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 下段: 日付行 */
+  .day-header-row {
+    height: 26px;
+    display: flex;
+  }
+
+  .date-col-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--border-color);
+    font-size: 10px;
     color: var(--text-muted);
     box-sizing: border-box;
     flex-shrink: 0;
+    user-select: none;
+  }
+
+  .date-label {
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .day-of-week {
+    font-size: 9px;
+    opacity: 0.8;
   }
   
+  /* ガントバー内のフォントと余白をコンパクト化 */
+  .gantt-bar .bar-label {
+    font-size: 10px;
+    padding: 0 4px;
+  }
+  
+  .date-label {
+    font-size: 10px;
+    font-weight: 500;
+  }
+  
+  /* 土日・祝日のヘッダーハイライト */
+  .date-col-header.holiday-col {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+  }
+  
+  :host-context(body[data-theme="light"]) .date-col-header.holiday-col {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  /* 今日のヘッダーハイライト */
   .today-col {
-    background-color: rgba(37, 99, 235, 0.15);
-    color: var(--accent-color);
+    background-color: rgba(37, 99, 235, 0.2) !important;
+    color: var(--accent-color) !important;
     font-weight: bold;
+  }
+  
+  /* 土日・祝日の背景格子セルハイライト */
+  .grid-cell.holiday-cell {
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+  
+  :host-context(body[data-theme="light"]) .grid-cell.holiday-cell {
+    background-color: rgba(0, 0, 0, 0.04);
   }
   
   .timeline-body {

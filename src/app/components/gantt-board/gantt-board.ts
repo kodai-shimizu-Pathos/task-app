@@ -8,9 +8,16 @@ export interface TimelineColumn {
   date: Date;
   dateString: string;
   label: string;
-  dayOfWeek: string;
+  dayNumber: number;   // 日付数字 (1, 2, 3...)
+  monthLabel: string;  // 年月表記 (例: "2026/10")
   isToday: boolean;
-  isWeekend: boolean;
+  isWeekend: boolean;  // 土日判定
+  isHoliday: boolean;  // 祝日判定
+}
+
+export interface MonthGroup {
+  label: string;
+  daysCount: number;
 }
 
 @Component({
@@ -33,18 +40,17 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
 
   @ViewChild('timelinePane', { static: false }) timelinePane?: ElementRef<HTMLDivElement>;
 
-  viewScale: 'day' | 'week' | 'month' = 'week';
   timelineColumns: TimelineColumn[] = [];
+  monthGroups: MonthGroup[] = [];
   timelineStartDate!: Date;
   timelineEndDate!: Date;
-  totalDays: number = 14;
 
   wbsWidth: number = 320;
   isResizing: boolean = false;
   resizeStartX: number = 0;
   resizeStartWbsWidth: number = 0;
 
-  columnWidth: number = 48;
+  columnWidth: number = 32;
   timelineScrollLeft: number = 0;
 
   // 【修正】draggedItem に統一
@@ -94,36 +100,24 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     }, 0);
   }
 
-  onViewScaleChange(scale: 'day' | 'week' | 'month'): void {
-    this.viewScale = scale;
-    this.totalDays = scale === 'day' ? 7 : scale === 'week' ? 14 : 30;
-    this.calculateTimelineRange();
-  }
-
   private calculateTimelineRange(): void {
     const hasTasks = this.tasks && this.tasks.length > 0;
     const hasProjects = !this.project && this.projects && this.projects.length > 0;
-
-    if (!hasTasks && !hasProjects && !this.project) {
-      const today = new Date();
-      this.timelineStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 14);
-      const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
-      this.generateTimelineColumns(this.timelineStartDate, endDate);
-      return;
-    }
-
+  
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+  
     let minDateMs = new Date('9999-12-31').getTime();
     let maxDateMs = new Date('1970-01-01').getTime();
-
-    // 単一親課題の範囲チェック
+  
+    // 1. 各タスクの最小・最大日付を取得
     if (this.project) {
       const pStart = this.project.scheduledStartDate ? new Date(this.project.scheduledStartDate).getTime() : null;
       const pEnd = (this.project.deadline || this.project.scheduledEndDate) ? new Date(this.project.deadline || this.project.scheduledEndDate!).getTime() : null;
       if (pStart && pStart < minDateMs) minDateMs = pStart;
       if (pEnd && pEnd > maxDateMs) maxDateMs = pEnd;
     }
-
-    // 子タスクの範囲チェック
+  
     if (hasTasks) {
       this.tasks.forEach(task => {
         const start = task.scheduledStartDate ? new Date(task.scheduledStartDate).getTime() : null;
@@ -133,7 +127,7 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
         if (end && end > maxDateMs) maxDateMs = end;
       });
     }
-    // 親課題一覧モード（Master Gantt）時の全親課題範囲チェック
+  
     if (hasProjects) {
       this.projects.forEach(proj => {
         const start = proj.scheduledStartDate ? new Date(proj.scheduledStartDate).getTime() : null;
@@ -143,33 +137,43 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
         if (end && end > maxDateMs) maxDateMs = end;
       });
     }
-
-    // 初期値設定
-    if (minDateMs === new Date('9999-12-31').getTime()) {
-      minDateMs = new Date().getTime();
-    }
-    if (maxDateMs === new Date('1970-01-01').getTime()) {
-      maxDateMs = new Date().getTime();
-    }
-
-    const startDate = new Date(minDateMs);
+  
+    if (minDateMs === new Date('9999-12-31').getTime()) minDateMs = today.getTime();
+    if (maxDateMs === new Date('1970-01-01').getTime()) maxDateMs = today.getTime();
+  
+    // 2. 基本バッファの計算（過去14日〜未来60日）
+    const startDate = new Date(Math.min(minDateMs, today.getTime()));
     startDate.setDate(startDate.getDate() - 14);
-    this.timelineStartDate = startDate;
-
-    const endDate = new Date(maxDateMs);
+  
+    const minFutureDate = new Date(today);
+    minFutureDate.setDate(minFutureDate.getDate() + 60);
+  
+    let endDate = new Date(Math.max(maxDateMs, minFutureDate.getTime()));
     endDate.setDate(endDate.getDate() + 30);
-
-    this.generateTimelineColumns(this.timelineStartDate, endDate);
+  
+    // 【★ セイフティキャップ制御 ★】
+    // 生成する最大日数を 365日（1年間）に制限し、DOM要素の激増を防ぐ
+    const MAX_SPAN_DAYS = 365;
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+    if (diffDays > MAX_SPAN_DAYS) {
+      console.warn(`[Gantt] タイムライン表示期間が上限(${MAX_SPAN_DAYS}日)を超えたため制限しました。`);
+      endDate = new Date(startDate.getTime() + MAX_SPAN_DAYS * 24 * 60 * 60 * 1000);
+    }
+  
+    this.timelineStartDate = startDate;
+    this.timelineEndDate = endDate;
+  
+    this.generateTimelineColumns(this.timelineStartDate, this.timelineEndDate);
   }
 
   generateTimelineColumns(start: Date, end: Date): void {
-    const columns = [];
+    const columns: TimelineColumn[] = [];
     let currentDate = new Date(start);
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-
+  
     while (currentDate <= end) {
       const d = new Date(currentDate);
       const yyyy = d.getFullYear();
@@ -177,20 +181,97 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
       const dd = String(d.getDate()).padStart(2, '0');
       const dateString = `${yyyy}-${mm}-${dd}`;
       const dayNum = d.getDay();
-
+      const monthLabel = `${yyyy}/${mm}`;
+  
+      const isWeekend = dayNum === 0 || dayNum === 6;
+      const isHoliday = this.checkJapaneseHoliday(d);
+  
       columns.push({
         date: d,
         dateString: dateString,
-        label: `${mm}/${dd}`,
-        dayOfWeek: `(${dayNames[dayNum]})`,
+        label: `${d.getDate()}`,
+        dayNumber: d.getDate(),
+        monthLabel: monthLabel,
         isToday: d.getTime() === today.getTime(),
-        isWeekend: dayNum === 0 || dayNum === 6,
+        isWeekend: isWeekend,
+        isHoliday: isHoliday,
       });
-
+  
       currentDate.setDate(currentDate.getDate() + 1);
     }
+  
     this.timelineColumns = columns;
+  
+    // 年月ごとにヘッダーセルをグループ化
+    const monthGroups: MonthGroup[] = [];
+    let currentMonthLabel = '';
+    let currentCount = 0;
+  
+    columns.forEach(col => {
+      if (col.monthLabel !== currentMonthLabel) {
+        if (currentMonthLabel !== '') {
+          monthGroups.push({ label: currentMonthLabel, daysCount: currentCount });
+        }
+        currentMonthLabel = col.monthLabel;
+        currentCount = 1;
+      } else {
+        currentCount++;
+      }
+    });
+    if (currentMonthLabel !== '') {
+      monthGroups.push({ label: currentMonthLabel, daysCount: currentCount });
+    }
+  
+    this.monthGroups = monthGroups;
   }
+
+  // 日本の祝日自動判定ヘルパーメソッド
+private checkJapaneseHoliday(date: Date): boolean {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const dayOfWeek = date.getDay();
+
+  // 固定祝日
+  if (month === 1 && day === 1) return true;   // 元日
+  if (month === 2 && day === 11) return true;  // 建国記念の日
+  if (month === 2 && day === 23) return true;  // 天皇誕生日
+  if (month === 4 && day === 29) return true;  // 昭和の日
+  if (month === 5 && day === 3) return true;   // 憲法記念日
+  if (month === 5 && day === 4) return true;   // みどりの日
+  if (month === 5 && day === 5) return true;   // こどもの日
+  if (month === 8 && day === 11) return true;  // 山の日
+  if (month === 11 && day === 3) return true;  // 文化の日
+  if (month === 11 && day === 23) return true; // 勤労感謝の日
+
+  // ハッピーマンデー (第N月曜日)
+  const nthMonday = Math.ceil(day / 7);
+  if (dayOfWeek === 1) {
+    if (month === 1 && nthMonday === 2) return true;  // 成人の日
+    if (month === 7 && nthMonday === 3) return true;  // 海の日
+    if (month === 9 && nthMonday === 3) return true;  // 敬老の日
+    if (month === 10 && nthMonday === 2) return true; // スポーツの日
+  }
+
+  // 春分の日・秋分の日の概算
+  if (month === 3) {
+    const shunbun = Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+    if (day === shunbun) return true;
+  }
+  if (month === 9) {
+    const shūbun = Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+    if (day === shūbun) return true;
+  }
+
+  // 振替休日 (日曜日の祝日の翌月曜日)
+  if (dayOfWeek === 1) {
+    const prevDate = new Date(date);
+    prevDate.setDate(date.getDate() - 1);
+    if (this.checkJapaneseHoliday(prevDate)) return true;
+  }
+
+  return false;
+}
 
   onTaskClick(task: Task, event: Event): void {
     event.stopPropagation();
@@ -248,7 +329,7 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     event.preventDefault();
     const delta = event.deltaY > 0 ? -1 : 1;
     const newWidth = this.columnWidth + delta * 4;
-    this.columnWidth = Math.max(32, Math.min(newWidth, 120));
+    this.columnWidth = Math.max(24, Math.min(newWidth, 120));
   }
 
   onZoomIn(): void {
@@ -258,7 +339,7 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
 
   onZoomOut(): void {
     const newWidth = this.columnWidth - 4;
-    this.columnWidth = Math.max(newWidth, 32);
+    this.columnWidth = Math.max(newWidth, 24);
   }
 
   onScrollToToday(): void {
@@ -454,33 +535,57 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
       if (item.deadline) {
         const dl = new Date(item.deadline);
         dl.setHours(0, 0, 0, 0);
+  
+        // タイムライン表示範囲外の場合は非表示
+        if (dl < this.timelineStartDate || dl > this.timelineEndDate) {
+          return { left: 0, width: 0, visible: false };
+        }
+  
         const deadlineIndex = Math.floor((dl.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
         const left = deadlineIndex * this.columnWidth;
         return { left, width: this.columnWidth, visible: true };
       }
       return { left: 0, width: 0, visible: false };
     }
-
+  
     const start = new Date(item.scheduledStartDate);
     start.setHours(0, 0, 0, 0);
-
+  
     const targetEnddate = item.deadline ? item.deadline : item.scheduledEndDate;
     const end = new Date(targetEnddate);
     end.setHours(23, 59, 59, 999);
-
-    const startIndex = Math.floor((start.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
-    const endIndex = Math.ceil((end.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
-
+  
+    // 1. タイムライン表示範囲外（完全にはみ出している場合）は非表示
+    if (end < this.timelineStartDate || start > this.timelineEndDate) {
+      return { left: 0, width: 0, visible: false };
+    }
+  
+    // 2. ★ガード適用：開始日・終了日をタイムライン描画範囲内 (timelineStartDate ～ timelineEndDate) にクランプ
+    const clampedStart = new Date(Math.max(start.getTime(), this.timelineStartDate.getTime()));
+    const clampedEnd = new Date(Math.min(end.getTime(), this.timelineEndDate.getTime()));
+  
+    const startIndex = Math.floor((clampedStart.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
+    const endIndex = Math.ceil((clampedEnd.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
+  
     const left = startIndex * this.columnWidth;
     const width = (endIndex - startIndex) * this.columnWidth;
-
+  
     return { left: Math.max(0, left), width: Math.max(this.columnWidth, width), visible: width > 0 };
   }
-
+  
   getScheduledEndPositionPx(item: Task | ParentProject): number {
     if (!item.scheduledEndDate) return 0;
-    const end = new Date(item.scheduledEndDate);
+    let end = new Date(item.scheduledEndDate);
     end.setHours(23, 59, 59, 999);
+  
+    // ★完了予定日マーカーもタイムライン最大範囲内にクランプ
+    if (end > this.timelineEndDate) {
+      end = new Date(this.timelineEndDate);
+    }
+    if (end < this.timelineStartDate) {
+      return 0;
+    }
+  
     const endIndex = Math.floor((end.getTime() - this.timelineStartDate.getTime()) / (24 * 60 * 60 * 1000));
     return (endIndex * this.columnWidth) + (this.columnWidth / 2);
   }
