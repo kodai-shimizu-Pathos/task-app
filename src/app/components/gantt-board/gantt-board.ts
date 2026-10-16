@@ -66,6 +66,7 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // 子タスクのソート
     if (changes['tasks'] && this.tasks) {
       this.tasks.sort((a, b) => {
         const dateA = new Date(a.scheduledStartDate || a.deadline || '9999-12-31').getTime();
@@ -73,7 +74,16 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
         return dateA - dateB;
       });
     }
-    if (changes['tasks'] || changes['project']) {
+    // 親課題一覧のソート
+    if (changes['projects'] && this.projects) {
+      this.projects.sort((a,b) => {
+        const dateA = new Date(a.createdAt || '9999-12-31').getTime();
+        const dateB = new Date(b.createdAt || '9999-12-31').getTime();
+        return dateB - dateA;
+      })
+    }
+
+    if (changes['tasks'] || changes['project'] || changes['projects']) {
       this.calculateTimelineRange();
     }
   }
@@ -91,9 +101,12 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   }
 
   private calculateTimelineRange(): void {
-    if (!this.tasks || this.tasks.length === 0) {
+    const hasTasks = this.tasks && this.tasks.length > 0;
+    const hasProjects = !this.project && this.projects && this.projects.length > 0;
+
+    if (!hasTasks && !hasProjects && !this.project) {
       const today = new Date();
-      this.timelineStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
+      this.timelineStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 14);
       const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
       this.generateTimelineColumns(this.timelineStartDate, endDate);
       return;
@@ -102,18 +115,46 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     let minDateMs = new Date('9999-12-31').getTime();
     let maxDateMs = new Date('1970-01-01').getTime();
 
-    this.tasks.forEach(task => {
-      const start = task.scheduledStartDate ? new Date(task.scheduledStartDate).getTime() : null;
-      const targetEndDate = task.deadline ? task.deadline : task.scheduledEndDate;
-      const end = targetEndDate ? new Date(targetEndDate).getTime() : null;
+    // 単一親課題の範囲チェック
+    if (this.project) {
+      const pStart = this.project.scheduledStartDate ? new Date(this.project.scheduledStartDate).getTime() : null;
+      const pEnd = (this.project.deadline || this.project.scheduledEndDate) ? new Date(this.project.deadline || this.project.scheduledEndDate!).getTime() : null;
+      if (pStart && pStart < minDateMs) minDateMs = pStart;
+      if (pEnd && pEnd > maxDateMs) maxDateMs = pEnd;
+    }
 
-      if (start && start < minDateMs) minDateMs = start;
-      if (end && end > maxDateMs) maxDateMs = end;
-    });
+    // 子タスクの範囲チェック
+    if (hasTasks) {
+      this.tasks.forEach(task => {
+        const start = task.scheduledStartDate ? new Date(task.scheduledStartDate).getTime() : null;
+        const targetEndDate = task.deadline ? task.deadline : task.scheduledEndDate;
+        const end = targetEndDate ? new Date(targetEndDate).getTime() : null;
+        if (start && start < minDateMs) minDateMs = start;
+        if (end && end > maxDateMs) maxDateMs = end;
+      });
+    }
+    // 親課題一覧モード（Master Gantt）時の全親課題範囲チェック
+    if (hasProjects) {
+      this.projects.forEach(proj => {
+        const start = proj.scheduledStartDate ? new Date(proj.scheduledStartDate).getTime() : null;
+        const targetEndDate = proj.deadline ? proj.deadline : proj.scheduledEndDate;
+        const end = targetEndDate ? new Date(targetEndDate).getTime() : null;
+        if (start && start < minDateMs) minDateMs = start;
+        if (end && end > maxDateMs) maxDateMs = end;
+      });
+    }
+
+    // 初期値設定
+    if (minDateMs === new Date('9999-12-31').getTime()) {
+      minDateMs = new Date().getTime();
+    }
+    if (maxDateMs === new Date('1970-01-01').getTime()) {
+      maxDateMs = new Date().getTime();
+    }
 
     const startDate = new Date(minDateMs);
-    startDate.setDate(startDate.getDate() - 30);
-    this.timelineStartDate = startDate; 
+    startDate.setDate(startDate.getDate() - 14);
+    this.timelineStartDate = startDate;
 
     const endDate = new Date(maxDateMs);
     endDate.setDate(endDate.getDate() + 30);
