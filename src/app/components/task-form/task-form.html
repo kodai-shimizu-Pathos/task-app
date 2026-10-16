@@ -91,13 +91,35 @@
                                (change)="toggleChecklistItem(item, $event)" 
                                class="checkbox-input" />
                         
-                        <!-- テキストラベル：completed クラス + click イベント -->
-                        <label [for]="'item-' + item.id" 
+                        <!-- 通常表示モード：テキスト表示と編集ボタン -->
+                        <label *ngIf="editingItemId !== item.id"
+                               [for]="'item-' + item.id" 
                                class="checklist-text" 
-                               [class.completed]="item.completed"
-                               (click)="toggleChecklistItem(item, $event)">
+                               [class.completed]="item.completed">
                             {{ item.text }}
                         </label>
+                        
+                        <!-- 編集ボタン（✏️）- クリックイベントでバブリング防止 -->
+                        <button *ngIf="editingItemId !== item.id"
+                                type="button"
+                                class="btn-edit-icon" 
+                                (click)="startEditingChecklistItem(item, $event)" 
+                                title="編集">
+                            ✏️
+                        </button>
+                        
+                        <!-- 編集モード：インライン入力欄 -->
+                        <input *ngIf="editingItemId === item.id"
+                               type="text" 
+                               [(ngModel)]="item.text" 
+                               [ngModelOptions]="{ updateOn: 'change' }"
+                               (click)="$event.stopPropagation()"
+                               (blur)="saveEditingChecklistItem(item)"
+                               (keydown.enter)="saveEditingChecklistItem(item, $event)"
+                               (keydown.escape)="editingItemId = null"
+                               class="checklist-edit-input"
+                               [attr.id]="'edit-' + item.id"
+                               autofocus />
                         
                         <!-- 削除ボタン -->
                         <button type="button" class="btn-delete-item" (click)="deleteChecklistItem(item.id)" title="削除">🗑️</button>

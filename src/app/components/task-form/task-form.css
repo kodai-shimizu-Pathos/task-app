@@ -280,6 +280,46 @@ textarea {
   word-break: break-word;
   color: var(--text-primary);
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* 編集ボタン（✏️）のスタイル */
+.btn-edit-icon {
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* ホバー時に編集ボタンを表示 */
+.checklist-item:hover .btn-edit-icon {
+  opacity: 0.7;
+}
+
+/* 編集ボタンのホバー効果 */
+.btn-edit-icon:hover {
+  opacity: 1 !important;
+  background-color: var(--border-color);
+}
+
+/* 編集アイコンは通常時は薄く表示 */
+.edit-icon {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  font-size: 0.85rem;
+}
+
+/* テキストホバー時に編集アイコンを表示 */
+.checklist-text:hover .edit-icon {
+  opacity: 0.7;
 }
 
 /* 完了状態：取り消し線 + 薄い色 + 不透明度 */
@@ -304,6 +344,26 @@ textarea {
 .btn-delete-item:hover {
   background-color: var(--border-color);
   color: var(--priority-high);
+}
+
+/* チェックリスト項目編集用インライン入力欄 */
+.checklist-edit-input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 2px solid var(--accent-color);
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.checklist-edit-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.1);
 }
 
 .progress-info {

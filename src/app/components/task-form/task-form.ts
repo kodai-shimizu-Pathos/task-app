@@ -35,6 +35,8 @@ export class TaskForm implements OnInit, OnChanges {
 
   tagsInput: string = '';
   checklistInput: string = ''; // 新しいチェックリスト項目の入力値
+  editingItemId: string | null = null; // インライン編集中の項目ID
+  originalEditText: string = ''; // 編集前のテキストをバックアップ
 
   get isEditMode(): boolean {
     return !!(this.taskToEdit && this.taskToEdit.id);
@@ -134,6 +136,42 @@ export class TaskForm implements OnInit, OnChanges {
 
     // 進捗率を再計算（ステータス自動連動を含む）
     this.recalculateChecklistProgress();
+  }
+
+  // チェックリスト項目のインライン編集を開始
+  startEditingChecklistItem(item: ChecklistItem, event?: MouseEvent): void {
+    // イベント伝播を完全に遮断
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    // 編集前のテキストをバックアップ
+    this.originalEditText = item.text;
+    this.editingItemId = item.id;
+  }
+
+  // チェックリスト項目の編集を確定・保存
+  saveEditingChecklistItem(item: ChecklistItem, event?: Event): void {
+    // イベント伝播を完全に遮断し、フォーム送信を防ぐ
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    // テキストをトリム
+    item.text = item.text ? item.text.trim() : '';
+
+    // 空文字の場合は項目を削除
+    if (!item.text) {
+      this.deleteChecklistItem(item.id);
+    } else {
+      // 進捗率を再計算
+      this.recalculateChecklistProgress();
+    }
+
+    // 編集モードを終了
+    this.editingItemId = null;
+    this.originalEditText = '';
   }
 
   // チェックリスト進捗率の再計算（完全同期版）
