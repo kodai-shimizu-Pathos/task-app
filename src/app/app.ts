@@ -36,8 +36,12 @@ export class AppComponent implements OnInit {
   private pipService = inject(PipService);
 
   // --- UI状態管理 ---  
-  activeView: MainView = 'kanban'; // 'kanban' | 'gantt' | 'calendar' | 'review'
+  /** サイドパネル用：'tasks'(課題管理メイン) | 'review'(AIレビュー) */
+  activeView: 'tasks' | 'review' = 'tasks';
+
+  /** ヘッダーのモードトグル用：'KANBAN' | 'GANTT' */
   currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
+
   currentTheme: 'dark' | 'light' = 'dark';
 
   // 昇格処理中のメモIDを一時保持するプロパティ
@@ -51,26 +55,20 @@ export class AppComponent implements OnInit {
     this.isMasterPanelCollapsed = !this.isMasterPanelCollapsed;
   }
 
-  // メインビュー切替ハンドラ
-  onViewchange(view: MainView): void {
+  // 1. サイドパネルからのビュー切替（課題管理 ↔ レビュー）
+  onViewchange(view: 'tasks' | 'review'): void {
     this.activeView = view;
-    if (view === 'kanban') {
-      this.currentMode = 'KANBAN';
-    } else if (view === 'gantt') {
-      this.currentMode = 'GANTT';
-    }
+  }
+
+  // 2. ヘッダーからのカンバン/ガント切替
+  switchViewMode(view: 'KANBAN' | 'GANTT'): void {
+    this.currentMode = view;
   }
 
   // 集中モード切替ハンドラ
   onToggleConcentrationMode(): void {
     console.log('集中モード起動');
     this.pipService.togglePip();
-  }
-
-  // 設定モーダルハンドラ
-  onOpenSettings(): void {
-    console.log('設定画面表示');
-    // todo 設定画面の処理を実装
   }
 
   // --- Project・Task データ管理 ---  
@@ -101,11 +99,6 @@ export class AppComponent implements OnInit {
   toggleTheme(): void {
     this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
     document.body.setAttribute('data-theme', this.currentTheme);
-  }
-
-  // 表示モード切替ハンドラ
-  switchViewMode(view: 'KANBAN' | 'GANTT'): void {
-    this.currentMode = view;
   }
   
   ngOnInit(): void {

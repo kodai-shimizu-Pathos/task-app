@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type MainView ='kanban' | 'gantt' | 'calendar' | 'review';
+export type MainView ='tasks' | 'review';
 
 @Component({
   selector: 'app-shell',
@@ -11,7 +11,7 @@ export type MainView ='kanban' | 'gantt' | 'calendar' | 'review';
 })
 export class AppShell {
   /** 現在アクティブなメインビュー */
-  @Input() activeView: MainView = 'kanban';
+  @Input() activeView: MainView = 'tasks';
 
   /** 各種イベント通知 */
   @Output() viewChange = new EventEmitter<MainView>();

@@ -3,8 +3,7 @@
   <app-shell
     [activeView]="activeView"
     (viewChange)="onViewchange($event)"
-    (toggleConcentrationMode)="onToggleConcentrationMode()"
-    (openSettings)="onOpenSettings()">
+    (toggleConcentrationMode)="onToggleConcentrationMode()">
   </app-shell>
 
   <!-- 2. 右側 メインエリア -->
@@ -25,8 +24,18 @@
 
       <div class="header-center">
         <div class="view-switcher">
-          <button type="button" [class.active]="currentMode === 'KANBAN'" (click)="currentMode = 'KANBAN'">カンバン</button>
-          <button type="button" [class.active]="currentMode === 'GANTT'" (click)="currentMode = 'GANTT'">ガントチャート</button>
+          <button
+            type="button"
+            [class.active]="currentMode === 'KANBAN'"
+            (click)="switchViewMode('KANBAN')">
+            カンバン
+          </button>
+          <button
+            type="button"
+            [class.active]="currentMode === 'GANTT'"
+            (click)="switchViewMode('GANTT')">
+            ガントチャート
+          </button>
         </div>
       </div>
 
@@ -37,52 +46,20 @@
       </div>
     </header>
 
-    <!-- メインコンテンツ領域 -->
+    <!-- app.html の main タグ内 -->
     <main class="main-content">
       
-      <!-- パターンA：親課題が未選択の時（全画面 Master UI: SCR-01 / SCR-02） -->
-      <div class="full-master-pane" *ngIf="!selectedProject">
-        <app-master-kanban-board
-          *ngIf="currentMode === 'KANBAN'"
-          [projects]="projects"
-          (selectProject)="onSelectProject($event)"
-          (parentTaskUpdated)="onParentTaskUpdated($event)">
-        </app-master-kanban-board>
-
-        <app-gantt-board
-          *ngIf="currentMode === 'GANTT'"
-          [tasks]="currentTasks"
-          [project]="selectedProject"
-          [projects]="projects"
-          (selectTask)="onSelectTask($event)"
-          (addTask)="onOpenNewTaskForm()"
-          (taskUpdated)="onTaskUpdated($event)"
-          (projectUpdated)="onParentTaskUpdated($event)">
-        </app-gantt-board>
-      </div>
-
-      <!-- パターンB：親課題が選択されている時（Master-Detail UI: SCR-03 / SCR-04） -->
-      <ng-container *ngIf="selectedProject">
-        <!-- 左側: Master情報パネル -->
-        <aside class="master-pane" [class.collapsed]="isMasterPanelCollapsed">
-          <app-master-info-panel 
-            [project]="selectedProject"
-            [isCollapsed]="isMasterPanelCollapsed"
-            (toggleCollapse)="toggleMasterPanel()"
-            (editProject)="onEditProject()"
-            (addTask)="onOpenNewTaskForm()">
-          </app-master-info-panel>
-        </aside>
-
-        <!-- 右側: Detail表示エリア (子タスク カンバン/ガント) -->
-        <section class="detail-pane">
-          <app-kanban-board 
+      <!-- 1. 課題管理画面（activeView が 'tasks' の時） -->
+      <ng-container *ngIf="activeView === 'tasks'">
+        
+        <!-- パターンA：親課題が未選択の時（全画面 Master UI） -->
+        <div class="full-master-pane" *ngIf="!selectedProject">
+          <app-master-kanban-board
             *ngIf="currentMode === 'KANBAN'"
-            [tasks]="currentTasks"
-            (selectTask)="onSelectTask($event)"
-            (addTask)="onOpenNewTaskForm()"
-            (taskUpdated)="onTaskUpdated($event)">
-          </app-kanban-board>
+            [projects]="projects"
+            (selectProject)="onSelectProject($event)"
+            (parentTaskUpdated)="onParentTaskUpdated($event)">
+          </app-master-kanban-board>
 
           <app-gantt-board
             *ngIf="currentMode === 'GANTT'"
@@ -90,11 +67,48 @@
             [project]="selectedProject"
             [projects]="projects"
             (selectTask)="onSelectTask($event)"
-            (selectProject)="onSelectProject($event)"
             (addTask)="onOpenNewTaskForm()"
-            (taskUpdated)="onTaskUpdated($event)">
+            (taskUpdated)="onTaskUpdated($event)"
+            (projectUpdated)="onParentTaskUpdated($event)">
           </app-gantt-board>
-        </section>
+        </div>
+
+        <!-- パターンB：親課題が選択されている時（Master-Detail UI） -->
+        <ng-container *ngIf="selectedProject">
+          <!-- 左側: Master情報パネル -->
+          <aside class="master-pane" [class.collapsed]="isMasterPanelCollapsed">
+            <app-master-info-panel 
+              [project]="selectedProject"
+              [isCollapsed]="isMasterPanelCollapsed"
+              (toggleCollapse)="toggleMasterPanel()"
+              (editProject)="onEditProject()"
+              (addTask)="onOpenNewTaskForm()">
+            </app-master-info-panel>
+          </aside>
+
+          <!-- 右側: Detail表示エリア (子タスク カンバン/ガント) -->
+          <section class="detail-pane">
+            <app-kanban-board 
+              *ngIf="currentMode === 'KANBAN'"
+              [tasks]="currentTasks"
+              (selectTask)="onSelectTask($event)"
+              (addTask)="onOpenNewTaskForm()"
+              (taskUpdated)="onTaskUpdated($event)">
+            </app-kanban-board>
+
+            <app-gantt-board
+              *ngIf="currentMode === 'GANTT'"
+              [tasks]="currentTasks"
+              [project]="selectedProject"
+              [projects]="projects"
+              (selectTask)="onSelectTask($event)"
+              (selectProject)="onSelectProject($event)"
+              (addTask)="onOpenNewTaskForm()"
+              (taskUpdated)="onTaskUpdated($event)">
+            </app-gantt-board>
+          </section>
+        </ng-container>
+
       </ng-container>
 
       <!-- サイドポケット折り畳みパネル -->
