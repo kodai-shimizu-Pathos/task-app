@@ -97,6 +97,13 @@
         </section>
       </ng-container>
 
+      <!-- サイドポケット折り畳みパネル -->
+      <app-side-pocket-panel
+        [projects]="projects"
+        [selectedProject]="selectedProject"
+        (promoteToTask)="onPromoteMemoToTask($event)"
+        (promoteToProjectMemo)="onPromoteMemoToProjectMemo($event)">
+      </app-side-pocket-panel>
     </main>
 
     <!-- 子タスク作成・編集スライドインフォーム -->

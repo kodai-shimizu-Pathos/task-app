@@ -1,5 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SidePocketPanelComponent } from './components/side-pocket-panel/side-pocket-panel';
+import { SidePocketMemo } from './services/task-data';
 import { AppShell, MainView } from './components/app-shell/app-shell';
 import { MasterInfoPanel } from './components/master-info-panel/master-info-panel';
 import { KanbanBoard } from './components/kanban-board/kanban-board';
@@ -17,6 +19,7 @@ import { PipService } from './services/pip';
   standalone: true,
   imports: [
     CommonModule, 
+    SidePocketPanelComponent,
     MasterInfoPanel, 
     KanbanBoard, 
     TaskForm,
@@ -36,6 +39,9 @@ export class AppComponent implements OnInit {
   activeView: MainView = 'kanban'; // 'kanban' | 'gantt' | 'calendar' | 'review'
   currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
   currentTheme: 'dark' | 'light' = 'dark';
+
+  // 昇格処理中のメモIDを一時保持するプロパティ
+  promotingMemoId: string | null = null;
 
   // 親課題パネルの折り畳み状態
   isMasterPanelCollapsed: boolean = false;
@@ -245,16 +251,22 @@ export class AppComponent implements OnInit {
   onCloseTaskForm(): void {
     this.isTaskFormOpen = false;
     this.taskToEdit = null;
+    this.promotingMemoId = null;
   }
 
   // タスクの作成完了ハンドラ
   onTaskCreated(newTask: Task): void {
-    // 親課題が選択されていない場合は警告を出して処理を止める
-    if (this.selectedProject) {
+    if (this.selectedProject && !newTask.parentId) {
       newTask.parentId = this.selectedProject.id;
-    }  
+    }
     const { id, ...taskData } = newTask;
     this.dataService.addTask(taskData);
+
+    // サイドポケットからのタスク昇格処理
+    if (this.promotingMemoId) {
+      this.dataService.deleteSidePocketMemo(this.promotingMemoId);
+      this.promotingMemoId = null;
+    }
     this.onCloseTaskForm();
   }
 
@@ -351,5 +363,45 @@ export class AppComponent implements OnInit {
         this.selectedProject = { ...updated };
       }
     }
+  }
+
+  // メモを本タスク化フォームへ移行
+  onPromoteMemoToTask(memo: SidePocketMemo): void {
+    this.promotingMemoId = memo.id; // メモIDを一時保持
+    this.taskToEdit = {
+      id: '',
+      title: memo.content,
+      status: 'todo',
+      priority: 'medium',
+      progress: 0,
+      tags: [],
+      parentId: this.selectedProject?.id || (this.projects[0]?.id || '')
+    };
+    this.isTaskFormOpen = true;
+  }
+  
+  // ★ メモを親課題（プロジェクト）のメモ・履歴へ追加
+  onPromoteMemoToProjectMemo(event: { memo: SidePocketMemo; projectId: string }): void {
+    const targetProject = this.projects.find(p => p.id === event.projectId);
+    if (!targetProject) return;
+
+    const newMemoItem = {
+      timestamp: new Date().toLocaleString('ja-JP'),
+      content: event.memo.content
+    };
+
+    const updatedMemos = [...(targetProject.memos || []), newMemoItem];
+    const updatedProject = {
+      ...targetProject,
+      memos: updatedMemos,
+      updatedAt: new Date().toISOString()
+    };
+
+    // 親課題の更新実行
+    const { id, ...projectData } = updatedProject;
+    this.dataService.updateProject(id, projectData);
+
+    // サイドポケットから消化・削除
+    this.dataService.deleteSidePocketMemo(event.memo.id);
   }
 }

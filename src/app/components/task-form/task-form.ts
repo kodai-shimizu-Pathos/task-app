@@ -33,14 +33,21 @@ export class TaskForm implements OnInit, OnChanges {
   };
 
   tagsInput: string = '';
+
+  get isEditMode(): boolean {
+    return !!(this.taskToEdit && this.taskToEdit.id);
+  }
   
   ngOnInit(): void {
     this.populateForm();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['taskToEdit'] || changes['projectId'] || changes['projects']) {
-      this.populateForm();
+    if (changes['taskToEdit'] && this.taskToEdit) {
+      this.taskData = { ...this.taskToEdit };
+      this.tagsInput = this.taskToEdit.tags ? this.taskToEdit.tags.join(', '): '';
+    } else if (!this.taskToEdit) {
+      this.resetForm(this.projectId);
     }
   }
 
@@ -88,7 +95,8 @@ export class TaskForm implements OnInit, OnChanges {
 
     const parsedTags = this.parseTags(this.tagsInput);
 
-    if (this.taskToEdit) {
+    // 既存タスク更新処理
+    if (this.taskToEdit && this.taskToEdit.id) {
       const updatedTask: Task = {
         ...this.taskToEdit,
         ...(this.taskData as Task),
@@ -98,6 +106,7 @@ export class TaskForm implements OnInit, OnChanges {
       };
       this.taskUpdated.emit(updatedTask);
     } else {
+      // 新規タスク作成処理
       const newTask: Task = {
         id: 'task-' + Date.now(),
         parentId: this.taskData.parentId,

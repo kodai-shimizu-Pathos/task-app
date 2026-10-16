@@ -1,7 +1,7 @@
 <div class="side-panel-backdrop" (click)="onClose()">
     <div class="side-panel-container" (click)="$event.stopPropagation()">
         <div class="panel-header">
-            <h2>{{ taskToEdit ? 'タスク詳細・編集' : '新規タスク作成' }}</h2>
+            <h2>{{ isEditMode ? 'タスク詳細・編集' : '新規タスク作成' }}</h2>
             <button type="button" class="close-btn" (click)="onClose()" title="閉じる">✕</button>
         </div>
 
@@ -75,10 +75,10 @@
 
             <!-- フッター -->
             <div class="panel-footer">
-                <button type="button" *ngIf="taskToEdit" class="btn-delete" (click)="onDelete()">🗑️ 削除</button>
+                <button type="button" *ngIf="isEditMode" class="btn-delete" (click)="onDelete()">🗑️ 削除</button>
                 <div class="footer-right">
                     <button type="button" class="btn-cancel" (click)="onClose()">キャンセル</button>
-                    <button type="submit" class="btn-submit">{{ taskToEdit ? '変更を保存' : 'タスクを作成' }}</button>
+                    <button type="submit" class="btn-submit">{{ isEditMode ? '変更を保存' : 'タスクを作成' }}</button>
                 </div>
             </div>
         </form>

@@ -27,9 +27,23 @@ export class TaskDataService {
   readonly projects$!: Observable<ParentProject[]>;
   readonly tasks$!: Observable<Task[]>;
 
-  // サイドポケットメモ状態管理 (RxJS BehaviorSubject)
-  private sidePocketMemosSubject = new BehaviorSubject<SidePocketMemo[]>([]);
-  public sidePocketMemos$ = this.sidePocketMemosSubject.asObservable();
+// TaskDataService 内の確認・追加メソッド
+private sidePocketSubject = new BehaviorSubject<SidePocketMemo[]>([]);
+public sidePocketMemos$ = this.sidePocketSubject.asObservable();
+
+addSidePocketMemo(memo: { content: string; createdAt: string }): void {
+  const newMemo: SidePocketMemo = {
+    id: `memo-${Date.now()}`,
+    ...memo
+  };
+  const current = this.sidePocketSubject.getValue();
+  this.sidePocketSubject.next([newMemo, ...current]);
+}
+
+deleteSidePocketMemo(id: string): void {
+  const current = this.sidePocketSubject.getValue();
+  this.sidePocketSubject.next(current.filter(m => m.id !== id));
+}
 
   constructor() {
     // Injection context が確立されている状態で初期化
@@ -96,25 +110,5 @@ export class TaskDataService {
   async deleteTask(id: string): Promise<void> {
     const docRef = doc(this.firestore, `tasks/${id}`);
     await deleteDoc(docRef);
-  }
-
-  // --- サイドポケット (集中モード) メモ操作 ---
-  addSidePocketMemo(memoData: { content: string; createdAt: string; parentProjectId?: string }): void {
-    const newMemo: SidePocketMemo = {
-      id: 'memo_' + Date.now(),
-      content: memoData.content,
-      createdAt: memoData.createdAt,
-      parentProjectId: memoData.parentProjectId
-    };
-
-    const currentMemos = this.sidePocketMemosSubject.getValue();
-    this.sidePocketMemosSubject.next([newMemo, ...currentMemos]);
-
-    console.log('Side Pocket Memo Added:', newMemo);
-  }
-
-  removeSidePocketMemo(id: string): void {
-    const currentMemos = this.sidePocketMemosSubject.getValue();
-    this.sidePocketMemosSubject.next(currentMemos.filter(m => m.id !== id));
   }
 }
