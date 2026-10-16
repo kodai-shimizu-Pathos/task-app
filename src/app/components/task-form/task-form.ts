@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, SimpleChanges, OnChanges } from '@angular/core'; 
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms';
-import { Task, PriorityLevel, Status } from '../../models/task.model';
+import { Task, PriorityLevel, Status, ChecklistItem } from '../../models/task.model';
 import { ParentProject } from '../../models/project.model';
 
 @Component({
@@ -30,9 +30,11 @@ export class TaskForm implements OnInit, OnChanges {
     scheduledEndDate: '',
     deadline: '',
     description: '',
+    checklist: [], // チェックリスト初期化
   };
 
   tagsInput: string = '';
+  checklistInput: string = ''; // 新しいチェックリスト項目の入力値
 
   get isEditMode(): boolean {
     return !!(this.taskToEdit && this.taskToEdit.id);
@@ -78,13 +80,105 @@ export class TaskForm implements OnInit, OnChanges {
       scheduledStartDate: '',
       scheduledEndDate: '',
       deadline: '',
+      checklist: [], // チェックリスト初期化
     };
     this.tagsInput = '';
+    this.checklistInput = '';
   }
 
   private parseTags(input: string): string[] {
     if (!input || !input.trim()) return [];
     return input.split(',').map(tag => tag.trim().replace(/^#/, '')).filter(tag => tag.length > 0);
+  }
+
+  // チェックリスト管理メソッド
+  addChecklistItem(event?: Event): void {
+    // Enterキー押下時はデフォルト動作を防止
+    if (event) {
+      event.preventDefault();
+    }
+
+    if (!this.checklistInput.trim()) return;
+    
+    if (!this.taskData.checklist) {
+      this.taskData.checklist = [];
+    }
+
+    const newItem: ChecklistItem = {
+      id: 'item-' + Date.now(),
+      text: this.checklistInput.trim(),
+      completed: false,
+      addedAfterStart: false,
+    };
+
+    this.taskData.checklist.push(newItem);
+    this.checklistInput = '';
+    this.recalculateChecklistProgress(); // 追加後に進捗率を更新
+  }
+
+  deleteChecklistItem(itemId: string): void {
+    if (this.taskData.checklist) {
+      this.taskData.checklist = this.taskData.checklist.filter(item => item.id !== itemId);
+      this.recalculateChecklistProgress(); // 削除後に進捗率を更新
+    }
+  }
+
+  toggleChecklistItem(item: ChecklistItem, event?: Event): void {
+    // イベントバブリング（二重発火）を防止
+    if (event) {
+      event.stopPropagation();
+    }
+
+    // チェック状態を反転
+    item.completed = !item.completed;
+
+    // 進捗率を再計算（ステータス自動連動を含む）
+    this.recalculateChecklistProgress();
+  }
+
+  // チェックリスト進捗率の再計算（完全同期版）
+  private recalculateChecklistProgress(): void {
+    if (!this.taskData.checklist || this.taskData.checklist.length === 0) {
+      // チェックリストが0件の場合：既存のステータス連動
+      this.taskData.progress = this.taskData.status === 'done' ? 100 : 
+                               (this.taskData.status === 'in-progress' ? 50 : 0);
+      return;
+    }
+
+    // チェックリスト1件以上の場合：達成数で自動計算
+    const completedCount = this.taskData.checklist.filter(item => item.completed).length;
+    const totalCount = this.taskData.checklist.length;
+    this.taskData.progress = Math.round((completedCount / totalCount) * 100);
+
+    // ステータスを自動連動
+    if (this.taskData.progress === 100) {
+      // すべて完了した場合 → done
+      this.taskData.status = 'done';
+    } else if (completedCount > 0) {
+      // 未完了項目がある場合 → in-progress
+      this.taskData.status = 'in-progress';
+    } else {
+      // 全て未完了の場合 → todo
+      this.taskData.status = 'todo';
+    }
+  }
+
+  // 進捗率の自動計算（旧メソッド互換性のため残す）
+  private updateProgress(): void {
+    this.recalculateChecklistProgress();
+  }
+
+  // テンプレート用：完了したチェックリスト項目数を取得
+  getCompletedChecklistCount(): number {
+    if (!this.taskData.checklist || this.taskData.checklist.length === 0) {
+      return 0;
+    }
+    return this.taskData.checklist.filter(item => item.completed).length;
+  }
+
+  // テンプレート用：チェックリスト項目総数を取得
+  getTotalChecklistCount(): number {
+    return this.taskData.checklist ? this.taskData.checklist.length : 0;
   }
 
   onSubmit(): void {
@@ -95,13 +189,17 @@ export class TaskForm implements OnInit, OnChanges {
 
     const parsedTags = this.parseTags(this.tagsInput);
 
+    // 進捗率の最終計算
+    this.recalculateChecklistProgress();
+
     // 既存タスク更新処理
     if (this.taskToEdit && this.taskToEdit.id) {
       const updatedTask: Task = {
         ...this.taskToEdit,
         ...(this.taskData as Task),
         tags: parsedTags,
-        progress: this.taskData.status === 'done' ? 100 : (this.taskData.status === 'in-progress' ? 50 : 0),
+        checklist: this.taskData.checklist || [],
+        progress: this.taskData.progress || 0,
         updatedAt: new Date().toISOString()
       };
       this.taskUpdated.emit(updatedTask);
@@ -118,7 +216,8 @@ export class TaskForm implements OnInit, OnChanges {
         deadline: this.taskData.deadline || '',
         description: this.taskData.description || '',
         tags: parsedTags,
-        progress: this.taskData.status === 'done' ? 100 : (this.taskData.status === 'in-progress' ? 50 : 0),
+        checklist: this.taskData.checklist || [],
+        progress: this.taskData.progress || 0,
         createdAt: new Date().toISOString()
       };
       this.taskCreated.emit(newTask);

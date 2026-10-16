@@ -38,4 +38,18 @@ export class TaskCard {
     if (lower === 'low') return '低';
     return '中';
   }
+
+  // チェックリストの完了数と全数を取得
+  getChecklistStats(): { completed: number; total: number } {
+    if (!this.task.checklist || this.task.checklist.length === 0) {
+      return { completed: 0, total: 0 };
+    }
+    const completed = this.task.checklist.filter(item => item.completed).length;
+    return { completed, total: this.task.checklist.length };
+  }
+
+  // チェックリストが存在するかをチェック
+  hasChecklist(): boolean {
+    return !!(this.task.checklist && this.task.checklist.length > 0);
+  }
 }

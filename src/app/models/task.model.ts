@@ -1,6 +1,14 @@
 export type PriorityLevel = 'HIGH' | 'MEDIUM' | 'LOW' | 'high' | 'medium' | 'low';
 export type Status = 'todo' | 'in-progress' | 'done' | 'archived';
 
+// チェックリスト項目のインターフェース
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  addedAfterStart?: boolean; // 作業着手後に追加されたフラグ
+}
+
 // 1件のタスクが持つ情報の形 (設計図)
 export interface Task {
     id: string; // タスクID (例： 'task-1')
@@ -16,6 +24,7 @@ export interface Task {
     description?: string; // タスクの説明
     createdAt?: string; // 作成日時 (yyyy-mm-dd HH:MM:SS)
     updatedAt?: string; // 更新日時 (yyyy-mm-dd HH:MM:SS)
+    checklist?: ChecklistItem[]; // チェックリスト（軽量チェックリスト）
     // prerequisitesTaskIds?: string[]; // 依存関係・前提タスクのID(例：['task-1', 'task-2'])
     // isRoutine?: boolean // ルーチンタスクかどうか
     // routineInterval?: 'daily' | 'weekly' | 'monthly'; // ルーチンタスクの間隔(日|週|月)

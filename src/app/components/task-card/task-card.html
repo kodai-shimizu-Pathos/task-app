@@ -33,4 +33,14 @@
             <span class="date-value">{{ task.deadline }}</span>
         </div>
     </div>
+
+    <!-- チェックリスト進捗バー（チェックリスト1件以上の場合のみ表示） -->
+    <div class="checklist-progress-section" *ngIf="hasChecklist()">
+        <div class="progress-bar-container">
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" [style.width.%]="task.progress || 0"></div>
+            </div>
+            <span class="progress-text">進捗: {{ getChecklistStats().completed }}/{{ getChecklistStats().total }} ({{ task.progress || 0 }}%)</span>
+        </div>
+    </div>
 </div>

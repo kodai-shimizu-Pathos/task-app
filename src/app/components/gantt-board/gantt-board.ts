@@ -708,4 +708,18 @@ private checkJapaneseHoliday(date: Date): boolean {
     target.setHours(0, 0, 0, 0);
     return target < today;
   }
+
+  // チェックリスト統計情報の取得
+  getChecklistStats(task: Task): { completed: number; total: number } {
+    if (!task.checklist || task.checklist.length === 0) {
+      return { completed: 0, total: 0 };
+    }
+    const completed = task.checklist.filter(item => item.completed).length;
+    return { completed, total: task.checklist.length };
+  }
+
+  // チェックリストが存在するかをチェック
+  hasChecklist(task: Task): boolean {
+    return !!(task.checklist && task.checklist.length > 0);
+  }
 }

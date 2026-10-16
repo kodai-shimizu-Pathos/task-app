@@ -73,6 +73,44 @@
                 <textarea id="description" [(ngModel)]="taskData.description" name="description" rows="4" placeholder="タスクの詳細やメモを入力…"></textarea>
             </div>
 
+            <!-- チェックリスト / サブタスク -->
+            <div class="form-group">
+                <label for="checklistInput">チェックリスト / サブタスク</label>
+                <div class="checklist-input-row">
+                    <input type="text" id="checklistInput" [(ngModel)]="checklistInput" name="checklistInput" placeholder="項目を入力…" (keydown.enter)="addChecklistItem($event)" />
+                    <button type="button" class="btn-add-item" (click)="addChecklistItem()" title="項目を追加">＋ 追加</button>
+                </div>
+
+                <!-- チェックリスト項目一覧 -->
+                <div class="checklist-items" *ngIf="taskData.checklist && taskData.checklist.length > 0">
+                    <div class="checklist-item" *ngFor="let item of taskData.checklist" [class.completed]="item.completed">
+                        <!-- チェックボックス：checked バインド + change イベント -->
+                        <input type="checkbox" 
+                               [id]="'item-' + item.id" 
+                               [checked]="item.completed" 
+                               (change)="toggleChecklistItem(item, $event)" 
+                               class="checkbox-input" />
+                        
+                        <!-- テキストラベル：completed クラス + click イベント -->
+                        <label [for]="'item-' + item.id" 
+                               class="checklist-text" 
+                               [class.completed]="item.completed"
+                               (click)="toggleChecklistItem(item, $event)">
+                            {{ item.text }}
+                        </label>
+                        
+                        <!-- 削除ボタン -->
+                        <button type="button" class="btn-delete-item" (click)="deleteChecklistItem(item.id)" title="削除">🗑️</button>
+                    </div>
+                </div>
+
+                <!-- 進捗率表示（チェックリスト1件以上の場合） -->
+                <div class="progress-info" *ngIf="taskData.checklist && taskData.checklist.length > 0">
+                    <span class="progress-label">進捗:</span>
+                    <span class="progress-value">{{ getCompletedChecklistCount() }} / {{ getTotalChecklistCount() }} ({{ taskData.progress || 0 }}%)</span>
+                </div>
+            </div>
+
             <!-- フッター -->
             <div class="panel-footer">
                 <button type="button" *ngIf="isEditMode" class="btn-delete" (click)="onDelete()">🗑️ 削除</button>
