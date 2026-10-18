@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { TaskDataService, SidePocketMemo } from '../../services/task-data';
 import { ParentProject } from '../../models/project.model';
+import { AiService } from '../../services/ai.service';
 
 @Component({
   selector: 'app-side-pocket-panel',
@@ -60,32 +61,91 @@ import { ParentProject } from '../../models/project.model';
 
           <p class="memo-content">{{ memo.content }}</p>
 
-          <!-- 昇格パイプラインアクション -->
+                    <!-- 昇格パイプラインアクション -->
           <div class="memo-actions">
-            <!-- 🚀 本タスク化 -->
-            <button class="btn-action promote-task" (click)="onPromoteToTask(memo)">
-              🚀 タスク化
-            </button>
+            
+            <!-- 1. 通常状態 (AI未実行) -->
+            <ng-container *ngIf="!aiStates[memo.id]">
+              <div class="btn-group-row">
+                <button class="btn-action promote-task" (click)="onPromoteToTask(memo)">
+                  🚀 手動タスク化
+                </button>
+                <button class="btn-action ai-predict-btn" (click)="onPredictProject(memo)" [disabled]="projects.length === 0">
+                  🤖 AI分類
+                </button>
+              </div>
 
-            <!-- 📌 親課題メモへ追加 -->
-            <div class="promote-project-group" *ngIf="projects.length > 0">
-              <select 
-                class="project-select" 
-                #projSelect 
-                (change)="onPromoteToProjectMemo(memo, projSelect.value); projSelect.value=''">
-                <option value="" disabled selected>📌 親課題メモに追加...</option>
+              <div class="promote-project-group" *ngIf="projects.length > 0">
+                <select 
+                  class="project-select" 
+                  #projSelect 
+                  (change)="onPromoteToProjectMemo(memo, projSelect.value); projSelect.value=''">
+                  <option value="" disabled selected>📌 親課題メモに追加...</option>
 
-                <!-- 選択中の親課題を優先表示 -->
-                <option *ngIf="selectedProject" [value]="selectedProject.id">
-                  ★ {{ selectedProject.title }} (選択中)
-                </option>
-                <ng-container *ngFor="let proj of projects">
-                  <option *ngIf="proj.id !== selectedProject?.id" [value]="proj.id">
-                    {{ proj.title }}
+                  <option *ngIf="selectedProject" [value]="selectedProject.id">
+                    ★ {{ selectedProject.title }} (選択中)
                   </option>
-                </ng-container>
-              </select>
+                  <ng-container *ngFor="let proj of projects">
+                    <option *ngIf="proj.id !== selectedProject?.id" [value]="proj.id">
+                      {{ proj.title }}
+                    </option>
+                  </ng-container>
+                </select>
+              </div>
+            </ng-container>
+
+            <!-- 2. AI推測中 (ローディング) -->
+            <div class="ai-loading" *ngIf="aiStates[memo.id]?.loading">
+              <span class="spinner">⏳</span> Geminiが親課題を推測中...
             </div>
+
+            <!-- 3. AI推測結果 (二段階承認UI) -->
+            <div class="ai-result-box" *ngIf="aiStates[memo.id] && !aiStates[memo.id].loading">
+              <!-- 推測成功時 -->
+              <ng-container *ngIf="aiStates[memo.id].predictedProjectId">
+                <div class="ai-header">
+                  <span class="ai-badge">🤖 AI提案</span>
+                  <span class="ai-reason">💡 {{ aiStates[memo.id].reason }}</span>
+                </div>
+                
+                <div class="ai-field">
+                  <label>親課題:</label>
+                  <select class="ai-select" [(ngModel)]="aiStates[memo.id].predictedProjectId">
+                    <option *ngFor="let proj of projects" [value]="proj.id">{{ proj.title }}</option>
+                  </select>
+                </div>
+
+                <div class="ai-field">
+                  <label>タスク名:</label>
+                  <input type="text" class="ai-input" [(ngModel)]="aiStates[memo.id].taskTitle" />
+                </div>
+
+                <div class="ai-btn-group">
+                  <button class="btn-approve" (click)="onApproveAiTask(memo)">✓ 承認してタスク化</button>
+                  <button class="btn-cancel" (click)="onCancelAiPredict(memo.id)">✕</button>
+                </div>
+              </ng-container>
+
+              <!-- 該当なし時 -->
+              <ng-container *ngIf="!aiStates[memo.id].predictedProjectId">
+                <div class="ai-header error">
+                  <span>⚠️ 該当する親課題が見つかりませんでした</span>
+                </div>
+                <div class="ai-field">
+                  <select class="ai-select" [(ngModel)]="aiStates[memo.id].predictedProjectId">
+                    <option [value]="null" disabled selected>親課題を選択してください...</option>
+                    <option *ngFor="let proj of projects" [value]="proj.id">{{ proj.title }}</option>
+                  </select>
+                </div>
+                <div class="ai-btn-group">
+                  <button class="btn-approve" [disabled]="!aiStates[memo.id].predictedProjectId" (click)="onApproveAiTask(memo)">
+                    🚀 タスク化
+                  </button>
+                  <button class="btn-cancel" (click)="onCancelAiPredict(memo.id)">✕</button>
+                </div>
+              </ng-container>
+            </div>
+
           </div>
         </div>
       </div>
@@ -372,6 +432,7 @@ import { ParentProject } from '../../models/project.model';
 export class SidePocketPanelComponent implements OnInit, OnDestroy {
   private dataService = inject(TaskDataService);
   private cdr = inject(ChangeDetectorRef);
+  private aiService = inject(AiService);
 
   @Input() projects: ParentProject[] = [];
   @Input() selectedProject: ParentProject | null = null;
@@ -427,6 +488,70 @@ export class SidePocketPanelComponent implements OnInit, OnDestroy {
     const hh = String(date.getHours()).padStart(2, '0');
     const min = String(date.getMinutes()).padStart(2, '0');
     return `${mm}/${dd} ${hh}:${min}`;
+  }
+  
+  aiStates: {
+    [memoId: string]: {
+      loading: boolean;
+      predictedProjectId: string | null;
+      taskTitle: string;
+      reason: string;
+      error?: string;
+    }
+  } = {};
+
+  async onPredictProject(memo: SidePocketMemo): Promise<void> {
+    this.aiStates[memo.id] = {
+      loading: true,
+      predictedProjectId: null,
+      taskTitle: memo.content,
+      reason: ''
+    };
+    this.cdr.detectChanges();
+
+    try {
+      const result = await this.aiService.predictParentProject(memo.content, this.projects);
+      this.aiStates[memo.id] = {
+        loading: false,
+        predictedProjectId: result.projectId,
+        taskTitle: result.suggestedTaskTitle,
+        reason: result.reason
+      };
+    } catch (err) {
+      this.aiStates[memo.id] = {
+        loading: false,
+        predictedProjectId: null,
+        taskTitle: memo.content,
+        reason: '',
+        error: 'AI推測に失敗しました'
+      };
+    }
+    this.cdr.detectChanges();
+  }
+
+
+  // --- 二段階承認 ---
+  onApproveAiTask(memo: SidePocketMemo): void {
+    const state = this.aiStates[memo.id];
+    if (!state || !state.predictedProjectId) return;
+
+    this.dataService.addTask({
+      title: state.taskTitle,
+      parentId: state.predictedProjectId,
+      status: 'todo',
+      priority: 'medium',
+      progress: 0,
+      tags: [],
+    });
+
+    this.dataService.deleteSidePocketMemo(memo.id);
+    delete this.aiStates[memo.id];
+  }
+
+  // --- AI推測のキャンセル ---
+  onCancelAiPredict(memoId: string): void {
+    delete this.aiStates[memoId];
+    this.cdr.detectChanges();
   }
 
   // --- ドラッグリサイズ制御 ---

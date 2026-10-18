@@ -9,5 +9,5 @@ export const environment = {
       appId: "1:236829433712:web:618846367bce5c2ec579b5",
       measurementId: "G-B21DHJP6G4"
     },
-    geminiApiKey: "YOUR_GEMINI_API_KEY_HERE" // 実際のAPIキーに置き換えてください
+    geminiApiKey: "YOUR_GEMINI_API_KEY" // 実際のAPIキーに置き換えてください
   };
