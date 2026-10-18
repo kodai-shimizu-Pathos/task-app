@@ -149,12 +149,19 @@
 
     <!-- アーカイブ一覧モーダル -->
     <app-archive-modal
-    *ngIf="isArchiveModalOpen"
-    [archivedProjects]="archivedProjects"
-    (closeModal)="onCloseArchiveModal()"
-    (restoreProject)="onRestoreProject($event)"
-    (deleteProject)="onProjectDeleted($event)">
-  </app-archive-modal>
+      *ngIf="isArchiveModalOpen"
+      [archivedProjects]="archivedProjects"
+      (closeModal)="onCloseArchiveModal()"
+      (restoreProject)="onRestoreProject($event)"
+      (deleteProject)="onProjectDeleted($event)">
+    </app-archive-modal>
+
+    <!-- ★ 遅延理由収集ノンブロッキングトースト -->
+    <app-delay-log-toast
+      *ngIf="autoCollectDelayLog && activeDelayLogInfo"
+      [taskTitle]="activeDelayLogInfo.taskTitle"
+      (selectReason)="onSelectDelayReason($event)">
+    </app-delay-log-toast>
 
   </div>
 </div>

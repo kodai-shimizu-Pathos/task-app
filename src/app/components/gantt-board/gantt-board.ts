@@ -135,6 +135,8 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     });
   }
 
+  private justDragged: boolean = false;
+
   // 【追加】スプリッターとフラグの手動ドラッグ用にプロパティを復活
   private boundMouseMove?: (e: MouseEvent) => void;
   private boundMouseUp?: () => void;
@@ -299,55 +301,62 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   }
 
   // 日本の祝日自動判定ヘルパーメソッド
-private checkJapaneseHoliday(date: Date): boolean {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const dayOfWeek = date.getDay();
+  private checkJapaneseHoliday(date: Date): boolean {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const dayOfWeek = date.getDay();
 
-  // 固定祝日
-  if (month === 1 && day === 1) return true;   // 元日
-  if (month === 2 && day === 11) return true;  // 建国記念の日
-  if (month === 2 && day === 23) return true;  // 天皇誕生日
-  if (month === 4 && day === 29) return true;  // 昭和の日
-  if (month === 5 && day === 3) return true;   // 憲法記念日
-  if (month === 5 && day === 4) return true;   // みどりの日
-  if (month === 5 && day === 5) return true;   // こどもの日
-  if (month === 8 && day === 11) return true;  // 山の日
-  if (month === 11 && day === 3) return true;  // 文化の日
-  if (month === 11 && day === 23) return true; // 勤労感謝の日
+    // 固定祝日
+    if (month === 1 && day === 1) return true;   // 元日
+    if (month === 2 && day === 11) return true;  // 建国記念の日
+    if (month === 2 && day === 23) return true;  // 天皇誕生日
+    if (month === 4 && day === 29) return true;  // 昭和の日
+    if (month === 5 && day === 3) return true;   // 憲法記念日
+    if (month === 5 && day === 4) return true;   // みどりの日
+    if (month === 5 && day === 5) return true;   // こどもの日
+    if (month === 8 && day === 11) return true;  // 山の日
+    if (month === 11 && day === 3) return true;  // 文化の日
+    if (month === 11 && day === 23) return true; // 勤労感謝の日
 
-  // ハッピーマンデー (第N月曜日)
-  const nthMonday = Math.ceil(day / 7);
-  if (dayOfWeek === 1) {
-    if (month === 1 && nthMonday === 2) return true;  // 成人の日
-    if (month === 7 && nthMonday === 3) return true;  // 海の日
-    if (month === 9 && nthMonday === 3) return true;  // 敬老の日
-    if (month === 10 && nthMonday === 2) return true; // スポーツの日
+    // ハッピーマンデー (第N月曜日)
+    const nthMonday = Math.ceil(day / 7);
+    if (dayOfWeek === 1) {
+      if (month === 1 && nthMonday === 2) return true;  // 成人の日
+      if (month === 7 && nthMonday === 3) return true;  // 海の日
+      if (month === 9 && nthMonday === 3) return true;  // 敬老の日
+      if (month === 10 && nthMonday === 2) return true; // スポーツの日
+    }
+
+    // 春分の日・秋分の日の概算
+    if (month === 3) {
+      const shunbun = Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+      if (day === shunbun) return true;
+    }
+    if (month === 9) {
+      const shūbun = Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+      if (day === shūbun) return true;
+    }
+
+    // 振替休日 (日曜日の祝日の翌月曜日)
+    if (dayOfWeek === 1) {
+      const prevDate = new Date(date);
+      prevDate.setDate(date.getDate() - 1);
+      if (this.checkJapaneseHoliday(prevDate)) return true;
+    }
+
+    return false;
   }
-
-  // 春分の日・秋分の日の概算
-  if (month === 3) {
-    const shunbun = Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
-    if (day === shunbun) return true;
-  }
-  if (month === 9) {
-    const shūbun = Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
-    if (day === shūbun) return true;
-  }
-
-  // 振替休日 (日曜日の祝日の翌月曜日)
-  if (dayOfWeek === 1) {
-    const prevDate = new Date(date);
-    prevDate.setDate(date.getDate() - 1);
-    if (this.checkJapaneseHoliday(prevDate)) return true;
-  }
-
-  return false;
-}
 
   onTaskClick(task: Task, event: Event): void {
     event.stopPropagation();
+
+    // ★ ドラッグ直後のクリック誤発火ならスライドインを開かずに終了
+    if (this.justDragged) {
+      this.justDragged = false;
+      return;
+    }
+
     if (task && task.id) {
       this.selectTask.emit(task);
     }
@@ -548,6 +557,7 @@ private checkJapaneseHoliday(date: Date): boolean {
     }
   }
 
+  // --- ドラッグ終了時の処理 ---
   @HostListener('document:mouseup', ['$event'])
   onBarMouseUp(event: MouseEvent): void {
     if (!this.draggedItem || !this.dragType || this.dragType === 'flag') return;
@@ -559,26 +569,34 @@ private checkJapaneseHoliday(date: Date): boolean {
       const isProject = 'totalTaskCount' in this.draggedItem;
 
       if (diffDays !== 0 && this.dragHasMoved) {
-        if (isProject) {
-          // 1. 親課題の更新を保存
-          this.projectUpdated.emit(this.draggedItem);
+        // ★ ドラッグ移動が発生したことを記録（クリックイベントをブロックするため）
+        this.justDragged = true;
 
-          // 2. 移動(move)の場合、子タスクは onBarMouseMove で既に日付が正しく更新されているため、
-          //    ここでは二重にシフトせず、更新イベントの通知(emit)のみ行う
+        const oldDueDate = this.dragStartDeadline || this.dragStartScheduledEnd || '';
+
+        if (isProject) {
+          const projectToEmit = {
+            ...this.draggedItem,
+            _previousDueDate: oldDueDate
+          };
+          this.projectUpdated.emit(projectToEmit);
+
           if (this.dragType === 'move') {
             this.tasks.forEach(task => {
               this.taskUpdated.emit(task);
             });
           }
         } else {
-          // 子タスク単体をドラッグした場合
-          this.taskUpdated.emit(this.draggedItem as Task);
+          const taskToEmit = {
+            ...this.draggedItem as Task,
+            _previousDueDate: oldDueDate
+          };
+          this.taskUpdated.emit(taskToEmit);
         }
       }
     } catch (error) {
       console.error('ドラッグ終了時の保存処理でエラーが発生しました:', error);
     } finally {
-      // ★何が発生しても必ずドラッグ状態（掴んでいる状態）を確実に解除する！
       this.resetDragState();
     }
   }
@@ -623,9 +641,13 @@ private checkJapaneseHoliday(date: Date): boolean {
     }
   }
 
+  // 完了予定日フラグ（🚩）のドラッグ離し時処理
   onFlagMouseUp(): void {
-    if (this.draggedItem) {
-      this.taskUpdated.emit(this.draggedItem as Task);
+    if (this.draggedItem && this.dragType === 'flag') {
+      const updatedTask = { ...this.draggedItem as Task };
+      // ドラッグ前日付に一時復元してから通知
+      this.draggedItem.scheduledEndDate = this.dragStartScheduledEnd;
+      this.taskUpdated.emit(updatedTask);
     }
     this.draggedItem = null;
     this.dragType = null;

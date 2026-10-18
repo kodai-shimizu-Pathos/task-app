@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { DelayLog } from '../models/delay-log.model';
 import { 
   Firestore, 
   collection, 
@@ -32,6 +33,8 @@ export class TaskDataService {
   private tasksCollection = collection(this.firestore, 'tasks');
   private sidePocketCollection = collection(this.firestore, 'side_pocket_memos');
 
+  private delayLogs:DelayLog[] = [];
+
   // Observable の宣言 (Firestoreとのリアルタイム同期)
   readonly projects$: Observable<ParentProject[]> = 
     collectionData(this.projectsCollection, { idField: 'id' }) as Observable<ParentProject[]>;
@@ -54,6 +57,29 @@ export class TaskDataService {
 
   getSidePocketMemos(): Observable<SidePocketMemo[]> {
     return this.sidePocketMemos$;
+  }
+
+  // --- 遅延要因ログの記録 ---
+  async addDelayLog(log: Omit<DelayLog, 'id' | 'createdAt'>): Promise<void> {
+    const newLog: DelayLog = {
+      ...log,
+      id: `log_${Date.now()}`,
+      createdAt: new Date(). toISOString(),
+    };
+
+    this.delayLogs.push(newLog);
+    console.log('遅延ログを記録しました：', newLog);
+
+    // Firestoreに保存
+    await addDoc(collection(this.firestore, 'delay_logs'), newLog);
+  }
+
+  // --- 過去7に置換の遅延ログを取得
+  getRecentDelayLogs(days: number = 7): DelayLog[] {
+    const now = new Date();
+    const pastDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+    return this.delayLogs.filter(log => new Date(log.createdAt) >= pastDate);
   }
 
   // --- SidePocket CRUD処理 (Firestore永続化) ---

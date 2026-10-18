@@ -1,0 +1,19 @@
+<div class="delay-toast-card">
+    <div class="toast-header">
+      <span class="toast-icon">📅</span>
+      <span class="toast-text">「{{ taskTitle }}」の期限を変更しました。理由は？</span>
+    </div>
+  
+    <div class="chip-group">
+      <button 
+        *ngFor="let r of reasons" 
+        class="chip-btn" 
+        (click)="onSelect(r)">
+        {{ labels[r].icon }} {{ labels[r].label }}
+      </button>
+    </div>
+  
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" [style.width.%]="progressWidth"></div>
+    </div>
+  </div>

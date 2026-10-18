@@ -14,6 +14,8 @@ import { MasterKanbanBoard } from './components/master-kanban-board/master-kanba
 import { GanttBoard } from './components/gantt-board/gantt-board';
 import { ArchiveModal } from './components/archive-modal/archive-modal';
 import { PipService } from './services/pip';
+import { DelayLogToast } from './components/delay-log-toast/delay-log-toast';
+import { DelayReason } from './models/delay-log.model';
 
 @Component({
   selector: 'app-root',
@@ -29,6 +31,7 @@ import { PipService } from './services/pip';
     GanttBoard,
     AppShell,
     ArchiveModal,
+    DelayLogToast,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -36,6 +39,15 @@ import { PipService } from './services/pip';
 export class AppComponent implements OnInit {
   private dataService = inject(TaskDataService);
   private pipService = inject(PipService);
+
+  // --- 遅延ログ関連プロパティ ---
+  autoCollectDelayLog: boolean = true; // 自動収集 ON/OFF（デフォルトON）
+  activeDelayLogInfo: {
+    taskId: string;
+    taskTitle: string;
+    previousDueDate: string;
+    newDueDate: string;
+  } | null = null;
 
   // --- モーダル表示フラグ ---
   isArchiveModalOpen = false;
@@ -188,43 +200,43 @@ export class AppComponent implements OnInit {
     this.onCloseProjectForm();
   }
 
-  // 親課題のステータス更新
+  // 親課題の更新ハンドラ
   onParentTaskUpdated(updatedProject: ParentProject | string): void {
-    // 1. 引数が文字列(ID)の場合、projectsから対象親課題を検索
     let project: ParentProject | null = null;
     if (typeof updatedProject === 'string') {
       project = this.projects.find(p => p.id === updatedProject) || null;
-      if (!project) {
-        console.error('更新対象の親課題IDが存在しません:', updatedProject);
-        return;
-      }
+      if (!project) return;
     } else {
       project = updatedProject;
-      if (!project || !project.id) {
-        console.error('更新対象の親課題IDが存在しません:', updatedProject?.id);
-        return;
-      }
+      if (!project || !project.id) return;
     }
 
-    // 2. projectsのローカル配列を即座に更新
+    const oldProject = this.projects.find(p => p.id === project!.id);
+    // ★ _previousDueDate（Ganttドラッグ前日付）があれば優先使用
+    const oldDueDate = (updatedProject as any)._previousDueDate || oldProject?.deadline || oldProject?.scheduledEndDate || '';
+    const newDueDate = project.deadline || project.scheduledEndDate || '';
+
+    // ★ 親課題の期限変更を検知した場合、トーストを起動
+    if (this.autoCollectDelayLog && oldDueDate && newDueDate && oldDueDate !== newDueDate) {
+      this.activeDelayLogInfo = {
+        taskId: project.id,
+        taskTitle: `📁 ${project.title} (配下タスク含む)`,
+        previousDueDate: oldDueDate,
+        newDueDate: newDueDate
+      };
+    }
+
     const index = this.projects.findIndex(p => p.id === project!.id);
     if (index !== -1) {
       this.projects[index] = { ...project };
     }
-
-    // 3. 選択中の親課題も同時に更新
     if (this.selectedProject?.id === project.id) {
       this.selectedProject = { ...project };
     }
 
-    // 4. 進捗率を再計算
     this.recalculateProgress();
-
-    // 5. Firestoreデータベースを更新
     const { id, ...projectData } = project;
-    this.dataService.updateProject(id, projectData)
-    .then(() => console.log('親課題更新完了:', id))
-    .catch(err => console.error('親課題更新エラー:', err));
+    this.dataService.updateProject(id, projectData);
   }
 
   // 親課題の削除完了ハンドラ
@@ -278,38 +290,89 @@ export class AppComponent implements OnInit {
     this.onCloseTaskForm();
   }
 
-  // タスクの更新完了ハンドラ
+  // 子タスクの更新ハンドラ
   onTaskUpdated(updatedTask: Task | string): void {
-    // 1. 引数が文字列(ID)の場合、allTasksから対象タスクを検索
     let task: Task | null = null;
     if (typeof updatedTask === 'string') {
       task = this.allTasks.find(t => t.id === updatedTask) || null;
-      if (!task) {
-        console.error('更新対象のタスクIDが存在しません:', updatedTask);
-        return;
-      }
+      if (!task) return;
     } else {
       task = updatedTask;
-      if (!task || !task.id) {
-        console.error('更新対象のタスクIDが存在しません:', updatedTask?.id);
-        return;
-      }
+      if (!task || !task.id) return;
     }
 
-    // 2. allTasksを即座に更新して画面と進捗率に反映
+    const oldTask = this.allTasks.find(t => t.id === task!.id);
+    // ★ _previousDueDate（Ganttドラッグ前日付）があれば優先使用
+    const oldDueDate = (updatedTask as any)._previousDueDate || oldTask?.deadline || oldTask?.scheduledEndDate || '';
+    const newDueDate = task.deadline || task.scheduledEndDate || '';
+
+    // ★ 現在、親課題のトーストが起動中の場合は、子タスク個別のトーストで上書きしない
+    const isParentToastActive = this.activeDelayLogInfo && this.activeDelayLogInfo.taskId === task.parentId;
+
+    if (this.autoCollectDelayLog && oldDueDate && newDueDate && oldDueDate !== newDueDate && !isParentToastActive) {
+      this.activeDelayLogInfo = {
+        taskId: task.id,
+        taskTitle: task.title,
+        previousDueDate: oldDueDate,
+        newDueDate: newDueDate
+      };
+    }
+
     const index = this.allTasks.findIndex(t => t.id === task!.id);
     if (index !== -1) {
       this.allTasks[index] = { ...task };
     }
     this.recalculateProgress();
 
-    // 3. Firestoreデータベースを更新
     const { id, ...taskData } = task;
-    this.dataService.updateTask(id, taskData)
-    .then(() => console.log('タスク更新完了:', id))
-    .catch(err => console.error('タスク更新エラー:', err));
-
+    this.dataService.updateTask(id, taskData);
     this.onCloseTaskForm();
+  }
+
+  // 遅延理由選択ハンドラ
+  onSelectDelayReason(reason: DelayReason): void {
+    if (!this.activeDelayLogInfo) return;
+
+    const targetId = this.activeDelayLogInfo.taskId;
+    const isProject = this.projects.some(p => p.id === targetId);
+
+    if (isProject) {
+      // ★ 親課題の一括変更の場合：配下の子タスク全件に遅延ログを一括保存
+      const childTasks = this.allTasks.filter(t => t.parentId === targetId);
+      
+      if (childTasks.length > 0) {
+        childTasks.forEach(task => {
+          this.dataService.addDelayLog({
+            taskId: task.id,
+            taskTitle: task.title,
+            previousDueDate: this.activeDelayLogInfo!.previousDueDate,
+            newDueDate: this.activeDelayLogInfo!.newDueDate,
+            reason: reason
+          });
+        });
+      } else {
+        // 子タスクが無い場合は親課題自体のログとして保存
+        this.dataService.addDelayLog({
+          taskId: targetId,
+          taskTitle: this.activeDelayLogInfo.taskTitle,
+          previousDueDate: this.activeDelayLogInfo.previousDueDate,
+          newDueDate: this.activeDelayLogInfo.newDueDate,
+          reason: reason
+        });
+      }
+    } else {
+      // ★ 単一子タスクの変更の場合
+      this.dataService.addDelayLog({
+        taskId: targetId,
+        taskTitle: this.activeDelayLogInfo.taskTitle,
+        previousDueDate: this.activeDelayLogInfo.previousDueDate,
+        newDueDate: this.activeDelayLogInfo.newDueDate,
+        reason: reason
+      });
+    }
+
+    // トーストを閉じる
+    this.activeDelayLogInfo = null;
   }
 
   // タスクの削除完了ハンドラ
