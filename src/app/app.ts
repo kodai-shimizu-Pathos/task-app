@@ -16,6 +16,7 @@ import { ArchiveModal } from './components/archive-modal/archive-modal';
 import { PipService } from './services/pip';
 import { DelayLogToast } from './components/delay-log-toast/delay-log-toast';
 import { DelayReason } from './models/delay-log.model';
+import { ReviewViewComponent } from './components/review-view/review-view';
 
 @Component({
   selector: 'app-root',
@@ -32,6 +33,7 @@ import { DelayReason } from './models/delay-log.model';
     AppShell,
     ArchiveModal,
     DelayLogToast,
+    ReviewViewComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -48,6 +50,15 @@ export class AppComponent implements OnInit {
     previousDueDate: string;
     newDueDate: string;
   } | null = null;
+
+  // 遅延ログ自動収集の ON/OFF 切替ハンドラ
+  onToggleAutoCollect(event: any): void {
+    if (typeof event === 'boolean') {
+      this.autoCollectDelayLog = event;
+    } else if (event && event.target) {
+      this.autoCollectDelayLog = (event.target as HTMLInputElement).checked;
+    }
+  }
 
   // --- モーダル表示フラグ ---
   isArchiveModalOpen = false;

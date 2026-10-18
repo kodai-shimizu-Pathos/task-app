@@ -116,6 +116,15 @@
 
       </ng-container>
 
+      <!-- 2. AIウィークリーレビュー画面（activeView が 'review' の時） -->
+      <ng-container *ngIf="activeView === 'review'">
+        <app-review-view
+          [tasks]="allTasks"
+          [autoCollect]="autoCollectDelayLog"
+          (toggleAutoCollect)="onToggleAutoCollect($event)">
+        </app-review-view>
+      </ng-container>
+
       <!-- サイドポケット折り畳みパネル -->
       <app-side-pocket-panel
         [projects]="projects"
