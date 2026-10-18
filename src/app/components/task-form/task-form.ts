@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Task, PriorityLevel, Status, ChecklistItem } from '../../models/task.model';
 import { ParentProject } from '../../models/project.model';
+import { AiService } from '../../services/ai.service';
 
 @Component({
   selector: 'app-task-form',
@@ -37,6 +38,9 @@ export class TaskForm implements OnInit, OnChanges {
   checklistInput: string = ''; // 新しいチェックリスト項目の入力値
   editingItemId: string | null = null; // インライン編集中の項目ID
   originalEditText: string = ''; // 編集前のテキストをバックアップ
+  isGeneratingAi: boolean = false; // AI生成中フラグ
+
+  constructor(private aiService: AiService) {}
 
   get isEditMode(): boolean {
     return !!(this.taskToEdit && this.taskToEdit.id);
@@ -217,6 +221,53 @@ export class TaskForm implements OnInit, OnChanges {
   // テンプレート用：チェックリスト項目総数を取得
   getTotalChecklistCount(): number {
     return this.taskData.checklist ? this.taskData.checklist.length : 0;
+  }
+
+  /**
+   * AI でサブタスク候補を生成
+   */
+  async generateSubtasksWithAi(): Promise<void> {
+    // 検証：タイトルが入力されているか確認
+    if (!this.taskData.title || !this.taskData.title.trim()) {
+      alert('タスク名を入力してからAI分解を実行してください。');
+      return;
+    }
+
+    this.isGeneratingAi = true;
+
+    try {
+      // AI Service を呼び出し
+      const subtasks = await this.aiService.generateSubtasks(
+        this.taskData.title,
+        this.taskData.description
+      );
+
+      // 生成されたサブタスクをチェックリストに追加
+      if (!this.taskData.checklist) {
+        this.taskData.checklist = [];
+      }
+
+      for (const subtaskText of subtasks) {
+        const newItem: ChecklistItem = {
+          id: 'item-' + Date.now() + Math.random(),
+          text: subtaskText,
+          completed: false,
+          addedAfterStart: false,
+        };
+        this.taskData.checklist.push(newItem);
+      }
+
+      // 進捗率を再計算
+      this.recalculateChecklistProgress();
+
+      alert(`✓ ${subtasks.length}個のサブタスクを追加しました！`);
+    } catch (error) {
+      console.error('AI サブタスク生成エラー:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert(`エラーが発生しました:\n${errorMessage}`);
+    } finally {
+      this.isGeneratingAi = false;
+    }
   }
 
   onSubmit(): void {

@@ -219,6 +219,49 @@ textarea {
   flex: 1;
 }
 
+.checklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.checklist-header label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0;
+  flex: 1;
+}
+
+/* AI分解ボタンのスタイル */
+.btn-ai-decompose {
+  background-color: #6366f1;
+  color: #ffffff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: opacity 0.2s, background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-ai-decompose:hover:not(:disabled) {
+  opacity: 0.85;
+  background-color: #4f46e5;
+}
+
+.btn-ai-decompose:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-add-item {
   background-color: var(--accent-color);
   color: #ffffff;

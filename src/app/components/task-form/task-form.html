@@ -75,7 +75,17 @@
 
             <!-- チェックリスト / サブタスク -->
             <div class="form-group">
-                <label for="checklistInput">チェックリスト / サブタスク</label>
+                <div class="checklist-header">
+                    <label for="checklistInput">チェックリスト / サブタスク</label>
+                    <button 
+                        type="button" 
+                        class="btn-ai-decompose" 
+                        (click)="generateSubtasksWithAi()"
+                        [disabled]="isGeneratingAi"
+                        title="AIがタスクを分解してサブタスク候補を生成します">
+                        {{ isGeneratingAi ? '🤖 生成中...' : '🤖 AIで分解' }}
+                    </button>
+                </div>
                 <div class="checklist-input-row">
                     <input type="text" id="checklistInput" [(ngModel)]="checklistInput" name="checklistInput" placeholder="項目を入力…" (keydown.enter)="addChecklistItem($event)" />
                     <button type="button" class="btn-add-item" (click)="addChecklistItem()" title="項目を追加">＋ 追加</button>

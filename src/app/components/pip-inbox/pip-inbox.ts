@@ -94,7 +94,7 @@ export class PipInboxComponent implements OnInit, OnDestroy {
       this.recognition.onresult = (event: any) => {
         let transcript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i].transcript;
+          transcript += event.results[i][0].transcript;
         }
         this.inputText = transcript;
         this.cdr.detectChanges();
