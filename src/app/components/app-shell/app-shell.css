@@ -111,8 +111,23 @@
   border: 1px solid var(--border-color);
   margin-top: 4px;
   transition: background-color 0.2s;
+  overflow: hidden; /* ★ 1. 画像が枠外へ飛び出すのをカット */
 }
 
 .user-avatar:hover {
   background-color: var(--bg-card);
+}
+
+/* ★ 2. アバター画像とテキストのスタイル設定を新規追加 */
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar-text {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-primary);
 }

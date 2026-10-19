@@ -3,7 +3,8 @@
   <app-shell
     [activeView]="activeView"
     (viewChange)="onViewchange($event)"
-    (toggleConcentrationMode)="onToggleConcentrationMode()">
+    (toggleConcentrationMode)="onToggleConcentrationMode()"
+    (openLoginModal)="onOpenLoginModal()">
   </app-shell>
 
   <!-- 2. 右側 メインエリア -->
@@ -226,5 +227,10 @@
       (selectReason)="onSelectDelayReason($event)"
       (skipAll)="onSkipAllDelayLogs()">
     </app-delay-log-toast>
+
+    <app-login-modal
+      *ngIf="isLoginModalOpen"
+      (closeModal)="onCloseLoginModal()">
+    </app-login-modal>
   </div>
 </div>

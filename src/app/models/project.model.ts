@@ -4,6 +4,7 @@ import { Status } from "./task.model";
 // 親課題 (Project) インターフェース
 export interface ParentProject {
     id: string; // 親課題ID
+    userId?: string; // ユーザーID
     title: string; // 親課題名
     description?: string; // 親課題の説明
     priority: PriorityLevel; // 優先度

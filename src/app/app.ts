@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { SidePocketPanelComponent } from './components/side-pocket-panel/side-pocket-panel';
 import { SidePocketMemo } from './services/task-data';
 import { AppShell, MainView } from './components/app-shell/app-shell';
-import { MasterInfoPanel } from './components/master-info-panel/master-info-panel';
 import { KanbanBoard } from './components/kanban-board/kanban-board';
 import { TaskForm } from './components/task-form/task-form';
 import { TaskDataService } from './services/task-data';
@@ -17,7 +16,8 @@ import { PipService } from './services/pip';
 import { DelayLogToast } from './components/delay-log-toast/delay-log-toast';
 import { DelayReason } from './models/delay-log.model';
 import { ReviewViewComponent } from './components/review-view/review-view';
-
+import { AuthService } from './services/auth.service';
+import { LoginModalComponent } from './components/login-modal/login-modal';
 /**
  * 遅延ログ情報インターフェース
  * タスク/親課題の期限変更時に記録される情報
@@ -35,7 +35,6 @@ export interface DelayLogInfo {
   imports: [
     CommonModule, 
     SidePocketPanelComponent,
-    MasterInfoPanel, 
     KanbanBoard, 
     TaskForm,
     ProjectForm,
@@ -45,11 +44,24 @@ export interface DelayLogInfo {
     ArchiveModal,
     DelayLogToast,
     ReviewViewComponent,
+    LoginModalComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class AppComponent implements OnInit {
+  authService = inject(AuthService);
+
+  isLoginModalOpen = false;
+
+  onOpenLoginModal(): void {
+    this.isLoginModalOpen = true;
+  }
+
+  onCloseLoginModal(): void {
+    this.isLoginModalOpen = false;
+  }
+
   // ========================================
   // @Input / @Output / @ViewChild
   // ========================================

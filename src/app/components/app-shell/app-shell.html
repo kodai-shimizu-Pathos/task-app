@@ -1,35 +1,59 @@
 <aside class="app-shell-sidebar">
-    <div class="shell-logo" title="BeSideFlow AI">
-      <span class="logo-icon">⚡</span>
-    </div>
-  
-    <nav class="shell-nav">
-      <!-- 1. 課題管理メイン画面 -->
-      <button
-        class="nav-btn"
-        [class.active]="activeView === 'tasks'"
-        (click)="onSelectView('tasks')"
-        title="課題管理">
-        <span class="icon">📁</span>
+  <div class="shell-logo" title="BeSideFlow AI">
+    <span class="logo-icon">⚡</span>
+  </div>
+
+  <nav class="shell-nav">
+    <!-- 1. 課題管理メイン画面 -->
+    <button
+      class="nav-btn"
+      [class.active]="activeView === 'tasks'"
+      (click)="onSelectView('tasks')"
+      title="課題管理">
+      <span class="icon">📁</span>
+    </button>
+
+    <!-- 2. レビュー画面 -->
+    <button
+      class="nav-btn"
+      [class.active]="activeView === 'review'"
+      (click)="onSelectView('review')"
+      title="レビュー">
+      <span class="icon">📝</span>
+    </button>
+  </nav>
+
+  <div class="shell-footer">
+    <!-- 3. 集中モード起動ボタン -->
+    <button
+      class="tool-btn concentration-btn"
+      (click)="onToggleConcentrationMode()"
+      title="集中モード (PiP)">
+      <span class="icon">🎯</span>
+    </button>
+
+    <!-- 4. 認証状態に応じたユーザーアイコン / ログインボタン -->
+    <ng-container *ngIf="authService.user$ | async as user; else loggedOut">
+      <!-- ログイン時：アバターアイコン（クリックでログアウト） -->
+      <div 
+        class="user-avatar" 
+        (click)="onLogout()" 
+        [title]="(user.displayName || user.email) + ' (クリックでログアウト)'">
+        <img *ngIf="user.photoURL; else defaultAvatar" [src]="user.photoURL" alt="User Avatar" class="avatar-img" />
+        <ng-template #defaultAvatar>
+          <span class="avatar-text">{{ (user.email || 'U').charAt(0).toUpperCase() }}</span>
+        </ng-template>
+      </div>
+    </ng-container>
+
+    <!-- 未ログイン時：ログインモーダルを開くボタン -->
+    <ng-template #loggedOut>
+      <button 
+        class="tool-btn login-btn" 
+        (click)="openLoginModal.emit()" 
+        title="ログイン">
+        <span class="icon">🔑</span>
       </button>
-  
-      <!-- 2. レビュー画面 -->
-      <button
-        class="nav-btn"
-        [class.active]="activeView === 'review'"
-        (click)="onSelectView('review')"
-        title="レビュー">
-        <span class="icon">📝</span>
-      </button>
-    </nav>
-  
-    <div class="shell-footer">
-      <!-- 3. 集中モード起動ボタン -->
-      <button
-        class="tool-btn concentration-btn"
-        (click)="onToggleConcentrationMode()"
-        title="集中モード (PiP)">
-        <span class="icon">🎯</span>
-      </button>
-    </div>
-  </aside>
+    </ng-template>
+  </div>
+</aside>

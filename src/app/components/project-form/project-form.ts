@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ParentProject } from '../../models/project.model';
 import { Status, PriorityLevel } from '../../models/task.model';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-project-form',
@@ -12,6 +13,7 @@ import { Status, PriorityLevel } from '../../models/task.model';
   styleUrl: './project-form.css',
 })
 export class ProjectForm implements OnInit, OnChanges {
+  private authService = inject(AuthService);
   // ========================================
   // @Input / @Output
   // ========================================
@@ -88,10 +90,13 @@ export class ProjectForm implements OnInit, OnChanges {
       return;
     }
 
+    const currentUserId = this.authService.currentUserId || '';
+
     if (this.projectToEdit) {
       // 既存親課題更新
       const updatedProject: ParentProject = {
         ...this.projectToEdit,
+        userId: this.projectToEdit.userId || currentUserId,
         title: this.title,
         description: this.description || undefined,
         status: this.status as Status,
@@ -107,6 +112,7 @@ export class ProjectForm implements OnInit, OnChanges {
       // 新規親課題作成
       const newProject: ParentProject = {
         id: `proj-${Date.now()}`,
+        userId: currentUserId,
         title: this.title,
         description: this.description || undefined,
         status: 'todo',
