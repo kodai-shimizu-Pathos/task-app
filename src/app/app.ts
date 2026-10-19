@@ -18,8 +18,10 @@ import { DelayLogToast } from './components/delay-log-toast/delay-log-toast';
 import { DelayReason } from './models/delay-log.model';
 import { ReviewViewComponent } from './components/review-view/review-view';
 
-
-// --- 遅延ログ情報インターフェース ---
+/**
+ * 遅延ログ情報インターフェース
+ * タスク/親課題の期限変更時に記録される情報
+ */
 export interface DelayLogInfo {
   taskId: string;
   taskTitle: string;
@@ -48,49 +50,187 @@ export interface DelayLogInfo {
   styleUrl: './app.css',
 })
 export class AppComponent implements OnInit {
-  private dataService = inject(TaskDataService);
-  private pipService = inject(PipService);
-  private wasMasterPanelCollapsedBeforeForm: boolean = false;
+  // ========================================
+  // @Input / @Output / @ViewChild
+  // ========================================
   @ViewChild(SidePocketPanelComponent) sidePocketPanel!: SidePocketPanelComponent;
 
-  private openTaskFormWithAutoCollapse(): void {
-    if (!this.isTaskFormOpen) {
-      // 開く直前の折り畳み状態を記憶
-      this.wasMasterPanelCollapsedBeforeForm = this.isMasterPanelCollapsed;
-      // 親課題パネルを折り畳む
-      this.isMasterPanelCollapsed = true;
-    }
-    this.isTaskFormOpen = true;
-  
-    // ★ ここを追加：タスク詳細が開いたらサイドポケットを自動でたたむ
-    if (this.sidePocketPanel) {
-      this.sidePocketPanel.isCollapsed = true;
-    }
-  }
+  // ========================================
+  // Dependency Injection
+  // ========================================
+  private dataService = inject(TaskDataService);
+  private pipService = inject(PipService);
 
+  // ========================================
+  // UI 状態管理
+  // ========================================
+  /** アクティブビュー: 'tasks'（課題管理メイン）| 'review'（AIレビュー） */
+  activeView: 'tasks' | 'review' = 'tasks';
+
+  /** 表示モード: 'KANBAN' | 'GANTT' */
+  currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
+
+  /** テーマ: 'dark' | 'light' */
+  currentTheme: 'dark' | 'light' = 'dark';
+
+  /** 親課題パネルの折り畳み状態 */
+  isMasterPanelCollapsed: boolean = false;
+
+  /** サマリーバーの展開状態 */
+  isSummaryExpanded: boolean = false;
+
+  /** 親課題フォームの表示状態 */
+  isProjectFormOpen = false;
+
+  /** タスクフォームの表示状態 */
+  isTaskFormOpen = false;
+
+  /** アーカイブモーダルの表示状態 */
+  isArchiveModalOpen = false;
+
+  /** 右ドッキングパネルの幅（単位: px） */
+  taskFormWidth: number = 480;
+
+  // ========================================
+  // Project・Task データ管理
+  // ========================================
+  /** 全親課題の配列 */
+  projects: ParentProject[] = [];
+
+  /** 現在選択中の親課題 */
+  selectedProject: ParentProject | null = null;
+
+  /** 編集対象の親課題（フォーム用） */
+  projectToEdit?: ParentProject | null = null;
+
+  /** 全タスクを一元管理するマスタ配列 */
+  allTasks: Task[] = [];
+
+  /** 現在選択中のタスク */
+  selectedTask: Task | null = null;
+
+  /** 編集対象のタスク（フォーム用） */
+  taskToEdit: Task | null = null;
+
+  // ========================================
+  // 遅延ログ・メモ昇格管理
+  // ========================================
+  /** 遅延ログ情報のキュー */
   delayLogQueue: DelayLogInfo[] = [];
 
+  /** 遅延ログの自動収集フラグ */
+  autoCollectDelayLog: boolean = true;
+
+  /** メモ昇格処理時の一時保持ID */
+  promotingMemoId: string | null = null;
+
+  /** タスクフォーム開く直前の親課題パネル折り畳み状態を記憶 */
+  private wasMasterPanelCollapsedBeforeForm: boolean = false;
+
+  // ========================================
+  // Getters
+  // ========================================
+
+  /**
+   * 遅延ログキューの先頭要素を取得
+   */
   get activeDelayLogInfo(): DelayLogInfo | null {
     return this.delayLogQueue.length > 0 ? this.delayLogQueue[0] : null;
   }
 
-  private enqueueDelayLog(info: DelayLogInfo): void {
-    if (info.newDueDate <= info.previousDueDate) return;
-
-    if (this.delayLogQueue.length >= 3) {
-      const oldest = this.delayLogQueue.shift();
-      if (oldest) {
-        this.saveDelayLog(oldest.taskId, oldest.taskTitle, oldest.previousDueDate, oldest.newDueDate, 'unclassified');
-      }
-    }
-
-    this.delayLogQueue.push(info);
+  /**
+   * 現在選択中の親課題に紐づく子タスク一覧を取得
+   */
+  get currentTasks(): Task[] {
+    if (!this.selectedProject) return [];
+    return this.allTasks.filter(task => task.parentId === this.selectedProject?.id);
   }
 
-  // --- 遅延ログ関連プロパティ ---
-  autoCollectDelayLog: boolean = true; // 自動収集 ON/OFF（デフォルトON）
+  /**
+   * アクティブ（未アーカイブ）な親課題一覧を取得
+   */
+  get activeProjects(): ParentProject[] {
+    return this.projects.filter(p => p.status !== 'archived');
+  }
 
-  // 遅延ログ自動収集の ON/OFF 切替ハンドラ
+  /**
+   * アーカイブ済み親課題一覧を取得
+   */
+  get archivedProjects(): ParentProject[] {
+    return this.projects.filter(p => p.status === 'archived');
+  }
+
+  // ========================================
+  // ライフサイクル
+  // ========================================
+
+  ngOnInit(): void {
+    // テーマの初期化
+    document.body.setAttribute('data-theme', this.currentTheme);
+
+    // Firestore リアルタイムリスナー登録
+    // 1. 親課題の監視
+    this.dataService.getProjects().subscribe(projects => {
+      this.projects = projects;
+      // 選択中の親課題があれば最新状態に同期
+      if (this.selectedProject) {
+        const updated = projects.find(p => p.id === this.selectedProject?.id);
+        this.selectedProject = updated || null;
+      }
+      this.recalculateProgress();
+    });
+
+    // 2. 子タスクの監視
+    this.dataService.getTasks().subscribe(tasks => {
+      this.allTasks = tasks;
+      this.recalculateProgress();
+    });
+  }
+
+  // ========================================
+  // Public メソッド
+  // ========================================
+
+  /**
+   * ビュー切り替え（課題管理 ↔ AIレビュー）
+   */
+  onViewchange(view: 'tasks' | 'review'): void {
+    this.activeView = view;
+  }
+
+  /**
+   * 表示モード切り替え（KANBAN ↔ GANTT）
+   */
+  switchViewMode(view: 'KANBAN' | 'GANTT'): void {
+    this.currentMode = view;
+  }
+
+  /**
+   * テーマ切り替え（ダーク ↔ ライト）
+   */
+  toggleTheme(): void {
+    this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+    document.body.setAttribute('data-theme', this.currentTheme);
+  }
+
+  /**
+   * 親課題パネルの折り畳み/展開切り替え
+   */
+  toggleMasterPanel(): void {
+    this.isMasterPanelCollapsed = !this.isMasterPanelCollapsed;
+  }
+
+  /**
+   * 集中モード（PIP）の切り替え
+   */
+  onToggleConcentrationMode(): void {
+    console.log('集中モード起動');
+    this.pipService.togglePip();
+  }
+
+  /**
+   * 自動遅延ログ収集の ON/OFF 切り替え
+   */
   onToggleAutoCollect(event: any): void {
     if (typeof event === 'boolean') {
       this.autoCollectDelayLog = event;
@@ -99,12 +239,9 @@ export class AppComponent implements OnInit {
     }
   }
 
-  isSummaryExpanded: boolean = false;
-
-  // ★ 右ドッキングパネルの幅（初期値: 480px）
-  taskFormWidth: number = 480;
-
-  // ★ 右ドッキングパネルの幅変更（スプリッター）ドラッグ処理
+  /**
+   * 右ドッキングパネルのリサイズ開始（スプリッタードラッグ）
+   */
   onResizeStart(event: MouseEvent): void {
     event.preventDefault();
     const startX = event.clientX;
@@ -125,159 +262,74 @@ export class AppComponent implements OnInit {
     window.addEventListener('mouseup', onMouseUp);
   }
 
-  // --- モーダル表示フラグ ---
-  isArchiveModalOpen = false;
+  // ========================================
+  // 親課題（Project）操作ハンドラ
+  // ========================================
 
-  // --- アーカイブデータ取得プロパティ ---
-  get archivedProjects(): ParentProject[] {
-    return this.projects.filter(p => p.status === 'archived');
-  }
-
-  // --- 通常表示用のフィルタ済みプロパティ ---
-  get activeProjects(): ParentProject[] {
-    return this.projects.filter(p => p.status !== 'archived');
-  }
-
-  // --- UI状態管理 ---  
-  /** サイドパネル用：'tasks'(課題管理メイン) | 'review'(AIレビュー) */
-  activeView: 'tasks' | 'review' = 'tasks';
-
-  /** ヘッダーのモードトグル用：'KANBAN' | 'GANTT' */
-  currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
-
-  currentTheme: 'dark' | 'light' = 'dark';
-
-  // 昇格処理中のメモIDを一時保持するプロパティ
-  promotingMemoId: string | null = null;
-
-  // 親課題パネルの折り畳み状態
-  isMasterPanelCollapsed: boolean = false;
-
-  // 親課題パネル折り畳みトグル
-  toggleMasterPanel(): void {
-    this.isMasterPanelCollapsed = !this.isMasterPanelCollapsed;
-  }
-
-  // 1. サイドパネルからのビュー切替（課題管理 ↔ レビュー）
-  onViewchange(view: 'tasks' | 'review'): void {
-    this.activeView = view;
-  }
-
-  // 2. ヘッダーからのカンバン/ガント切替
-  switchViewMode(view: 'KANBAN' | 'GANTT'): void {
-    this.currentMode = view;
-  }
-
-  // 集中モード切替ハンドラ
-  onToggleConcentrationMode(): void {
-    console.log('集中モード起動');
-    this.pipService.togglePip();
-  }
-
-  // --- Project・Task データ管理 ---  
-  projects: ParentProject[] = [];
-  selectedProject: ParentProject | null = null;
-
-  // 全タスクを一元管理するマスタ配列
-  allTasks: Task[] = [];
-  selectedTask: Task | null = null;
-
-  // 選択中の親課題に紐づく子タスクのみを取得
-  get currentTasks(): Task[] {
-    if (!this.selectedProject) return [];
-    return this.allTasks.filter(task => task.parentId === this.selectedProject?.id);
-  }
-
-  // --- フォーム状態管理 ---
-  // 親課題 (Project) フォームの表示状態
-  isProjectFormOpen = false;
-  projectToEdit?: ParentProject | null = null;  
-
-  // 子タスク (Task) フォームの表示状態
-  isTaskFormOpen = false;
-  taskToEdit: Task | null = null;
-
-  // --- テーマ管理 ---
-  // テーマ切り替えハンドラ
-  toggleTheme(): void {
-    this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
-    document.body.setAttribute('data-theme', this.currentTheme);
-  }
-  
-  ngOnInit(): void {
-    document.body.setAttribute('data-theme', this.currentTheme);
-
-    // 1. Firestoreから親課題をリアルタイム受信
-    this.dataService.getProjects().subscribe(projects => {
-      this.projects = projects;
-      // 選択中の親課題があれば最新状態に同期
-      if (this.selectedProject) {
-        const updated = projects.find(p => p.id === this.selectedProject?.id);
-        this.selectedProject = updated || null;
-      }
-      this.recalculateProgress();
-    });
-
-    // 2. Firestoreから子タスクをリアルタイム受信
-    this.dataService.getTasks().subscribe(tasks => {
-      this.allTasks = tasks;
-      this.recalculateProgress();
-    });
-  }
-
-  // =======================================================
-  // 親課題(Project)操作ロジック
-  // =======================================================
-  // 親課題を選択
+  /**
+   * 親課題を選択
+   */
   onSelectProject(project: ParentProject): void {
     this.selectedProject = project;
-    this.isMasterPanelCollapsed = false; // 新しい親課題を開いたときは必ず親課題パネルを展開状態にする
+    this.isMasterPanelCollapsed = false;
   }
-  
-  // 親課題を解除
+
+  /**
+   * 親課題選択を解除
+   */
   onUnselectProject(): void {
     this.selectedProject = null;
     this.isMasterPanelCollapsed = false;
   }
 
-  // 新規の親課題フォームを開く
+  /**
+   * 新規親課題フォームを開く
+   */
   onOpenNewProjectForm(): void {
     this.projectToEdit = null;
-    this.isTaskFormOpen = false; // タスクフォームが開いていれば閉じる
+    this.isTaskFormOpen = false;
     this.isProjectFormOpen = true;
 
     if (this.sidePocketPanel) {
-      this.sidePocketPanel.isCollapsed = true; // サイドポケットを自動で閉じる
+      this.sidePocketPanel.isCollapsed = true;
     }
   }
 
-  // 既存の親課題の編集フォームを開く
+  /**
+   * 既存親課題の編集フォームを開く
+   */
   onEditProject(): void {
     if (this.selectedProject) {
       this.projectToEdit = { ...this.selectedProject };
-      this.isTaskFormOpen = false; // タスクフォームが開いていれば閉じる
+      this.isTaskFormOpen = false;
       this.isProjectFormOpen = true;
-  
+
       if (this.sidePocketPanel) {
-        this.sidePocketPanel.isCollapsed = true; // サイドポケットを自動で閉じる
+        this.sidePocketPanel.isCollapsed = true;
       }
     }
   }
 
-  // 親課題フォームを閉じる
+  /**
+   * 親課題フォームを閉じる
+   */
   onCloseProjectForm(): void {
     this.isProjectFormOpen = false;
     this.projectToEdit = null;
   }
 
-  // 親課題の新規作成
+  /**
+   * 新規親課題作成完了ハンドラ
+   */
   onProjectCreated(newProject: ParentProject): void {
     const { id, ...projectData } = newProject;
     this.dataService.addProject(projectData);
     this.onCloseProjectForm();
   }
 
-  // 親課題の更新
+  /**
+   * 親課題更新完了ハンドラ
+   */
   onProjectUpdated(updatedProject: ParentProject): void {
     if (this.selectedProject?.id === updatedProject.id) {
       const { id, ...projectData } = updatedProject;
@@ -286,7 +338,10 @@ export class AppComponent implements OnInit {
     this.onCloseProjectForm();
   }
 
-  // 親課題の更新ハンドラ
+  /**
+   * 親課題の更新（期限変更など）ハンドラ
+   * 遅延ログの自動記録処理を含む
+   */
   onParentTaskUpdated(updatedProject: ParentProject | string): void {
     let project: ParentProject | null = null;
     if (typeof updatedProject === 'string') {
@@ -301,7 +356,7 @@ export class AppComponent implements OnInit {
     const oldDueDate = (updatedProject as any)._previousDueDate || oldProject?.deadline || oldProject?.scheduledEndDate || '';
     const newDueDate = project.deadline || project.scheduledEndDate || '';
 
-    // 後ろ倒し発生時、親課題（配下タスク含む）として1回だけキューへ追加
+    // 期限が後ろ倒しになった場合、親課題としてキューに追加
     if (this.autoCollectDelayLog && oldDueDate && newDueDate) {
       const childCount = this.allTasks.filter(t => t.parentId === project!.id).length;
       const titleLabel = childCount > 0 
@@ -329,9 +384,11 @@ export class AppComponent implements OnInit {
     this.dataService.updateProject(id, projectData);
   }
 
-  // 親課題の削除完了ハンドラ
+  /**
+   * 親課題削除完了ハンドラ
+   * 紐づく子タスクも一括で削除される
+   */
   onProjectDeleted(projectId: string): void {
-    // 削除された親課題に紐づく子タスクも一括クリア
     this.dataService.deleteProject(projectId);
     if (this.selectedProject?.id === projectId) {
       this.selectedProject = null;
@@ -339,25 +396,74 @@ export class AppComponent implements OnInit {
     this.onCloseProjectForm();
   }
 
-  // =======================================================
-  // 子タスク(Task)操作ロジック
-  // =======================================================
+  /**
+   * 選択中の親課題をアーカイブ済み状態に変更
+   */
+  onArchiveSelectedProject(): void {
+    if (!this.selectedProject) return;
 
-  // タスク選択時 (カードクリック)
+    const updated = { ...this.selectedProject, status: 'archived' as const };
+    const { id, ...projectData } = updated;
+    this.dataService.updateProject(id, projectData);
+
+    this.selectedProject = null;
+    this.recalculateProgress();
+  }
+
+  /**
+   * 親課題をアーカイブから復元
+   */
+  onRestoreProject(project: ParentProject): void {
+    const updated = { ...project, status: 'in-progress' as const };
+    const { id, ...projectData } = updated;
+    this.dataService.updateProject(id, projectData);
+
+    if (this.selectedProject?.id === id) {
+      this.selectedProject = { ...updated };
+    }
+    this.recalculateProgress();
+  }
+
+  /**
+   * アーカイブモーダルを開く
+   */
+  onOpenArchiveModal(): void {
+    this.isArchiveModalOpen = true;
+  }
+
+  /**
+   * アーカイブモーダルを閉じる
+   */
+  onCloseArchiveModal(): void {
+    this.isArchiveModalOpen = false;
+  }
+
+  // ========================================
+  // 子タスク（Task）操作ハンドラ
+  // ========================================
+
+  /**
+   * タスク選択時（カードクリック）
+   * 親課題パネルを自動で折り畳む
+   */
   onSelectTask(task: Task): void {
     if (task) {
       this.taskToEdit = { ...task };
-    this.openTaskFormWithAutoCollapse();
+      this.openTaskFormWithAutoCollapse();
     }
   }
 
-  // 新規タスク追加フォームを開く
+  /**
+   * 新規タスク作成フォームを開く
+   */
   onOpenNewTaskForm(): void {
     this.taskToEdit = null;
     this.openTaskFormWithAutoCollapse();
   }
 
-  // タスクフォームを閉じる
+  /**
+   * タスクフォームを閉じる
+   */
   onCloseTaskForm(): void {
     this.isTaskFormOpen = false;
     this.taskToEdit = null;
@@ -365,7 +471,9 @@ export class AppComponent implements OnInit {
     this.isMasterPanelCollapsed = this.wasMasterPanelCollapsedBeforeForm;
   }
 
-  // タスクの作成完了ハンドラ
+  /**
+   * 新規タスク作成完了ハンドラ
+   */
   onTaskCreated(newTask: Task): void {
     if (this.selectedProject && !newTask.parentId) {
       newTask.parentId = this.selectedProject.id;
@@ -373,7 +481,7 @@ export class AppComponent implements OnInit {
     const { id, ...taskData } = newTask;
     this.dataService.addTask(taskData);
 
-    // サイドポケットからのタスク昇格処理
+    // サイドポケットからのメモ昇格処理
     if (this.promotingMemoId) {
       this.dataService.deleteSidePocketMemo(this.promotingMemoId);
       this.promotingMemoId = null;
@@ -381,7 +489,10 @@ export class AppComponent implements OnInit {
     this.onCloseTaskForm();
   }
 
-  // 子タスクの更新ハンドラ
+  /**
+   * タスク更新完了ハンドラ
+   * 期限変更時の遅延ログ自動記録を含む
+   */
   onTaskUpdated(updatedTask: Task | string): void {
     let task: Task | null = null;
     if (typeof updatedTask === 'string') {
@@ -419,15 +530,70 @@ export class AppComponent implements OnInit {
     this.onCloseTaskForm();
   }
 
-  // 遅延理由選択ハンドラ
+  /**
+   * タスク削除完了ハンドラ
+   */
+  onTaskDeleted(taskId: string): void {
+    this.dataService.deleteTask(taskId);
+    this.onCloseTaskForm();
+  }
+
+  /**
+   * メモから本タスクへの昇格ハンドラ
+   */
+  onPromoteMemoToTask(memo: SidePocketMemo): void {
+    this.promotingMemoId = memo.id;
+    this.taskToEdit = {
+      id: '',
+      title: memo.content,
+      status: 'todo',
+      priority: 'medium',
+      progress: 0,
+      tags: [],
+      parentId: this.selectedProject?.id || (this.projects[0]?.id || '')
+    };
+    this.openTaskFormWithAutoCollapse();
+  }
+
+  /**
+   * メモから親課題のメモ履歴への昇格ハンドラ
+   */
+  onPromoteMemoToProjectMemo(event: { memo: SidePocketMemo; projectId: string }): void {
+    const targetProject = this.projects.find(p => p.id === event.projectId);
+    if (!targetProject) return;
+
+    const newMemoItem = {
+      timestamp: new Date().toLocaleString('ja-JP'),
+      content: event.memo.content
+    };
+
+    const updatedMemos = [...(targetProject.memos || []), newMemoItem];
+    const updatedProject = {
+      ...targetProject,
+      memos: updatedMemos,
+      updatedAt: new Date().toISOString()
+    };
+
+    const { id, ...projectData } = updatedProject;
+    this.dataService.updateProject(id, projectData);
+
+    // サイドポケットから消化・削除
+    this.dataService.deleteSidePocketMemo(event.memo.id);
+  }
+
+  /**
+   * 遅延理由の選択ハンドラ
+   */
   onSelectDelayReason(reason: DelayReason): void {
-    const current = this.delayLogQueue.shift(); // 先頭のログを取り出して消化
+    const current = this.delayLogQueue.shift();
     if (!current) return;
 
     this.saveDelayLog(current.taskId, current.taskTitle, current.previousDueDate, current.newDueDate, reason);
   }
 
-  // 残りのキューを一括スキップ（未分類としてすべて保存）
+  /**
+   * 残りのキューをすべてスキップ（未分類として保存）
+   */
   onSkipAllDelayLogs(): void {
     while (this.delayLogQueue.length > 0) {
       const item = this.delayLogQueue.shift();
@@ -437,7 +603,46 @@ export class AppComponent implements OnInit {
     }
   }
 
-  // Firestoreへの保存共通ヘルパー
+  // ========================================
+  // Private ヘルパーメソッド
+  // ========================================
+
+  /**
+   * タスクフォームを開く際に親課題パネルを自動で折り畳む
+   */
+  private openTaskFormWithAutoCollapse(): void {
+    if (!this.isTaskFormOpen) {
+      this.wasMasterPanelCollapsedBeforeForm = this.isMasterPanelCollapsed;
+      this.isMasterPanelCollapsed = true;
+    }
+    this.isTaskFormOpen = true;
+
+    // サイドポケットも自動で折り畳む
+    if (this.sidePocketPanel) {
+      this.sidePocketPanel.isCollapsed = true;
+    }
+  }
+
+  /**
+   * 遅延ログをキューに追加（最大3件保持、超過時は最古を保存）
+   */
+  private enqueueDelayLog(info: DelayLogInfo): void {
+    if (info.newDueDate <= info.previousDueDate) return;
+
+    if (this.delayLogQueue.length >= 3) {
+      const oldest = this.delayLogQueue.shift();
+      if (oldest) {
+        this.saveDelayLog(oldest.taskId, oldest.taskTitle, oldest.previousDueDate, oldest.newDueDate, 'unclassified');
+      }
+    }
+
+    this.delayLogQueue.push(info);
+  }
+
+  /**
+   * Firestoreへ遅延ログを保存
+   * 親課題更新の場合は配下の子タスクに分散記録
+   */
   private saveDelayLog(taskId: string, title: string, oldDate: string, newDate: string, reason: DelayReason): void {
     const isProject = this.projects.some(p => p.id === taskId);
     if (isProject) {
@@ -465,42 +670,35 @@ export class AppComponent implements OnInit {
     });
   }
 
-  // タスクの削除完了ハンドラ
-  onTaskDeleted(taskId: string): void {
-    this.dataService.deleteTask(taskId);
-    this.onCloseTaskForm();
-  }
-
-  // 進捗率と完了タスク数の自動再計算
+  /**
+   * 各親課題の進捗率と完了タスク数を自動再計算
+   * 配下のタスク数・完了数から進捗率を算出し、Firestoreに反映
+   */
   private recalculateProgress(): void {
     if (!this.projects || this.projects.length === 0) return;
 
-    // 変更が必要なプロジェクトを追跡
     let hasChanges = false;
 
-    // 1. .map() を使って、各プロジェクトに対して、子タスクの数と完了数をカウント
     const updatedProjects = this.projects.map(project => {
       const projectTasks = this.allTasks.filter(t => t.parentId === project.id);
       const total = projectTasks.length;
       const completed = projectTasks.filter(t => t.status === 'done').length;
       const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-      // 値に変更があった場合のみ、新しい参照を作成して更新フラグを立てる
+      // 値に変更があった場合のみ更新
       if (
         project.totalTaskCount !== total ||
         project.completedTaskCount !== completed ||
         project.progressPercentage !== percentage
       ) {
         hasChanges = true;
-        
-        // Firestoreも更新
+
         this.dataService.updateProject(project.id, {
           totalTaskCount: total,
           completedTaskCount: completed,
           progressPercentage: percentage,
         }).catch(err => console.error('進捗率Firestore更新エラー:', err));
 
-        // 新しい参照を持つオブジェクトを返す
         return {
           ...project,
           totalTaskCount: total,
@@ -512,90 +710,16 @@ export class AppComponent implements OnInit {
       return project;
     });
 
-    // 2. 変更があった場合のみprojectsを更新
     if (hasChanges) {
       this.projects = updatedProjects;
     }
 
-    // 3. 選択中の親課題オブジェクトも新しい参照で更新
+    // 選択中の親課題オブジェクトも新しい参照で更新
     if (this.selectedProject) {
       const updated = this.projects.find(p => p.id === this.selectedProject?.id);
       if (updated) {
         this.selectedProject = { ...updated };
       }
     }
-  }
-
-  // メモを本タスク化フォームへ移行
-  onPromoteMemoToTask(memo: SidePocketMemo): void {
-    this.promotingMemoId = memo.id; // メモIDを一時保持
-    this.taskToEdit = {
-      id: '',
-      title: memo.content,
-      status: 'todo',
-      priority: 'medium',
-      progress: 0,
-      tags: [],
-      parentId: this.selectedProject?.id || (this.projects[0]?.id || '')
-    };
-    this.openTaskFormWithAutoCollapse();
-  }
-  
-  // ★ メモを親課題（プロジェクト）のメモ・履歴へ追加
-  onPromoteMemoToProjectMemo(event: { memo: SidePocketMemo; projectId: string }): void {
-    const targetProject = this.projects.find(p => p.id === event.projectId);
-    if (!targetProject) return;
-
-    const newMemoItem = {
-      timestamp: new Date().toLocaleString('ja-JP'),
-      content: event.memo.content
-    };
-
-    const updatedMemos = [...(targetProject.memos || []), newMemoItem];
-    const updatedProject = {
-      ...targetProject,
-      memos: updatedMemos,
-      updatedAt: new Date().toISOString()
-    };
-
-    // 親課題の更新実行
-    const { id, ...projectData } = updatedProject;
-    this.dataService.updateProject(id, projectData);
-
-    // サイドポケットから消化・削除
-    this.dataService.deleteSidePocketMemo(event.memo.id);
-  }
-
-  // --- アーカイブ操作ハンドラ ---
-  onOpenArchiveModal(): void {
-    this.isArchiveModalOpen = true;
-  }
-
-  onCloseArchiveModal(): void {
-    this.isArchiveModalOpen = false;
-  }
-
-  // 選択中の親課題をアーカイブへ移動
-  onArchiveSelectedProject(): void {
-    if (!this.selectedProject) return;
-
-    const updated = { ...this.selectedProject, status: 'archived' as const };
-    const { id, ...projectData } = updated;
-    this.dataService.updateProject(id, projectData);
-
-    this.selectedProject = null; // 一覧画面へ戻る
-    this.recalculateProgress();
-  }
-
-  // 親課題の復元
-  onRestoreProject(project: ParentProject): void {
-    const updated = { ...project, status: 'in-progress' as const };
-    const { id, ...projectData } = updated;
-    this.dataService.updateProject(id, projectData);
-
-    if (this.selectedProject?.id === id) {
-      this.selectedProject = { ...updated };
-    }
-    this.recalculateProgress();
   }
 }

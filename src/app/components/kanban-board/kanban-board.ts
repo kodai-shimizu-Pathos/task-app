@@ -13,22 +13,39 @@ import { Task, Status, PriorityLevel } from '../../models/task.model';
   styleUrl: './kanban-board.css',
 })
 export class KanbanBoard implements OnChanges {
-  // 全タスクの配列を受け取る
+  // ========================================
+  // @Input / @Output
+  // ========================================
   @Input() tasks: Task[] = [];
 
   @Output() selectTask = new EventEmitter<Task>();
   @Output() addTask = new EventEmitter<Task>();
   @Output() taskUpdated = new EventEmitter<Task>();
 
-  // タグ一覧のプロパティ
+  // ========================================
+  // フィルター・ソート状態
+  // ========================================
+  /** キーワード検索 */
+  searchKeyword: string = '';
+
+  /** 優先度フィルター */
+  priorityFilter: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW' = 'ALL';
+
+  /** タグフィルター */
+  selectedTag: string = 'ALL';
+
+  /** ソートキー */
+  sortBy: 'createdAt' | 'deadline' | 'priority' = 'createdAt';
+
+  /** ソート順序 */
+  sortOrder: 'asc' | 'desc' = 'asc';
+
+  /** 利用可能なタグ一覧 */
   availableTags: string[] = [];
 
-  // --- フィルター・ソート状態プロパティ ---
-  searchKeyword: string = '';
-  priorityFilter: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW' = 'ALL';
-  selectedTag: string = 'ALL';
-  sortBy: 'createdAt' | 'deadline' | 'priority' = 'createdAt';
-  sortOrder: 'asc' | 'desc' = 'asc';
+  // ========================================
+  // ライフサイクル
+  // ========================================
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['tasks']) {
@@ -36,26 +53,13 @@ export class KanbanBoard implements OnChanges {
     }
   }
 
-  // --- タグ一覧の抽出処理 ---
-  private updateAvailableTags(): void {
-    if (!this.tasks || this.tasks.length === 0) {
-      this.availableTags = [];
-      return;
-    }
+  // ========================================
+  // Public メソッド
+  // ========================================
 
-    const tagSet = new Set<string>();
-    this.tasks.forEach(task => {
-      if (Array.isArray(task.tags)) {
-        task.tags.forEach(tag => {
-          const cleaned = tag.trim().replace(/^#/, '');
-          if (cleaned) tagSet.add(cleaned);
-        });
-      }
-    });
-    this.availableTags = Array.from(tagSet);
-  }
-
-  // タグ選択変更時のデバッグログ用メソッド
+  /**
+   * フィルター条件が変更されたときのハンドラ
+   */
   onFilterChange(): void {
     console.log('=== [フィルター条件変更] ===');
     console.log('選択中のタグ (selectedTag):', this.selectedTag);
@@ -64,12 +68,98 @@ export class KanbanBoard implements OnChanges {
     console.log('フィルター後のタスク件数:', this.filteredAndSortedTasks.length);
   }
 
-  private cleanTag(tag: string): string {
-    if (!tag) return '';
-    return tag.trim().replace(/^#/, '').toLowerCase();
+  /**
+   * タグ選択変更ハンドラ
+   */
+  onTagSelected(tag: string): void {
+    this.selectedTag = tag;
   }
 
-  // --- フィルタリング＆ソート適用後の全タスクリスト ---
+  /**
+   * ソート順序の切り替え
+   */
+  toggleSortOrder(): void {
+    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+  }
+
+  /**
+   * フィルター条件を初期状態にリセット
+   */
+  resetFilters(): void {
+    this.searchKeyword = '';
+    this.priorityFilter = 'ALL';
+    this.selectedTag = 'ALL';
+    this.sortBy = 'createdAt';
+    this.sortOrder = 'asc';
+  }
+
+  /**
+   * タスク追加ボタンのハンドラ
+   */
+  onAddTask(): void {
+    this.addTask.emit();
+  }
+
+  /**
+   * タスクがドラッグで移動された時のハンドラ
+   * 同一カラム内の順番変更 or 別カラムへの移動に対応
+   */
+  onTaskDropped(event: CdkDragDrop<Task[]>, targetStatus: Status): void {
+    if (event.previousContainer === event.container) {
+      // 同一カラム内での順番入れ替え
+      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+    } else {
+      // 別カラムへの移動
+      let taskId: string | null = null;
+      const itemData = event.item.data;
+
+      // ドラッグデータからタスクIDを抽出
+      if (typeof itemData === 'object' && itemData != null && itemData['id']) {
+        taskId = itemData.id;
+      } else if (typeof itemData === 'string') {
+        taskId = itemData;
+      } else {
+        // previousContainerから復元を試みる
+        const previousData = event.previousContainer.data;
+        if (Array.isArray(previousData) && event.previousIndex >= 0 && previousData[event.previousIndex]) {
+          const prevTask = previousData[event.previousIndex];
+          if (prevTask && typeof prevTask === 'object' && prevTask.id) {
+            taskId = prevTask.id;
+          }
+        }
+      }
+
+      if (!taskId) {
+        console.error('更新対象のタスクIDが見つかりません:', itemData);
+        return;
+      }
+
+      const taskIndex = this.tasks.findIndex(t => t.id === taskId);
+      if (taskIndex === -1) {
+        console.error('タスクが配列に見つかりません:', taskId);
+        return;
+      }
+
+      const task = this.tasks[taskIndex];
+
+      // タスク情報を新しいステータスに合わせて更新
+      const newProgress = targetStatus === 'done' ? 100 : (targetStatus === 'in-progress' ? 50 : 0);
+      task.status = targetStatus;
+      task.progress = newProgress;
+      task.updatedAt = new Date().toISOString();
+
+      this.tasks[taskIndex] = { ...task };
+      this.taskUpdated.emit({ ...task });
+    }
+  }
+
+  // ========================================
+  // Getters
+  // ========================================
+
+  /**
+   * フィルター＆ソート適用後の全タスクリスト
+   */
   get filteredAndSortedTasks(): Task[] {
     let result = [...this.tasks];
 
@@ -92,10 +182,9 @@ export class KanbanBoard implements OnChanges {
       const target = this.cleanTag(this.selectedTag);
 
       console.log('--- タグ判定デバッグ ---');
-      console.log('検索ターゲット:', JSON.stringify(target)); // 文字列を厳密に出力
+      console.log('検索ターゲット:', JSON.stringify(target));
 
       result = result.filter(t => {
-        // タスクが優先度など他の条件を通過してここまで届いているか確認
         console.log(`チェック中タスク: "${t.title}", 優先度: "${t.priority}"`);
 
         if (!t.tags || !Array.isArray(t.tags)) return false;
@@ -111,7 +200,7 @@ export class KanbanBoard implements OnChanges {
     }
 
     // 4. ソート処理
-    result.sort((a,b) => {
+    result.sort((a, b) => {
       let comparison = 0;
 
       if (this.sortBy === 'deadline') {
@@ -120,11 +209,11 @@ export class KanbanBoard implements OnChanges {
         const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
         comparison = dateA - dateB;
       } else if (this.sortBy === 'priority') {
-        // 優先度順
+        // 優先度順（高 → 中 → 低）
         const weight: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 , high: 3, medium: 2, low: 1 };
         const weightA = weight[a.priority] || 0;
         const weightB = weight[b.priority] || 0;
-        comparison = weightB - weightA; // 高優先度順を標準とする
+        comparison = weightB - weightA;
       } else {
         // 作成日時順
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -132,28 +221,24 @@ export class KanbanBoard implements OnChanges {
         comparison = timeB - timeA;
       }
 
-      return this.sortOrder ==='asc' ? comparison : -comparison;
+      return this.sortOrder === 'asc' ? comparison : -comparison;
     });
 
     return result;
   }
 
-  onTagSelected(tag: string): void {
-    this.selectedTag = tag;
-  }
-
-  // ステータス文字列を安全に正規化するヘルパー
-  private normalizeStatus(status: string): string {
-    if (!status) return '';
-    return status.trim().toLowerCase().replace('_', '-');
-  }
-
+  /**
+   * Todo ステータスのタスク一覧
+   */
   get todoTasks(): Task[] {
     return this.filteredAndSortedTasks.filter(task => 
       this.normalizeStatus(task.status) === 'todo'
     );
   }
 
+  /**
+   * In Progress ステータスのタスク一覧
+   */
   get inProgressTasks(): Task[] {
     return this.filteredAndSortedTasks.filter(task => 
       this.normalizeStatus(task.status) === 'in-progress' || 
@@ -161,85 +246,53 @@ export class KanbanBoard implements OnChanges {
     );
   }
 
+  /**
+   * Done ステータスのタスク一覧
+   */
   get doneTasks(): Task[] {
     return this.filteredAndSortedTasks.filter(task => 
       this.normalizeStatus(task.status) === 'done'
     );
   }
 
-  // --- ボタン操作などで呼び出される処理 ---
-  // 昇順と降順をボタンで切り替える
-  toggleSortOrder(): void {
-    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+  // ========================================
+  // Private ヘルパーメソッド
+  // ========================================
+
+  /**
+   * 利用可能なタグ一覧を更新
+   */
+  private updateAvailableTags(): void {
+    if (!this.tasks || this.tasks.length === 0) {
+      this.availableTags = [];
+      return;
+    }
+
+    const tagSet = new Set<string>();
+    this.tasks.forEach(task => {
+      if (Array.isArray(task.tags)) {
+        task.tags.forEach(tag => {
+          const cleaned = tag.trim().replace(/^#/, '');
+          if (cleaned) tagSet.add(cleaned);
+        });
+      }
+    });
+    this.availableTags = Array.from(tagSet);
   }
 
-  // フィルター条件を初期状態にリセット
-  resetFilters(): void {
-    this.searchKeyword = '';
-    this.priorityFilter = 'ALL';
-    this.selectedTag = 'ALL';
-    this.sortBy = 'createdAt';
-    this.sortOrder = 'asc';
-  }
-  
-  onTaskDropped(event: CdkDragDrop<Task[]>, targetStatus: Status): void {
-    if (event.previousContainer === event.container) {
-      // 同一カラム内での順番入れ替え
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-    } else {
-      // 1. ドラッグデータを取得
-      let taskId: string | null = null;
-      const itemData = event.item.data;
-
-      // 分岐A：cdkDragDataからオブジェクトが取得できた場合
-      if (typeof itemData === 'object' && itemData != null && itemData['id']) {
-        taskId = itemData.id;
-      }
-      // 分岐B：cdkDragDataからID文字列が取得できた場合
-      else if (typeof itemData === 'string') {
-        taskId = itemData;
-      }
-      // 分岐C：previousContainerから復元を試みる
-      else {
-        const previousData = event.previousContainer.data;
-        if (Array.isArray(previousData) && event.previousIndex >= 0 && previousData[event.previousIndex]) {
-          const prevTask = previousData[event.previousIndex];
-          if (prevTask && typeof prevTask === 'object' && prevTask.id) {
-            taskId = prevTask.id;
-          }
-        }
-      }
-
-      // IDが取得できなかった場合はエラー
-      if (!taskId) {
-        console.error('更新対象のタスクIDが見つかりません:', itemData);
-        return;
-      }
-
-      // 2. this.tasks配列からタスクオブジェクトを取得・復元
-      const taskIndex = this.tasks.findIndex(t => t.id === taskId);
-      if (taskIndex === -1) {
-        console.error('タスクが配列に見つかりません:', taskId);
-        return;
-      }
-
-      const task = this.tasks[taskIndex];
-
-      // 3. タスクのプロパティを更新
-      const newProgress = targetStatus === 'done' ? 100 : (targetStatus === 'in-progress' ? 50 : 0);
-      task.status = targetStatus;
-      task.progress = newProgress;
-      task.updatedAt = new Date().toISOString();
-
-      // 4. 配列も更新
-      this.tasks[taskIndex] = { ...task };
-
-      // 5. 親コンポーネントに更新されたタスクを通知
-      this.taskUpdated.emit({ ...task });
-    } 
+  /**
+   * タグ文字列を正規化（小文字・トリム・#削除）
+   */
+  private cleanTag(tag: string): string {
+    if (!tag) return '';
+    return tag.trim().replace(/^#/, '').toLowerCase();
   }
 
-  onAddTask(): void {
-    this.addTask.emit();
+  /**
+   * ステータス文字列を正規化（小文字・ハイフン統一）
+   */
+  private normalizeStatus(status: string): string {
+    if (!status) return '';
+    return status.trim().toLowerCase().replace('_', '-');
   }
 }

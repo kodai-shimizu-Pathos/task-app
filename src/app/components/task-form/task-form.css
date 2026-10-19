@@ -1,3 +1,6 @@
+/* ========================================
+   パネルコンテナの基本スタイル
+   ======================================== */
 .side-panel-backdrop {
   position: static;
   width: 100%;
@@ -14,15 +17,13 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: none; /* 画面固定用のかさばる影を削除 */
-  animation: none;  /* アニメーションを解除 */
+  box-shadow: none;
+  animation: none;
 }
 
-@keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
+/* ========================================
+   パネルヘッダー
+   ======================================== */
 .panel-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-color);
@@ -53,16 +54,22 @@
   color: var(--text-primary);
 }
 
+/* ========================================
+   パネルボディ
+   ======================================== */
 .panel-body {
-  padding: 10px 14px; 
+  padding: 10px 14px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px; 
+  gap: 8px;
 }
 
+/* ========================================
+   フォーム要素の基本スタイル
+   ======================================== */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -81,21 +88,24 @@
 
 .form-row {
   display: flex;
-  gap: 12px; /* 2列の間に適度なマージンを確保 */
+  gap: 12px;
   width: 100%;
 }
 
 .form-row .form-group.flex-1 {
   flex: 1;
-  min-width: 0; /* フォーム要素が親からはみ出るのを防止 */
+  min-width: 0;
 }
 
+/* ========================================
+   入力フィールドのスタイル
+   ======================================== */
 input[type="text"],
 input[type="date"],
 select,
 textarea {
   width: 100%;
-  padding: 5px 8px; /* 入力欄内の上下パディングを6px→5pxに微修正 */
+  padding: 5px 8px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background-color: var(--bg-secondary);
@@ -104,7 +114,7 @@ textarea {
   box-sizing: border-box;
 }
 
-/* ダークモード特別対応：背景を見やすく */
+/* ダークモード特別対応 */
 body[data-theme="dark"] input[type="text"],
 body[data-theme="dark"] input[type="date"],
 body[data-theme="dark"] select,
@@ -140,7 +150,66 @@ textarea {
   min-height: 90px;
 }
 
-/* フッター＆ボタン */
+/* ========================================
+   ドキュメントリンク入力
+   ======================================== */
+.doc-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-add-doc {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.btn-add-doc:hover {
+  background-color: var(--border-color);
+}
+
+.doc-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.doc-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.btn-remove-doc {
+  background: none;
+  border: none;
+  color: var(--priority-high);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.btn-remove-doc:hover {
+  background-color: var(--border-color);
+}
+
+/* ========================================
+   パネルフッター＆ボタン
+   ======================================== */
 .panel-footer {
   padding: 16px 20px;
   border-top: 1px solid var(--border-color);
@@ -174,7 +243,7 @@ textarea {
   color: #ffffff;
   border: none;
   cursor: pointer;
-  flex-shrink: 0;
+  transition: opacity 0.2s;
 }
 
 .btn-submit:hover {
@@ -190,12 +259,12 @@ textarea {
   font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
-  white-space: nowrap !important; 
-  flex-shrink: 0 !important;      
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 80px;                 
+  min-width: 80px;
   transition: background-color 0.2s;
 }
 
@@ -218,7 +287,9 @@ textarea {
   opacity: 0.85;
 }
 
-/* チェックリスト関連スタイル */
+/* ========================================
+   チェックリスト関連スタイル
+   ======================================== */
 .checklist-input-row {
   display: flex;
   gap: 8px;
@@ -245,7 +316,7 @@ textarea {
   flex: 1;
 }
 
-/* AI分解ボタンのスタイル */
+/* AI分解ボタン */
 .btn-ai-decompose {
   background-color: #6366f1;
   color: #ffffff;
@@ -311,7 +382,6 @@ textarea {
   transition: background-color 0.2s ease;
 }
 
-/* チェックリスト項目完了時のスタイル */
 .checklist-item.completed {
   background-color: var(--bg-secondary);
   opacity: 0.85;
@@ -339,7 +409,6 @@ textarea {
   gap: 8px;
 }
 
-/* 編集ボタン（✏️）のスタイル */
 .btn-edit-icon {
   background: none;
   border: none;
@@ -352,30 +421,15 @@ textarea {
   flex-shrink: 0;
 }
 
-/* ホバー時に編集ボタンを表示 */
 .checklist-item:hover .btn-edit-icon {
   opacity: 0.7;
 }
 
-/* 編集ボタンのホバー効果 */
 .btn-edit-icon:hover {
   opacity: 1 !important;
   background-color: var(--border-color);
 }
 
-/* 編集アイコンは通常時は薄く表示 */
-.edit-icon {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  font-size: 0.85rem;
-}
-
-/* テキストホバー時に編集アイコンを表示 */
-.checklist-text:hover .edit-icon {
-  opacity: 0.7;
-}
-
-/* 完了状態：取り消し線 + 薄い色 + 不透明度 */
 .checklist-text.completed {
   text-decoration: line-through;
   color: var(--text-muted);
@@ -399,7 +453,6 @@ textarea {
   color: var(--priority-high);
 }
 
-/* チェックリスト項目編集用インライン入力欄 */
 .checklist-edit-input {
   flex: 1;
   padding: 6px 8px;
@@ -419,6 +472,9 @@ textarea {
   box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.1);
 }
 
+/* ========================================
+   進捗情報表示
+   ======================================== */
 .progress-info {
   display: flex;
   gap: 8px;
@@ -440,6 +496,9 @@ textarea {
   font-weight: 600;
 }
 
+/* ========================================
+   説明欄トグル
+   ======================================== */
 .description-header {
   display: flex;
   justify-content: space-between;
@@ -454,9 +513,9 @@ textarea {
   font-weight: 600;
   cursor: pointer;
   padding: 0;
+  transition: opacity 0.2s;
 }
 
 .btn-toggle-desc:hover {
   text-decoration: underline;
 }
-
