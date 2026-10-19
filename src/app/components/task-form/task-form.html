@@ -6,183 +6,188 @@
         <button type="button" class="close-btn" (click)="onClose()" title="閉じる">✕</button>
       </div>
   
-      <!-- フォーム本体 -->
-      <form (ngSubmit)="onSubmit()" class="panel-body">
+      <!-- フォーム本体 (Flexboxでボディのみ可変・フッター常時固定構造) -->
+      <form (ngSubmit)="onSubmit()" class="form-container">
         
-        <!-- 1行目：親課題（全幅） -->
-        <div class="form-group">
-          <label for="parentId">親課題<span class="required">*</span></label>
-          <select id="parentId" [(ngModel)]="taskData.parentId" name="parentId" required>
-            <option value="" disabled>-- 親課題を選択 --</option>
-            <option *ngFor="let project of projects" [value]="project.id">
-              {{ project.title }}
-            </option>
-          </select>
-        </div>
-  
-        <!-- 2行目：タスク名（全幅） -->
-        <div class="form-group">
-          <label for="title">タスク名<span class="required">*</span></label>
-          <input type="text" id="title" [(ngModel)]="taskData.title" name="title" required placeholder="例: ログイン画面の実装" />
-        </div>
-  
-        <!-- 3行目：ステータス、優先度（2列横並び） -->
-        <div class="form-row">
-          <div class="form-group flex-1">
-            <label for="status">ステータス</label>
-            <select id="status" [(ngModel)]="taskData.status" name="status">
-              <option value="todo">🔴 未着手</option>
-              <option value="in-progress">🟡 進行中</option>
-              <option value="done">🟢 完了</option>
+        <!-- スクロール可能な入力ボディ -->
+        <div class="panel-body">
+          
+          <!-- 1行目：親課題（全幅） -->
+          <div class="form-group">
+            <label for="parentId">親課題<span class="required">*</span></label>
+            <select id="parentId" [(ngModel)]="taskData.parentId" name="parentId" required>
+              <option value="" disabled>-- 親課題を選択 --</option>
+              <option *ngFor="let project of projects" [value]="project.id">
+                {{ project.title }}
+              </option>
             </select>
           </div>
-          <div class="form-group flex-1">
-            <label for="priority">優先度</label>
-            <select id="priority" [(ngModel)]="taskData.priority" name="priority">
-              <option value="low">🔵 低</option>
-              <option value="medium">🟢 中</option>
-              <option value="high">🔴 高</option>
-            </select>
-          </div>
-        </div>
   
-        <!-- 4行目：開始予定日、完了予定日（2列横並び） -->
-        <div class="form-row">
-          <div class="form-group flex-1">
-            <label for="scheduledStartDate">開始予定日</label>
-            <input type="date" id="scheduledStartDate" [(ngModel)]="taskData.scheduledStartDate" name="scheduledStartDate" />
-          </div>
-          <div class="form-group flex-1">
-            <label for="scheduledEndDate">完了予定日</label>
-            <input type="date" id="scheduledEndDate" [(ngModel)]="taskData.scheduledEndDate" name="scheduledEndDate" />
-          </div>
-        </div>
-  
-        <!-- 5行目：最終期限（全幅） -->
-        <div class="form-group">
-          <label for="deadline">最終期限</label>
-          <input type="date" id="deadline" [(ngModel)]="taskData.deadline" name="deadline" />
-        </div>
-  
-        <!-- 6行目：タグ（全幅） -->
-        <div class="form-group">
-          <label for="tagsInput">タグ (カンマ区切り)</label>
-          <input type="text" id="tagsInput" [(ngModel)]="tagsInput" name="tagsInput" placeholder="例: UI設計, Angular" />
-        </div>
-  
-        <!-- <説明・メモ> (アコーディオン開閉) -->
-        <div class="form-group">
-          <div class="description-header">
-            <label for="description">📝 説明・メモ</label>
-            <button type="button" class="btn-toggle-desc" (click)="isDescriptionOpen = !isDescriptionOpen">
-              {{ isDescriptionOpen || taskData.description ? '▲ 閉じる' : '＋ メモを入力' }}
-            </button>
-          </div>
-          <textarea
-            *ngIf="isDescriptionOpen || taskData.description"
-            id="description"
-            [(ngModel)]="taskData.description"
-            name="description"
-            rows="2"
-            placeholder="タスクの詳細やメモを入力…">
-          </textarea>
-        </div>
-  
-        <!-- 7行目：チェックリスト（全幅） -->
-        <div class="form-group checklist-group">
-          <div class="checklist-header">
-            <label for="checklistInput">チェックリスト / サブタスク</label>
-            <button 
-              type="button" 
-              class="btn-ai-decompose" 
-              (click)="generateSubtasksWithAi()"
-              [disabled]="isGeneratingAi"
-              title="AIがタスクを分解してサブタスク候補を生成します">
-              {{ isGeneratingAi ? '🤖 生成中...' : '🤖 AIで分解' }}
-            </button>
+          <!-- 2行目：タスク名（全幅） -->
+          <div class="form-group">
+            <label for="title">タスク名<span class="required">*</span></label>
+            <input type="text" id="title" [(ngModel)]="taskData.title" name="title" required placeholder="例: ログイン画面の実装" />
           </div>
   
-          <div class="checklist-input-row">
-            <input type="text" id="checklistInput" [(ngModel)]="checklistInput" name="checklistInput" placeholder="項目を入力…" (keydown.enter)="addChecklistItem($event)" />
-            <button type="button" class="btn-add-item" (click)="addChecklistItem()" title="項目を追加">＋ 追加</button>
-          </div>
-  
-          <!-- チェックリスト項目一覧 -->
-          <div class="checklist-items" *ngIf="taskData.checklist && taskData.checklist.length > 0">
-            <div 
-              class="checklist-item" 
-              *ngFor="let item of taskData.checklist" 
-              [class.completed]="item.completed"
-              [class.editing]="editingItemId === item.id">
-              
-              <!-- 通常表示モード -->
-              <ng-container *ngIf="editingItemId !== item.id">
-                <input 
-                  type="checkbox" 
-                  [id]="'item-' + item.id" 
-                  [checked]="item.completed" 
-                  (change)="toggleChecklistItem(item, $event)" 
-                  class="checkbox-input" />
-                <label 
-                  [for]="'item-' + item.id" 
-                  class="checklist-text" 
-                  [class.completed]="item.completed">
-                  {{ item.text }}
-                </label>
-                <button 
-                  type="button" 
-                  class="btn-edit-icon" 
-                  (click)="startEditingChecklistItem(item, $event)" 
-                  title="編集">✏️</button>
-                <button 
-                  type="button" 
-                  class="btn-delete-item" 
-                  (click)="deleteChecklistItem(item.id)" 
-                  title="削除">🗑️</button>
-              </ng-container>
-  
-              <!-- インライン編集モード -->
-              <div *ngIf="editingItemId === item.id" class="checklist-edit-container" (click)="$event.stopPropagation()">
-                <div class="checklist-original-ref">
-                  <span class="ref-tag">編集前:</span> {{ originalEditText }}
-                </div>
-                <div class="checklist-edit-row">
-                  <input 
-                    type="text" 
-                    [(ngModel)]="item.text" 
-                    [ngModelOptions]="{ standalone: true }"
-                    (click)="$event.stopPropagation()"
-                    (keydown.enter)="saveEditingChecklistItem(item, $event)"
-                    (keydown.escape)="cancelEditingChecklistItem(item, $event)"
-                    class="checklist-edit-input"
-                    [attr.id]="'edit-' + item.id"
-                    autofocus />
-                  <button 
-                    type="button" 
-                    class="btn-save-inline" 
-                    (mousedown)="$event.preventDefault(); $event.stopPropagation()"
-                    (click)="saveEditingChecklistItem(item, $event)" 
-                    title="保存">✓</button>
-                  <button 
-                    type="button" 
-                    class="btn-cancel-inline" 
-                    (mousedown)="$event.preventDefault(); $event.stopPropagation()"
-                    (click)="cancelEditingChecklistItem(item, $event)" 
-                    title="キャンセル">✕</button>
-                </div>
-              </div>
-  
+          <!-- 3行目：ステータス、優先度（2列横並び） -->
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="status">ステータス</label>
+              <select id="status" [(ngModel)]="taskData.status" name="status">
+                <option value="todo">🔴 未着手</option>
+                <option value="in-progress">🟡 進行中</option>
+                <option value="done">🟢 完了</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="priority">優先度</label>
+              <select id="priority" [(ngModel)]="taskData.priority" name="priority">
+                <option value="low">🔵 低</option>
+                <option value="medium">🟢 中</option>
+                <option value="high">🔴 高</option>
+              </select>
             </div>
           </div>
   
-          <!-- 進捗カウント表示 -->
-          <div class="progress-info" *ngIf="taskData.checklist && taskData.checklist.length > 0">
-            <span class="progress-label">進捗:</span>
-            <span class="progress-value">{{ getCompletedChecklistCount() }} / {{ getTotalChecklistCount() }} ({{ taskData.progress || 0 }}%)</span>
+          <!-- 4行目：開始予定日、完了予定日（2列横並び） -->
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="scheduledStartDate">開始予定日</label>
+              <input type="date" id="scheduledStartDate" [(ngModel)]="taskData.scheduledStartDate" name="scheduledStartDate" />
+            </div>
+            <div class="form-group flex-1">
+              <label for="scheduledEndDate">完了予定日</label>
+              <input type="date" id="scheduledEndDate" [(ngModel)]="taskData.scheduledEndDate" name="scheduledEndDate" />
+            </div>
           </div>
+  
+          <!-- 5行目：最終期限（全幅） -->
+          <div class="form-group">
+            <label for="deadline">最終期限</label>
+            <input type="date" id="deadline" [(ngModel)]="taskData.deadline" name="deadline" />
+          </div>
+  
+          <!-- 6行目：タグ（全幅） -->
+          <div class="form-group">
+            <label for="tagsInput">タグ (カンマ区切り)</label>
+            <input type="text" id="tagsInput" [(ngModel)]="tagsInput" name="tagsInput" placeholder="例: UI設計, Angular" />
+          </div>
+  
+          <!-- <説明・メモ> (アコーディオン開閉) -->
+          <div class="form-group">
+            <div class="description-header">
+              <label for="description">📝 説明・メモ</label>
+              <button type="button" class="btn-toggle-desc" (click)="isDescriptionOpen = !isDescriptionOpen">
+                {{ isDescriptionOpen || taskData.description ? '▲ 閉じる' : '＋ メモを入力' }}
+              </button>
+            </div>
+            <textarea
+              *ngIf="isDescriptionOpen || taskData.description"
+              id="description"
+              [(ngModel)]="taskData.description"
+              name="description"
+              rows="2"
+              placeholder="タスクの詳細やメモを入力…">
+            </textarea>
+          </div>
+  
+          <!-- 7行目：チェックリスト（全幅） -->
+          <div class="form-group checklist-group">
+            <div class="checklist-header">
+              <label for="checklistInput">チェックリスト / サブタスク</label>
+              <button 
+                type="button" 
+                class="btn-ai-decompose" 
+                (click)="generateSubtasksWithAi()"
+                [disabled]="isGeneratingAi"
+                title="AIがタスクを分解してサブタスク候補を生成します">
+                {{ isGeneratingAi ? '🤖 生成中...' : '🤖 AIで分解' }}
+              </button>
+            </div>
+  
+            <div class="checklist-input-row">
+              <input type="text" id="checklistInput" [(ngModel)]="checklistInput" name="checklistInput" placeholder="項目を入力…" (keydown.enter)="addChecklistItem($event)" />
+              <button type="button" class="btn-add-item" (click)="addChecklistItem()" title="項目を追加">＋ 追加</button>
+            </div>
+  
+            <!-- チェックリスト項目一覧 -->
+            <div class="checklist-items" *ngIf="taskData.checklist && taskData.checklist.length > 0">
+              <div 
+                class="checklist-item" 
+                *ngFor="let item of taskData.checklist" 
+                [class.completed]="item.completed"
+                [class.editing]="editingItemId === item.id">
+                
+                <!-- 通常表示モード -->
+                <ng-container *ngIf="editingItemId !== item.id">
+                  <input 
+                    type="checkbox" 
+                    [id]="'item-' + item.id" 
+                    [checked]="item.completed" 
+                    (change)="toggleChecklistItem(item, $event)" 
+                    class="checkbox-input" />
+                  <label 
+                    [for]="'item-' + item.id" 
+                    class="checklist-text" 
+                    [class.completed]="item.completed">
+                    {{ item.text }}
+                  </label>
+                  <button 
+                    type="button" 
+                    class="btn-edit-icon" 
+                    (click)="startEditingChecklistItem(item, $event)" 
+                    title="編集">✏️</button>
+                  <button 
+                    type="button" 
+                    class="btn-delete-item" 
+                    (click)="deleteChecklistItem(item.id)" 
+                    title="削除">🗑️</button>
+                </ng-container>
+  
+                <!-- インライン編集モード -->
+                <div *ngIf="editingItemId === item.id" class="checklist-edit-container" (click)="$event.stopPropagation()">
+                  <div class="checklist-original-ref">
+                    <span class="ref-tag">編集前:</span> {{ originalEditText }}
+                  </div>
+                  <div class="checklist-edit-row">
+                    <input 
+                      type="text" 
+                      [(ngModel)]="item.text" 
+                      [ngModelOptions]="{ standalone: true }"
+                      (click)="$event.stopPropagation()"
+                      (keydown.enter)="saveEditingChecklistItem(item, $event)"
+                      (keydown.escape)="cancelEditingChecklistItem(item, $event)"
+                      class="checklist-edit-input"
+                      [attr.id]="'edit-' + item.id"
+                      autofocus />
+                    <button 
+                      type="button" 
+                      class="btn-save-inline" 
+                      (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+                      (click)="saveEditingChecklistItem(item, $event)" 
+                      title="保存">✓</button>
+                    <button 
+                      type="button" 
+                      class="btn-cancel-inline" 
+                      (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+                      (click)="cancelEditingChecklistItem(item, $event)" 
+                      title="キャンセル">✕</button>
+                  </div>
+                </div>
+  
+              </div>
+            </div>
+  
+            <!-- 進捗カウント表示 -->
+            <div class="progress-info" *ngIf="taskData.checklist && taskData.checklist.length > 0">
+              <span class="progress-label">進捗:</span>
+              <span class="progress-value">{{ getCompletedChecklistCount() }} / {{ getTotalChecklistCount() }} ({{ taskData.progress || 0 }}%)</span>
+            </div>
+          </div>
+  
         </div>
   
-        <!-- フッター -->
+        <!-- ★ 最下部固定フッター (panel-body の外に配置) -->
         <div class="panel-footer">
           <button type="button" *ngIf="isEditMode" class="btn-delete" (click)="onDelete()">🗑️ 削除</button>
           <div class="footer-right">

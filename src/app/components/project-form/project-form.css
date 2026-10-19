@@ -1,40 +1,51 @@
-/* ========================================
-   パネルコンテナの基本スタイル
-   ======================================== */
+/* ★ 1. Custom Host Element を Flexbox 全高化し、親パネルにフィットさせる */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .side-panel-backdrop {
   position: static;
   width: 100%;
   height: 100%;
+  min-height: 0;
   background-color: transparent;
   display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .side-panel-container {
   width: 100%;
   height: 100%;
+  min-height: 0;
   background-color: var(--bg-master);
   color: var(--text-primary);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: none;
-  animation: none;
 }
 
-/* ========================================
-   パネルヘッダー
-   ======================================== */
+/* ヘッダー固定 */
 .panel-header {
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
+  background-color: var(--bg-master);
 }
 
 .panel-header h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -46,37 +57,36 @@
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
-  transition: background-color 0.2s;
 }
 
-.close-btn:hover {
-  background-color: var(--border-color);
-  color: var(--text-primary);
-}
-
-/* ========================================
-   パネルボディ
-   ======================================== */
-.panel-body {
-  padding: 20px;
-  flex: 1;
-  overflow-y: auto;
+/* ★ 2. フォーム全体を Flex で高さ可変管理 (min-height: 0 が必須) */
+.form-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  flex: 1;
+  min-height: 0; /* ★ Flexアイテムが親サイズ以下に縮むために必須 */
+  overflow: hidden;
 }
 
-/* ========================================
-   フォーム要素の基本スタイル
-   ======================================== */
+/* ★ 3. 可変＆縦スクロール可能な入力ボディ */
+.panel-body {
+  padding: 16px 20px;
+  flex: 1;
+  min-height: 0; /* ★ 小さな画面で中身より縮んでスクロールバーを絶対発動させる指定 */
+  overflow-y: auto; /* ★ 画面が小さくなったらフォーム内部でスクロール */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .form-group label {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -92,36 +102,31 @@
 
 .form-row .form-group {
   flex: 1;
+  min-width: 0;
 }
 
-/* ========================================
-   入力フィールドのスタイル
-   ======================================== */
 input[type="text"],
 input[type="date"],
 select,
 textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background-color: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   box-sizing: border-box;
-  transition: border-color 0.2s;
+  outline: none;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
-  outline: none;
+input[type="text"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
   border-color: var(--accent-color);
 }
 
-/* ========================================
-   ドキュメントリンク入力
-   ======================================== */
 .doc-input-row {
   display: flex;
   gap: 8px;
@@ -135,17 +140,14 @@ select:focus {
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.2s;
-}
-
-.btn-add-doc:hover {
-  background-color: var(--border-color);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .doc-list {
   list-style: none;
   padding: 0;
-  margin: 8px 0 0 0;
+  margin: 6px 0 0 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -167,26 +169,17 @@ select:focus {
   border: none;
   color: var(--priority-high);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
 }
 
-.btn-remove-doc:hover {
-  background-color: var(--border-color);
-}
-
-/* ========================================
-   パネルフッター＆ボタン
-   ======================================== */
+/* ★ 4. パネル最下部常時固定フッター (絶対に見切れない・縮まない) */
 .panel-footer {
-  padding: 14px 20px;
+  padding: 12px 20px;
   border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: var(--bg-master);
-  flex-shrink: 0;
+  flex-shrink: 0 !important; /* ★ 絶対に潰れたり押し出されたりしない */
 }
 
 .footer-right {
@@ -251,9 +244,4 @@ select:focus {
   font-weight: 600;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
-  transition: opacity 0.2s;
-}
-
-.btn-delete:hover {
-  opacity: 0.85;
 }

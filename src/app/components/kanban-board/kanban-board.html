@@ -1,58 +1,60 @@
 <div class="kanban-board-wrapper">
-  <!-- ヘッダー領域（タイトル＆フィルターバー＆新規作成ボタン） -->
+  <!-- ヘッダー操作ツールバー -->
   <div class="board-header">
-    <div class="header-left">
-      <h2>タスク一覧</h2>
-
-      <!-- フィルター・ソートコントロールバー-->
-       <div class="filter-bar">
+    <div class="kanban-toolbar">
+      <!-- 左側: 検索・フィルター・ソートコントロール -->
+      <div class="filter-bar">
         <!-- キーワード検索 -->
-         <div class="search-box">
+        <div class="search-box">
           <span class="search-icon">🔍</span>
           <input
             type="text"
             [(ngModel)]="searchKeyword"
-            placeholder="タイトルや説明を検索..."
+            placeholder="タスクを検索..."
             class="filter-input-text" />
-         </div>
+        </div>
 
-         <!-- 優先度フィルター-->
-          <select [(ngModel)]="priorityFilter" class="filter-select">
-            <option value="ALL">優先度： すべて</option>
-            <option value="HIGH">高</option>
-            <option value="MEDIUM">中</option>
-            <option value="LOW">低</option>
-          </select>
+        <!-- 優先度フィルター -->
+        <select [(ngModel)]="priorityFilter" class="filter-select">
+          <option value="ALL">優先度： すべて</option>
+          <option value="HIGH">高</option>
+          <option value="MEDIUM">中</option>
+          <option value="LOW">低</option>
+        </select>
 
-           <!-- タグフィルター-->
-          <span *ngIf="selectedTag !== 'ALL'" class="active-tag-chip" (click)="selectedTag = 'ALL'" title="タグフィルターを解除">#{{ selectedTag }}</span>
+        <!-- アクティブタグチップ -->
+        <span *ngIf="selectedTag !== 'ALL'" class="active-tag-chip" (click)="selectedTag = 'ALL'" title="タグフィルターを解除">#{{ selectedTag }}</span>
 
-          <!-- ソート項目-->
-          <select [(ngModel)]="sortBy" class="filter-select">
-            <option value="createdAt">作成日順</option>
-            <option value="deadline">最終期限順</option>
-            <option value="priority">優先度順</option>
-          </select>
+        <!-- ソート項目 -->
+        <select [(ngModel)]="sortBy" class="filter-select">
+          <option value="createdAt">作成日順</option>
+          <option value="deadline">最終期限順</option>
+          <option value="priority">優先度順</option>
+        </select>
 
-          <!-- 昇順/降順ボタン-->
-          <button class="btn-sort-order" (click)="toggleSortOrder()" [title]="sortOrder === 'asc' ? '降順' : '昇順'">
-            {{ sortOrder === 'asc' ? '▼' : '▲' }}
-          </button>
+        <!-- 昇順/降順ボタン -->
+        <button class="btn-sort-order" (click)="toggleSortOrder()" [title]="sortOrder === 'asc' ? '降順' : '昇順'">
+          {{ sortOrder === 'asc' ? '▼' : '▲' }}
+        </button>
 
-          <!-- フィルターリセットボタン-->
-          <button
-           *ngIf="searchKeyword || priorityFilter !== 'ALL' || sortBy !== 'createdAt'"
-           class="btn-reset-filter"
-           (click)="resetFilters()"
-           title="フィルター条件をリセット">
+        <!-- フィルターリセットボタン -->
+        <button
+          *ngIf="searchKeyword || priorityFilter !== 'ALL' || sortBy !== 'createdAt'"
+          class="btn-reset-filter"
+          (click)="resetFilters()"
+          title="フィルター条件をリセット">
           <span class="reset-icon">✕ クリア</span>
-          </button>
-       </div>
-     </div>
+        </button>
+      </div>
 
-   </div>
+      <!-- 右側: 「＋ 新規タスク」追加ボタン -->
+      <button type="button" class="btn-primary" (click)="onAddTask()">
+        ＋ 新規タスク
+      </button>
+    </div>
+  </div>
 
-  <!-- カンバンエリア（kanban-body クラス名を維持したまま cdkDropListGroup を追加） -->
+  <!-- カンバンエリア -->
   <div class="kanban-body" cdkDropListGroup>
     <!-- 未着手 -->
     <app-kanban-column
@@ -63,7 +65,7 @@
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'todo')"
       (addTask)="onAddTask()"
-      (tagSelected)="onTagSelected($event)"> <!-- ★ 追加 -->
+      (tagSelected)="onTagSelected($event)">
     </app-kanban-column>
   
     <!-- 進行中 -->
@@ -75,7 +77,7 @@
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'in-progress')"
       (addTask)="onAddTask()"
-      (tagSelected)="onTagSelected($event)"> <!-- ★ 追加 -->
+      (tagSelected)="onTagSelected($event)">
     </app-kanban-column>
   
     <!-- 完了 -->
@@ -87,7 +89,7 @@
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'done')"
       (addTask)="onAddTask()"
-      (tagSelected)="onTagSelected($event)"> <!-- ★ 追加 -->
+      (tagSelected)="onTagSelected($event)">
     </app-kanban-column>
   </div>
 </div>

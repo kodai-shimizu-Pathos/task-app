@@ -45,7 +45,7 @@
       </div>
     </header>
 
-    <!-- ★ メインコンテンツ領域（2ペイン構造） -->
+    <!-- ★ メインコンテンツ領域 -->
     <main class="main-content">
       <ng-container *ngIf="activeView === 'tasks'">
         
@@ -84,105 +84,108 @@
           </div>
         </div>
 
-        <!-- パターンB：親課題選択時（上部サマリーバー ＋ 2ペイン構造） -->
+        <!-- パターンB：親課題選択時（全高ドッキングパネル構造） -->
         <div class="project-detail-layout" *ngIf="selectedProject">
           
-          <!-- ★ 1. 上部親課題サマリーバー -->
-          <div class="project-summary-bar">
-            <div class="summary-main-row">
-              <div class="summary-left">
-                <span class="project-badge">📁 親課題</span>
-                <h2 class="project-title-text">{{ selectedProject.title }}</h2>
-                <span class="status-chip" [attr.data-status]="selectedProject.status">
-                  {{ selectedProject.status === 'done' ? '🟢 完了' : (selectedProject.status === 'in-progress' ? '🟡 進行中' : '🔴 未着手') }}
-                </span>
+          <!-- ★ 左〜中央エリア（サマリーカード ＋ ワークスペース） -->
+          <div class="detail-main-area">
+            <!-- 1. 上部親課題ヒーローカード -->
+            <div class="project-summary-card">
+              <div class="summary-top-row">
+                <div class="summary-title-group">
+                  <span class="project-badge">📁 親課題</span>
+                  <h2 class="project-title-text">{{ selectedProject.title }}</h2>
+                  <span class="status-chip" [attr.data-status]="selectedProject.status">
+                    {{ selectedProject.status === 'done' ? '🟢 完了' : (selectedProject.status === 'in-progress' ? '🟡 進行中' : '🔴 未着手') }}
+                  </span>
+                </div>
+
+                <div class="summary-actions">
+                  <button type="button" class="btn-toggle-summary" (click)="isSummaryExpanded = !isSummaryExpanded">
+                    {{ isSummaryExpanded ? '▲ 閉じる' : '▼ 概要・メモ' }}
+                  </button>
+                  <button type="button" class="btn-edit-project-icon" (click)="onEditProject()" title="親課題を編集">
+                    ✏️
+                  </button>
+                </div>
               </div>
 
-              <div class="summary-right">
-                <!-- 進捗メーター -->
+              <!-- 下段: 進捗メーター -->
+              <div class="summary-bottom-row">
                 <div class="progress-box">
                   <span class="progress-label">進捗率: {{ selectedProject.progressPercentage || 0 }}%</span>
                   <div class="progress-bar-bg">
                     <div class="progress-bar-fill" [style.width.%]="selectedProject.progressPercentage || 0"></div>
                   </div>
                 </div>
+              </div>
 
-                <!-- アコーディオン切替ボタン -->
-                <button type="button" class="btn-toggle-summary" (click)="isSummaryExpanded = !isSummaryExpanded">
-                  {{ isSummaryExpanded ? '▲ 閉じる' : '▼ 概要・メモ' }}
-                </button>
-                <button type="button" class="btn-edit-project-icon" (click)="onEditProject()" title="親課題を編集">
-                  ✏️
-                </button>
+              <!-- サマリー展開領域 -->
+              <div class="summary-expanded-content" *ngIf="isSummaryExpanded">
+                <p class="project-desc" *ngIf="selectedProject.description">
+                  <strong>概要:</strong> {{ selectedProject.description }}
+                </p>
+                <div class="doc-links-chips" *ngIf="selectedProject.docLinks && selectedProject.docLinks.length > 0">
+                  <strong>関連資料:</strong>
+                  <a *ngFor="let doc of selectedProject.docLinks" [href]="doc.url" target="_blank" class="doc-chip">
+                    📎 {{ doc.title }}
+                  </a>
+                </div>
               </div>
             </div>
 
-            <!-- サマリーバー展開領域（概要・メモ・関連リンク） -->
-            <div class="summary-expanded-content" *ngIf="isSummaryExpanded">
-              <p class="project-desc" *ngIf="selectedProject.description">
-                <strong>概要:</strong> {{ selectedProject.description }}
-              </p>
-              <div class="doc-links-chips" *ngIf="selectedProject.docLinks && selectedProject.docLinks.length > 0">
-                <strong>関連資料:</strong>
-                <a *ngFor="let doc of selectedProject.docLinks" [href]="doc.url" target="_blank" class="doc-chip">
-                  📎 {{ doc.title }}
-                </a>
-              </div>
+            <!-- 2. メイン ワークスペース (カンバン / ガント) -->
+            <div class="workspace-body">
+              <section class="main-board-pane">
+                <app-kanban-board 
+                  *ngIf="currentMode === 'KANBAN'"
+                  [tasks]="currentTasks"
+                  (selectTask)="onSelectTask($event)"
+                  (addTask)="onOpenNewTaskForm()"
+                  (taskUpdated)="onTaskUpdated($event)">
+                </app-kanban-board>
+
+                <app-gantt-board
+                  *ngIf="currentMode === 'GANTT'"
+                  [tasks]="currentTasks"
+                  [project]="selectedProject"
+                  [projects]="projects"
+                  (selectTask)="onSelectTask($event)"
+                  (selectProject)="onSelectProject($event)"
+                  (addTask)="onOpenNewTaskForm()"
+                  (taskUpdated)="onTaskUpdated($event)"
+                  (projectUpdated)="onParentTaskUpdated($event)">
+                </app-gantt-board>
+              </section>
             </div>
           </div>
 
-          <!-- ★ 2. メイン 2ペイン ワークスペース -->
-          <div class="workspace-body">
-            <!-- 左〜中央：子タスクメインボード -->
-            <section class="main-board-pane">
-              <app-kanban-board 
-                *ngIf="currentMode === 'KANBAN'"
-                [tasks]="currentTasks"
-                (selectTask)="onSelectTask($event)"
-                (addTask)="onOpenNewTaskForm()"
-                (taskUpdated)="onTaskUpdated($event)">
-              </app-kanban-board>
+          <!-- ★ 右：全高ドッキング詳細パネル (ヒーローカードの横まで上いっぱいに全高化) -->
+          <div class="docked-detail-pane" *ngIf="isTaskFormOpen || isProjectFormOpen" [style.width.px]="taskFormWidth">
+            <!-- 可変幅リサイザーハンドル -->
+            <div class="pane-resizer" (mousedown)="onResizeStart($event)"></div>
+            
+            <!-- 子タスクフォーム -->
+            <app-task-form
+              *ngIf="isTaskFormOpen"
+              [taskToEdit]="taskToEdit"
+              [projects]="projects"
+              [projectId]="selectedProject.id"
+              (taskCreated)="onTaskCreated($event)"
+              (taskUpdated)="onTaskUpdated($event)"
+              (taskDeleted)="onTaskDeleted($event)"
+              (closePanel)="onCloseTaskForm()">
+            </app-task-form>
 
-              <app-gantt-board
-                *ngIf="currentMode === 'GANTT'"
-                [tasks]="currentTasks"
-                [project]="selectedProject"
-                [projects]="projects"
-                (selectTask)="onSelectTask($event)"
-                (selectProject)="onSelectProject($event)"
-                (addTask)="onOpenNewTaskForm()"
-                (taskUpdated)="onTaskUpdated($event)"
-                (projectUpdated)="onParentTaskUpdated($event)">
-              </app-gantt-board>
-            </section>
-
-            <!-- 右：ドッキング詳細パネル (タスクフォームまたは親課題フォーム) -->
-            <div class="docked-detail-pane" *ngIf="isTaskFormOpen || isProjectFormOpen" [style.width.px]="taskFormWidth">
-              <!-- 可変幅リサイザーハンドル -->
-              <div class="pane-resizer" (mousedown)="onResizeStart($event)"></div>
-              
-              <!-- 子タスクフォーム -->
-              <app-task-form
-                *ngIf="isTaskFormOpen"
-                [taskToEdit]="taskToEdit"
-                [projects]="projects"
-                [projectId]="selectedProject.id"
-                (taskCreated)="onTaskCreated($event)"
-                (taskUpdated)="onTaskUpdated($event)"
-                (taskDeleted)="onTaskDeleted($event)"
-                (closePanel)="onCloseTaskForm()">
-              </app-task-form>
-
-              <!-- 親課題フォーム（右ドッキング化） -->
-              <app-project-form
-                *ngIf="isProjectFormOpen"
-                [projectToEdit]="projectToEdit"
-                (projectCreated)="onProjectCreated($event)"
-                (projectUpdated)="onProjectUpdated($event)"
-                (projectDeleted)="onProjectDeleted($event)"
-                (closeModal)="onCloseProjectForm()">
-              </app-project-form>
-            </div>
+            <!-- 親課題フォーム -->
+            <app-project-form
+              *ngIf="isProjectFormOpen"
+              [projectToEdit]="projectToEdit"
+              (projectCreated)="onProjectCreated($event)"
+              (projectUpdated)="onProjectUpdated($event)"
+              (projectDeleted)="onProjectDeleted($event)"
+              (closeModal)="onCloseProjectForm()">
+            </app-project-form>
           </div>
 
         </div>

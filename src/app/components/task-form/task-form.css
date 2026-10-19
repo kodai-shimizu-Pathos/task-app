@@ -1,40 +1,51 @@
-/* ========================================
-   パネルコンテナの基本スタイル
-   ======================================== */
+/* ★ 1. Custom Host Element を Flexbox 全高化 */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .side-panel-backdrop {
   position: static;
   width: 100%;
   height: 100%;
+  min-height: 0;
   background-color: transparent;
   display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .side-panel-container {
   width: 100%;
   height: 100%;
+  min-height: 0;
   background-color: var(--bg-master);
   color: var(--text-primary);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: none;
-  animation: none;
 }
 
-/* ========================================
-   パネルヘッダー
-   ======================================== */
+/* 固定ヘッダー */
 .panel-header {
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
+  background-color: var(--bg-master);
 }
 
 .panel-header h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -46,38 +57,36 @@
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
-  transition: background-color 0.2s;
 }
 
-.close-btn:hover {
-  background-color: var(--border-color);
-  color: var(--text-primary);
-}
-
-/* ========================================
-   パネルボディ
-   ======================================== */
-.panel-body {
-  padding: 10px 14px;
+/* ★ 2. フォーム全体を Flex で高さ管理 (min-height: 0 で縮小可能に) */
+.form-container {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+}
+
+/* ★ 3. 可変＆縦スクロール可能な入力ボディ */
+.panel-body {
+  padding: 16px 20px;
+  flex: 1;
+  min-height: 0; /* ★ ウィンドウ縮小時に正しく縮んでスクロールバーを絶対発生させる */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-/* ========================================
-   フォーム要素の基本スタイル
-   ======================================== */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .form-group label {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -97,128 +106,148 @@
   min-width: 0;
 }
 
-/* ========================================
-   入力フィールドのスタイル
-   ======================================== */
 input[type="text"],
 input[type="date"],
 select,
 textarea {
   width: 100%;
-  padding: 5px 8px;
+  padding: 8px 10px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background-color: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   box-sizing: border-box;
-}
-
-/* ダークモード特別対応 */
-body[data-theme="dark"] input[type="text"],
-body[data-theme="dark"] input[type="date"],
-body[data-theme="dark"] select,
-body[data-theme="dark"] textarea {
-  background-color: #3B444E;
-  color: #E8EAEE;
-}
-
-/* ライトモード対応 */
-body[data-theme="light"] input[type="text"],
-body[data-theme="light"] input[type="date"],
-body[data-theme="light"] select,
-body[data-theme="light"] textarea {
-  background-color: #FFFFFF;
-  color: #24292F;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
   outline: none;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
   border-color: var(--accent-color);
 }
 
-/* 日付ピッカーアイコンの視認性調整 */
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.8);
+/* 説明・メモ アコーディオン */
+.description-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-toggle-desc {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  font-size: 0.8rem;
   cursor: pointer;
+  padding: 2px 4px;
 }
 
-textarea {
-  resize: vertical;
-  min-height: 90px;
+/* チェックリスト領域 */
+.checklist-group {
+  border-top: 1px dashed var(--border-color);
+  padding-top: 12px;
+  margin-top: 4px;
 }
 
-/* ========================================
-   ドキュメントリンク入力
-   ======================================== */
-.doc-input-row {
+.checklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.btn-ai-decompose {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--accent-color);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-ai-decompose:hover {
+  background-color: var(--border-color);
+}
+
+.checklist-input-row {
   display: flex;
   gap: 8px;
+  margin-bottom: 8px;
 }
 
-.btn-add-doc {
+.btn-add-item {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   padding: 6px 12px;
   border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.2s;
 }
 
-.btn-add-doc:hover {
-  background-color: var(--border-color);
-}
-
-.doc-list {
-  list-style: none;
-  padding: 0;
-  margin: 8px 0 0 0;
+.checklist-items {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-bottom: 8px;
 }
 
-.doc-list li {
+.checklist-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
   padding: 6px 10px;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.85rem;
 }
 
-.btn-remove-doc {
+.checklist-item.completed .checklist-text {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.checklist-text {
+  flex: 1;
+}
+
+.btn-edit-icon, .btn-delete-item {
   background: none;
   border: none;
-  color: var(--priority-high);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  font-size: 0.85rem;
+  opacity: 0.7;
 }
 
-.btn-remove-doc:hover {
-  background-color: var(--border-color);
+.btn-edit-icon:hover, .btn-delete-item:hover {
+  opacity: 1;
 }
 
-/* ========================================
-   パネルフッター＆ボタン
-   ======================================== */
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ★ 4. 最下部固定フッター (絶対に潰れない・見切れない) */
 .panel-footer {
-  padding: 16px 20px;
+  padding: 12px 20px;
   border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: var(--bg-master);
-  flex-shrink: 0;
-  margin-top: auto;
+  flex-shrink: 0 !important;
 }
 
 .footer-right {
@@ -230,35 +259,35 @@ textarea {
 }
 
 .btn-submit {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: 6px;
-  background-color: var(--accent-color);
-  color: #ffffff;
-  border: none;
-  cursor: pointer;
   transition: opacity 0.2s;
 }
 
 .btn-submit:hover {
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .btn-cancel {
   background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
   display: inline-flex;
@@ -279,243 +308,8 @@ textarea {
   padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
-  transition: opacity 0.2s;
-}
-
-.btn-delete:hover {
-  opacity: 0.85;
-}
-
-/* ========================================
-   チェックリスト関連スタイル
-   ======================================== */
-.checklist-input-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.checklist-input-row input {
-  flex: 1;
-}
-
-.checklist-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.checklist-header label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin: 0;
-  flex: 1;
-}
-
-/* AI分解ボタン */
-.btn-ai-decompose {
-  background-color: #6366f1;
-  color: #ffffff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
   font-size: 0.85rem;
-  white-space: nowrap;
-  transition: opacity 0.2s, background-color 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.btn-ai-decompose:hover:not(:disabled) {
-  opacity: 0.85;
-  background-color: #4f46e5;
-}
-
-.btn-ai-decompose:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-add-item {
-  background-color: var(--accent-color);
-  color: #ffffff;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  cursor: pointer;
   font-weight: 600;
-  white-space: nowrap;
-  transition: opacity 0.2s;
-  font-size: 0.9rem;
-}
-
-.btn-add-item:hover {
-  opacity: 0.85;
-}
-
-.checklist-items {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px;
-  background-color: var(--bg-secondary);
-  padding: 12px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-}
-
-.checklist-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background-color: var(--bg-master);
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-  transition: background-color 0.2s ease;
-}
-
-.checklist-item.completed {
-  background-color: var(--bg-secondary);
-  opacity: 0.85;
-}
-
-.checklist-item input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  flex-shrink: 0;
-  accent-color: var(--accent-color);
-}
-
-.checklist-text {
-  flex: 1;
-  cursor: pointer;
-  user-select: none;
-  padding: 2px 4px;
-  word-break: break-word;
-  color: var(--text-primary);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.btn-edit-icon {
-  background: none;
-  border: none;
-  font-size: 0.95rem;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 4px;
-  opacity: 0;
-  transition: opacity 0.2s ease, background-color 0.2s ease;
-  flex-shrink: 0;
-}
-
-.checklist-item:hover .btn-edit-icon {
-  opacity: 0.7;
-}
-
-.btn-edit-icon:hover {
-  opacity: 1 !important;
-  background-color: var(--border-color);
-}
-
-.checklist-text.completed {
-  text-decoration: line-through;
-  color: var(--text-muted);
-  opacity: 0.6;
-}
-
-.btn-delete-item {
-  background: none;
-  border: none;
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-  flex-shrink: 0;
-  color: var(--text-muted);
-}
-
-.btn-delete-item:hover {
-  background-color: var(--border-color);
-  color: var(--priority-high);
-}
-
-.checklist-edit-input {
-  flex: 1;
-  padding: 6px 8px;
-  border: 2px solid var(--accent-color);
-  border-radius: 4px;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  font-family: inherit;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-
-.checklist-edit-input:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.1);
-}
-
-/* ========================================
-   進捗情報表示
-   ======================================== */
-.progress-info {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 10px 12px;
-  background-color: var(--bg-secondary);
-  border-radius: 6px;
-  border-left: 4px solid var(--accent-color);
-  font-size: 0.9rem;
-}
-
-.progress-label {
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.progress-value {
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-/* ========================================
-   説明欄トグル
-   ======================================== */
-.description-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.btn-toggle-desc {
-  background: none;
-  border: none;
-  color: var(--accent-color);
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  transition: opacity 0.2s;
-}
-
-.btn-toggle-desc:hover {
-  text-decoration: underline;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }

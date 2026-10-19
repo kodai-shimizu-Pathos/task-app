@@ -1,80 +1,87 @@
 <div class="side-panel-backdrop" (click)="onClose()">
   <div class="side-panel-container" (click)="$event.stopPropagation()">
+    
+    <!-- 固定ヘッダー -->
     <div class="panel-header">
       <h2>{{ projectToEdit ? '親課題の編集' : '新規親課題の作成' }}</h2>
       <button type="button" class="close-btn" (click)="onClose()">✕</button>
     </div>
 
-    <form (ngSubmit)="onSubmit()" class="panel-body">
-      <!-- 1行目: 親課題名 -->
-      <div class="form-group">
-        <label for="proj-title">親課題名 <span class="required">*</span></label>
-        <input type="text" id="proj-title" name="title" [(ngModel)]="title" placeholder="例: 開発フェーズ1 仕様策定" required />
-      </div>
-
-      <!-- 2行目: ステータスと優先度 (2列横並び) -->
-      <div class="form-row">
+    <!-- フォーム本体 (Flexboxでボディのみ可変・フッター常時固定) -->
+    <form (ngSubmit)="onSubmit()" class="form-container">
+      
+      <!-- スクロール可能な入力ボディ -->
+      <div class="panel-body">
+        <!-- 1行目: 親課題名 -->
         <div class="form-group">
-          <label for="proj-status">ステータス<span class="required">*</span></label>
-          <select id="proj-status" name="status" [(ngModel)]="status" required>
-            <option value="todo">🔴 未着手</option>
-            <option value="in-progress">🟡 進行中</option>
-            <option value="done">🟢 完了</option>
-          </select>
+          <label for="proj-title">親課題名 <span class="required">*</span></label>
+          <input type="text" id="proj-title" name="title" [(ngModel)]="title" placeholder="例: 開発フェーズ1 仕様策定" required />
         </div>
+
+        <!-- 2行目: ステータスと優先度 (2列横並び) -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="proj-status">ステータス<span class="required">*</span></label>
+            <select id="proj-status" name="status" [(ngModel)]="status" required>
+              <option value="todo">🔴 未着手</option>
+              <option value="in-progress">🟡 進行中</option>
+              <option value="done">🟢 完了</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="proj-priority">優先度<span class="required">*</span></label>
+            <select id="proj-priority" name="priority" [(ngModel)]="priority" required>
+              <option value="low">🔵 低</option>
+              <option value="medium">🟢 中</option>
+              <option value="high">🔴 高</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 3行目: 概要・メモ -->
         <div class="form-group">
-          <label for="proj-priority">優先度<span class="required">*</span></label>
-          <select id="proj-priority" name="priority" [(ngModel)]="priority" required>
-            <option value="low">🔵 低</option>
-            <option value="medium">🟢 中</option>
-            <option value="high">🔴 高</option>
-          </select>
+          <label for="proj-desc">概要・メモ</label>
+          <textarea id="proj-desc" name="description" [(ngModel)]="description" rows="2" placeholder="課題の目的や背景、全体メモを入力..."></textarea>
         </div>
-      </div>
 
-      <!-- 3行目: 概要・メモ -->
-      <div class="form-group">
-        <label for="proj-desc">概要・メモ</label>
-        <textarea id="proj-desc" name="description" [(ngModel)]="description" rows="3" placeholder="課題の目的や背景、全体メモを入力..."></textarea>
-      </div>
+        <!-- 4行目: スケジュール (2列横並び) -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="proj-start">開始予定日</label>
+            <input type="date" id="proj-start" name="scheduledStartDate" [(ngModel)]="scheduledStartDate" />
+          </div>
+          <div class="form-group">
+            <label for="proj-end">完了予定日</label>
+            <input type="date" id="proj-end" name="scheduledEndDate" [(ngModel)]="scheduledEndDate" />
+          </div>
+        </div>
 
-      <!-- 4行目: スケジュール (2列横並び) -->
-      <div class="form-row">
+        <!-- 5行目: 最終期限 -->
         <div class="form-group">
-          <label for="proj-start">開始予定日</label>
-          <input type="date" id="proj-start" name="scheduledStartDate" [(ngModel)]="scheduledStartDate" />
+          <label for="proj-deadline">最終期限</label>
+          <input type="date" id="proj-deadline" name="deadline" [(ngModel)]="deadline" />
         </div>
+
+        <!-- 6行目: 関連資料リンク -->
         <div class="form-group">
-          <label for="proj-end">完了予定日</label>
-          <input type="date" id="proj-end" name="scheduledEndDate" [(ngModel)]="scheduledEndDate" />
+          <label>関連資料・リンク</label>
+          <div class="doc-input-row">
+            <input type="text" [(ngModel)]="docTitle" name="docTitle" placeholder="資料名 (例: 要件定義書)" />
+            <input type="text" [(ngModel)]="docUrl" name="docUrl" placeholder="URL (https://...)" />
+            <button type="button" class="btn-add-doc" (click)="addDoc()">追加</button>
+          </div>
+
+          <!-- 登録済みリンク一覧 -->
+          <ul class="doc-list" *ngIf="docLinks.length > 0">
+            <li *ngFor="let doc of docLinks; let i = index">
+              <span>📎 {{ doc.title }}</span>
+              <button type="button" class="btn-remove-doc" (click)="removeDoc(i)">✕</button>
+            </li>
+          </ul>
         </div>
       </div>
 
-      <!-- 5行目: 最終期限 -->
-      <div class="form-group">
-        <label for="proj-deadline">最終期限</label>
-        <input type="date" id="proj-deadline" name="deadline" [(ngModel)]="deadline" />
-      </div>
-
-      <!-- 6行目: 関連資料リンク -->
-      <div class="form-group">
-        <label>関連資料・リンク</label>
-        <div class="doc-input-row">
-          <input type="text" [(ngModel)]="docTitle" name="docTitle" placeholder="資料名 (例: 要件定義書)" />
-          <input type="text" [(ngModel)]="docUrl" name="docUrl" placeholder="URL (https://...)" />
-          <button type="button" class="btn-add-doc" (click)="addDoc()">追加</button>
-        </div>
-
-        <!-- 登録済みリンク一覧 -->
-        <ul class="doc-list" *ngIf="docLinks.length > 0">
-          <li *ngFor="let doc of docLinks; let i = index">
-            <span>📎 {{ doc.title }}</span>
-            <button type="button" class="btn-remove-doc" (click)="removeDoc(i)">✕</button>
-          </li>
-        </ul>
-      </div>
-
-      <!-- フッター -->
+      <!-- 最下部固定フッター -->
       <div class="panel-footer">
         <button *ngIf="projectToEdit" type="button" class="btn-delete" (click)="onDelete()">
           🗑️ 親課題を削除

@@ -1,18 +1,23 @@
 <!-- gantt-board.html -->
 <div class="gantt-board-wrapper">
-    <!-- ヘッダーコントロールバー -->
+    <!-- ヘッダー操作ツールバー (カンバンボードとデザイン・配置を完全統一) -->
     <div class="gantt-header-bar">
-        <div class="header-left">
-            <h3 class="gantt-title">📊 ガントチャート</h3>
-
-            <!-- 🔍 フィルターコントロール領域 -->
-            <div class="gantt-filter-bar">
+        <div class="gantt-toolbar">
+            <!-- 左側: 検索・フィルターコントロール -->
+            <div class="filter-bar">
                 <!-- キーワード検索 -->
-                <input type="text" [(ngModel)]="searchQuery" placeholder="🔍 検索..." class="filter-input" />
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input
+                        type="text"
+                        [(ngModel)]="searchQuery"
+                        placeholder="検索..."
+                        class="filter-input-text" />
+                </div>
 
                 <!-- ステータス絞り込み -->
                 <select [(ngModel)]="selectedStatus" class="filter-select">
-                    <option value="all">すべてのステータス</option>
+                    <option value="all">ステータス： すべて</option>
                     <option value="exclude-done">⚡ 完了以外</option>
                     <option value="todo">🔴 未着手</option>
                     <option value="in-progress">🟡 進行中</option>
@@ -21,28 +26,28 @@
 
                 <!-- 優先度絞り込み -->
                 <select [(ngModel)]="selectedPriority" class="filter-select">
-                    <option value="all">すべての優先度</option>
+                    <option value="all">優先度： すべて</option>
                     <option value="high">🔴 高</option>
                     <option value="medium">🟡 中</option>
                     <option value="low">🔵 低</option>
                 </select>
-
-            </div>
-        </div>
-
-        <div class="header-controls">
-            <!-- ズーム機能 -->
-            <div class="zoom-controls">
-                <button type="button" class="zoom-btn" (click)="onZoomOut()" title="ズームアウト">➖</button>
-                <span class="zoom-label">{{ columnWidth }}px</span>
-                <button type="button" class="zoom-btn" (click)="onZoomIn()" title="ズームイン">➕</button>
             </div>
 
-            <!-- 今日へのスクロールボタン -->
-            <button type="button" class="btn-today" (click)="onScrollToToday()" title="本日の位置へスクロール">📍 今日</button>
+            <!-- 右側: ズーム操作・今日ボタン・新規追加ボタン -->
+            <div class="header-controls">
+                <!-- ズーム機能 -->
+                <div class="zoom-controls">
+                    <button type="button" class="zoom-btn" (click)="onZoomOut()" title="ズームアウト">➖</button>
+                    <span class="zoom-label">{{ columnWidth }}px</span>
+                    <button type="button" class="zoom-btn" (click)="onZoomIn()" title="ズームイン">➕</button>
+                </div>
 
-            <!-- 新規タスク/親課題追加 -->
-            <button type="button" class="btn-primary" (click)="onAddNewTask()">＋ 新規タスク</button>
+                <!-- 今日へのスクロールボタン -->
+                <button type="button" class="btn-today" (click)="onScrollToToday()" title="本日の位置へスクロール">📍 今日</button>
+
+                <!-- 新規タスク/親課題追加 -->
+                <button type="button" class="btn-primary" (click)="onAddNewTask()">＋ 新規タスク</button>
+            </div>
         </div>
     </div>
 
@@ -69,7 +74,7 @@
                     </div>
                 </div>
 
-                <!-- パターン2：親課題一覧表示（projects を filteredProjects に変更） -->
+                <!-- パターン2：親課題一覧表示 -->
                 <ng-container *ngIf="!project">
                     <div *ngFor="let proj of filteredProjects" class="wbs-row parent-row" (click)="onProjectClick(proj, $event)">
                         <div class="col-title">
@@ -85,7 +90,7 @@
                     </div>
                 </ng-container>
 
-                <!-- 子タスク行一覧（tasks を filteredTasks に変更） -->
+                <!-- 子タスク行一覧 -->
                 <div *ngFor="let task of filteredTasks" class="wbs-row task-row" [class.is-overdue]="isTaskOverdue(task)" (click)="onTaskClick(task, $event)">
                     <div class="col-title">
                         <span class="tree-indent"> └ ♦ </span>
@@ -142,7 +147,7 @@
                     </ng-container>
                 </div>
 
-                <!-- 親課題一覧ガントバー（projects を filteredProjects に変更） -->
+                <!-- 親課題一覧ガントバー -->
                 <ng-container *ngIf="!project">
                     <div *ngFor="let proj of filteredProjects" class="timeline-row parent-row" (click)="onProjectClick(proj, $event)">
                         <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday"></div>
@@ -158,14 +163,13 @@
                     </div>
                 </ng-container>
 
-                <!-- 子タスクガントバー一覧（tasks を filteredTasks に変更） -->
+                <!-- 子タスクガントバー一覧 -->
                 <div *ngFor="let task of filteredTasks" class="timeline-row task-row" (click)="onTaskClick(task, $event)">
                     <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday" [class.holiday-cell]="col.isWeekend || col.isHoliday"></div>
                     <ng-container *ngIf="getTaskBarPositionPx(task) as bar">
                         <div *ngIf="bar.visible" class="gantt-bar" [ngClass]="[task.status, 'priority-' + (task.priority | lowercase)]" [class.is-overdue]="isTaskOverdue(task)" [style.left.px]="bar.left" [style.width.px]="bar.width" (mousedown)="onBarMouseDown(task, $event, 'move')">
                             <div class="resize-handle resize-left" (mousedown)="onBarMouseDown(task, $event, 'resize-left')"></div>
                             <span class="bar-label">{{ task.title }}</span>
-                            <!-- チェックリスト達成数バッジ（チェックリスト1件以上の場合のみ表示） -->
                             <span class="checklist-badge" *ngIf="hasChecklist(task)">
                               ({{ getChecklistStats(task).completed }}/{{ getChecklistStats(task).total }})
                             </span>

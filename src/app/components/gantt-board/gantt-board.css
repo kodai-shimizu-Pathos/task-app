@@ -14,63 +14,75 @@
   overflow: hidden;
 }
 
-/* ヘッダーバー */
+/* ★ ヘッダーバー (カンバンボードとパディング・高さを完全統一) */
 .gantt-header-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 12px 20px;
-  background-color: var(--bg-panel);
-  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-main);
   flex-shrink: 0;
 }
 
-.gantt-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: bold;
-  color: var(--text-primary);
-}
-
-.header-controls {
+/* ツールバー全体を flex にして左右均等配置 */
+.gantt-toolbar {
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  width: 100%;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
-/* gantt-board.css に追加 */
-
-.gantt-filter-bar {
+/* 左側 フィルターバー */
+.filter-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: 16px;
+  flex-wrap: wrap;
 }
 
-.filter-input {
-  padding: 4px 10px;
-  border: 1px solid var(--border-color);
+/* 検索ボックス */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.filter-input-text {
+  padding: 5px 8px 5px 26px !important;
+  font-size: 12px !important;
+  height: 32px;
+  width: 150px;
   border-radius: 6px;
+  border: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 12px;
-  width: 130px;
-  transition: width 0.2s, border-color 0.2s;
-}
-
-.filter-input:focus {
   outline: none;
-  border-color: var(--accent-color);
-  width: 180px;
+  transition: width 0.2s ease, border-color 0.2s ease;
 }
 
+.filter-input-text:focus {
+  width: 190px;
+  border-color: var(--accent-color);
+}
+
+/* ドロップダウンセレクト */
 .filter-select {
-  padding: 4px 8px;
-  border: 1px solid var(--border-color);
+  height: 32px;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
   border-radius: 6px;
+  border: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 12px;
   cursor: pointer;
   outline: none;
 }
@@ -79,487 +91,468 @@
   border-color: var(--accent-color);
 }
 
-  /* ズーム制御 */
-  .zoom-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--bg-secondary);
-    border-radius: 6px;
-    padding: 4px 10px;
-    border: 1px solid var(--border-color);
-  }
+/* 右側 コントロール群 */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-  .zoom-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    padding: 2px 6px;
-    font-size: 13px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.15s;
-  }
+/* ズーム制御 */
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-secondary);
+  border-radius: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-color);
+  height: 32px;
+  box-sizing: border-box;
+}
 
-  .zoom-btn:hover {
-    background-color: rgba(37, 99, 235, 0.15);
-    color: var(--accent-color);
-  }
+.zoom-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
 
-  .zoom-label {
-    font-size: 11px;
-    color: var(--text-muted);
-    min-width: 35px;
-    text-align: center;
-  }
+.zoom-btn:hover {
+  background-color: rgba(37, 99, 235, 0.15);
+  color: var(--accent-color);
+}
 
-  .btn-today {
-    background-color: var(--accent-color);
-    color: #ffffff;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.15s;
-  }
+.zoom-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 32px;
+  text-align: center;
+  font-weight: 600;
+}
 
-  .btn-today:hover {
-    background-color: #1d4ed8;
-  }
-  
-  /* 表示単位切替 */
-  .scale-switcher {
-    display: flex;
-    background-color: var(--bg-secondary);
-    border-radius: 6px;
-    padding: 2px;
-    border: 1px solid var(--border-color);
-  }
-  
-  .scale-switcher button {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    padding: 4px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-  
-  .scale-switcher button.active {
-    background-color: var(--accent-color);
-    color: #ffffff;
-    font-weight: bold;
-  }
-  
-  .btn-primary {
-    background-color: #2563EB;
-    color: #ffffff;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  /* メイン分割表示コンテナ */
-  .gantt-main-container {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-    position: relative;
-  }
-  
-  /* 左列: WBS領域 */
-  .wbs-pane {
-    background-color: var(--bg-panel);
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    transition: width 0.1s linear;
-  }
+/* 今日ボタン */
+.btn-today {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
 
-  /* 【1】スプリッター */
-  .splitter {
-    width: 6px;
-    background-color: var(--border-color);
-    cursor: col-resize;
-    flex-shrink: 0;
-    user-select: none;
-    transition: background-color 0.15s;
-    position: relative;
-  }
+.btn-today:hover {
+  background-color: var(--border-color);
+}
 
-  .splitter:hover,
-  .splitter.active {
-    background-color: var(--accent-color);
-    width: 8px;
-    margin-left: -1px;
-  }
-  
-  .wbs-header {
-    height: 36px;
-    display: flex;
-    align-items: center;
-    background-color: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    font-size: 12px;
-    font-weight: bold;
-    color: var(--text-muted);
-    padding: 0 12px;
-  }
-  
-  .col-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .col-progress { width: 50px; text-align: right; }
-  .col-priority { width: 60px; text-align: center; }
-  
-  .wbs-body {
-    flex: 1;
-    overflow-y: auto;
-  }
-  
-  .wbs-row {
-    height: 44px;
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 13px;
-    cursor: pointer;
-    transition: background-color 0.15s;
-  }
-  
-  .wbs-row:hover {
-    background-color: var(--bg-secondary);
-  }
-  
-  .tree-indent {
-    color: var(--text-muted);
-    margin-right: 4px;
-  }
-  
-  .done-text {
-    text-decoration: line-through;
-    color: var(--text-muted);
-  }
-  
-  /* 右列: タイムライン領域 */
-  .timeline-pane {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow-x: auto;
-    position: relative;
-  }
-  
-  /* タイムラインヘッダー (2段構成) */
-  .timeline-header {
-    height: 48px;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-    width: max-content;
-    min-width: 100%;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
+/* 新規タスク追加ボタン */
+.btn-primary {
+  background-color: var(--accent-color, #2563EB);
+  color: #ffffff;
+  border: none;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
 
-  /* 上段: 年月行 */
-  .month-header-row {
-    height: 22px;
-    display: flex;
-    border-bottom: 1px solid var(--border-color);
-  }
+.btn-primary:hover {
+  opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
 
-  .month-col-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-right: 1px solid var(--border-color);
-    font-size: 11px;
-    font-weight: bold;
-    color: var(--text-primary);
-    box-sizing: border-box;
-    flex-shrink: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+/* メイン分割表示コンテナ */
+.gantt-main-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
 
-  /* 下段: 日付行 */
-  .day-header-row {
-    height: 26px;
-    display: flex;
-  }
+/* 左列: WBS領域 */
+.wbs-pane {
+  background-color: var(--bg-panel);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.1s linear;
+}
 
-  .date-col-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-right: 1px solid var(--border-color);
-    font-size: 10px;
-    color: var(--text-muted);
-    box-sizing: border-box;
-    flex-shrink: 0;
-    user-select: none;
-  }
+/* スプリッター */
+.splitter {
+  width: 6px;
+  background-color: var(--border-color);
+  cursor: col-resize;
+  flex-shrink: 0;
+  user-select: none;
+  transition: background-color 0.15s;
+  position: relative;
+}
 
-  .date-label {
-    font-size: 10px;
-    font-weight: 600;
-  }
+.splitter:hover,
+.splitter.active {
+  background-color: var(--accent-color);
+  width: 8px;
+  margin-left: -1px;
+}
 
-  .day-of-week {
-    font-size: 9px;
-    opacity: 0.8;
-  }
-  
-  /* ガントバー内のフォントと余白をコンパクト化 */
-  .gantt-bar .bar-label {
-    font-size: 10px;
-    padding: 0 4px;
-  }
-  
-  .date-label {
-    font-size: 10px;
-    font-weight: 500;
-  }
-  
-  /* 土日・祝日のヘッダーハイライト */
-  .date-col-header.holiday-col {
-    background-color: rgba(255, 255, 255, 0.06);
-    color: var(--text-muted);
-  }
-  
-  :host-context(body[data-theme="light"]) .date-col-header.holiday-col {
-    background-color: rgba(0, 0, 0, 0.05);
-  }
-  
-  /* 今日のヘッダーハイライト */
-  .today-col {
-    background-color: rgba(37, 99, 235, 0.2) !important;
-    color: var(--accent-color) !important;
-    font-weight: bold;
-  }
-  
-  /* 土日・祝日の背景格子セルハイライト */
-  .grid-cell.holiday-cell {
-    background-color: rgba(255, 255, 255, 0.04);
-  }
-  
-  :host-context(body[data-theme="light"]) .grid-cell.holiday-cell {
-    background-color: rgba(0, 0, 0, 0.04);
-  }
-  
-  .timeline-body {
-    flex: 1;
-    overflow: visible;
-    position: relative;
-    width: max-content;
-    min-width: 100%;
-  }
-  
-  /* 背景格子グリッド */
-  .timeline-row {
-    height: 44px;
-    display: flex;
-    border-bottom: 1px solid var(--border-color);
-    position: relative;
-    width: 100%;
-  }
-  
-  .grid-cell {
-    border-right: 1px solid var(--border-color);
-    box-sizing: border-box;
-    flex-shrink: 0;
-  }
-  
-  /* ベースのハイライト（ダークモード・デフォルト状態） */
-  .grid-cell.today-cell {
-    background-color: rgba(37, 99, 235, 0.15); /* 元の0.04から透過率を上げる */
-    border-left: 1px solid rgba(37, 99, 235, 0.5); /* 左に縦線 */
-    border-right: 1px solid rgba(37, 99, 235, 0.5); /* 右に縦線 */
-  }
+/* WBSヘッダー (タイムラインヘッダー48pxに完全同期) */
+.wbs-header {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--text-muted);
+  padding: 0 12px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
 
-  /* ライトモード用のハイライト（明るい背景に合わせて少し色を抑える） */
-  :host-context(body[data-theme="light"]) .grid-cell.today-cell {
-    background-color: rgba(37, 99, 235, 0.08); 
-    border-left: 1px solid rgba(37, 99, 235, 0.3);
-    border-right: 1px solid rgba(37, 99, 235, 0.3);
-  }
-  
-  /* ガントバー */
-  .gantt-bar {
-    position: absolute;
-    top: 8px;
-    height: 28px;
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    padding: 0 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    overflow: visible;
-    z-index: 2;
-    transition: transform 0.15s;
-    cursor: grab;
-    user-select: none;
-  }
+.col-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-priority { width: 60px; text-align: center; }
 
-  .gantt-bar:hover {
-    transform: translateY(-1px);
-    z-index: 3;
-  }
+.wbs-body {
+  flex: 1;
+  overflow-y: auto;
+}
 
-  .gantt-bar:active {
-    cursor: grabbing;
-  }
+.wbs-row {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background-color 0.15s;
+}
 
-  /* リサイズハンドル */
-  .resize-handle {
-    position: absolute;
-    height: 100%;
-    width: 8px;
-    top: 0;
-    cursor: col-resize;
-    z-index: 4;
-  }
+.wbs-row:hover {
+  background-color: var(--bg-secondary);
+}
 
-  .resize-left {
-    left: -4px;
-  }
+.tree-indent {
+  color: var(--text-muted);
+  margin-right: 4px;
+}
 
-  .resize-right {
-    right: -4px;
-  }
+.done-text {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
 
-  .resize-handle:hover {
-    background-color: rgba(37, 99, 235, 0.3);
-  }
+/* 右列: タイムライン領域 */
+.timeline-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  position: relative;
+}
 
-  /* 完了予定日フラグマーカー */
-  .scheduled-end-marker {
-    position: absolute;
-    font-size: 13px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 3;
-    margin-left: -6px;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: grab;
-    user-select: none;
-  }
+/* タイムラインヘッダー (2段構成 48px) */
+.timeline-header {
+  height: 48px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  width: max-content;
+  min-width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-sizing: border-box;
+}
 
-  .scheduled-end-marker:active {
-    cursor: grabbing;
-  }
-  
-  .bar-label {
-    position: relative;
-    z-index: 2;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  .deadline-marker {
-    position: relative;
-    z-index: 2;
-    margin-left: auto;
-    font-size: 10px;
-    color: var(--priority-high);
-  }
-  
-  /* ステータス別バーカラー */
-  .gantt-bar.in-progress { border-left: 4px solid #F59E0B; }
-  .gantt-bar.done { border-left: 4px solid #10B981; opacity: 0.8; }
-  .gantt-bar.todo { border-left: 4px solid #EF4444; }
+/* 上段: 年月行 */
+.month-header-row {
+  height: 22px;
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  box-sizing: border-box;
+}
 
-  /* 期限超過タスク */
-  .gantt-bar.is-overdue {
-    background-color: rgba(239, 68, 68, 0.1);
-    border: 2px solid #EF4444;
-  }
+.month-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--border-color);
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--text-primary);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  .wbs-row.is-overdue {
-    background-color: rgba(239, 68, 68, 0.05);
-  }
+/* 下段: 日付行 */
+.day-header-row {
+  height: 26px;
+  display: flex;
+  box-sizing: border-box;
+}
 
-  .overdue-alert {
-    margin-left: 4px;
-    font-size: 12px;
-  }
-  
-  .empty-wbs {
-    padding: 24px;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 12px;
-  }
+.date-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--border-color);
+  font-size: 10px;
+  color: var(--text-muted);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  user-select: none;
+}
 
-  /* =========================================
-  親課題ガントバーの特別スタイル
-  ========================================= */
-  .gantt-bar.parent-bar {
-    background-color: rgba(37, 99, 235, 0.05); /* 少し透かした背景 */
-    border: 2px dashed var(--accent-color);    /* 青色の破線で「枠」を表現 */
-    box-shadow: none;                          /* 影を消して平坦に */
-    height: 24px;                              /* 子タスク(28px)より少し細くする */
-    top: 10px;                                 /* 縦位置の微調整 */
-    /* pointer-events: none; */
-  }
+.date-label {
+  font-size: 10px;
+  font-weight: 600;
+}
 
-  /* ライトモード用の微調整 */
-  body[data-theme="light"] .gantt-bar.parent-bar {
-    background-color: rgba(9, 105, 218, 0.05);
-  }
+/* 土日・祝日のヘッダーハイライト */
+.date-col-header.holiday-col {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
 
-  .gantt-bar.parent-bar .bar-label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-primary);
-    opacity: 0.8;
-  }
+:host-context(body[data-theme="light"]) .date-col-header.holiday-col {
+  background-color: rgba(0, 0, 0, 0.05);
+}
 
-  .gantt-bar.parent-bar .deadline-marker {
-    opacity: 0.7; /* 期限アイコンも少し薄く */
-  }
+/* 今日のヘッダーハイライト */
+.today-col {
+  background-color: rgba(37, 99, 235, 0.2) !important;
+  color: var(--accent-color) !important;
+  font-weight: bold;
+}
 
-  /* チェックリスト達成数バッジ */
-  .checklist-badge {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 6px;
-    background-color: rgba(255, 255, 255, 0.3);
-    border-radius: 3px;
-    color: var(--text-primary);
-    white-space: nowrap;
-  }
+/* タイムラインボディ */
+.timeline-body {
+  flex: 1;
+  overflow: visible;
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+}
 
-  /* ダークモード対応 */
-  body[data-theme="dark"] .checklist-badge {
-    background-color: rgba(0, 0, 0, 0.2);
-    color: #E8EAEE;
-  }
+/* 背景格子グリッド */
+.timeline-row {
+  height: 44px;
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-  /* ライトモード対応 */
-  body[data-theme="light"] .checklist-badge {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #24292F;
-  }
+.grid-cell {
+  border-right: 1px solid var(--border-color);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.grid-cell.holiday-cell {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+:host-context(body[data-theme="light"]) .grid-cell.holiday-cell {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* 今日の列ハイライト */
+.grid-cell.today-cell {
+  background-color: rgba(37, 99, 235, 0.15);
+  border-left: 1px solid rgba(37, 99, 235, 0.5);
+  border-right: 1px solid rgba(37, 99, 235, 0.5);
+}
+
+:host-context(body[data-theme="light"]) .grid-cell.today-cell {
+  background-color: rgba(37, 99, 235, 0.08); 
+  border-left: 1px solid rgba(37, 99, 235, 0.3);
+  border-right: 1px solid rgba(37, 99, 235, 0.3);
+}
+
+/* ガントバー */
+.gantt-bar {
+  position: absolute;
+  top: 8px;
+  height: 28px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  overflow: visible;
+  z-index: 2;
+  transition: transform 0.15s;
+  cursor: grab;
+  user-select: none;
+}
+
+.gantt-bar:hover {
+  transform: translateY(-1px);
+  z-index: 3;
+}
+
+.gantt-bar:active {
+  cursor: grabbing;
+}
+
+/* リサイズハンドル */
+.resize-handle {
+  position: absolute;
+  height: 100%;
+  width: 8px;
+  top: 0;
+  cursor: col-resize;
+  z-index: 4;
+}
+
+.resize-left { left: -4px; }
+.resize-right { right: -4px; }
+
+.resize-handle:hover {
+  background-color: rgba(37, 99, 235, 0.3);
+}
+
+/* 完了予定日フラグマーカー */
+.scheduled-end-marker {
+  position: absolute;
+  font-size: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  margin-left: -6px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+}
+
+.scheduled-end-marker:active {
+  cursor: grabbing;
+}
+
+.bar-label {
+  position: relative;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deadline-marker {
+  position: relative;
+  z-index: 2;
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--priority-high);
+}
+
+/* ステータス別バーカラー */
+.gantt-bar.in-progress { border-left: 4px solid #F59E0B; }
+.gantt-bar.done { border-left: 4px solid #10B981; opacity: 0.8; }
+.gantt-bar.todo { border-left: 4px solid #EF4444; }
+
+/* 期限超過タスク */
+.gantt-bar.is-overdue {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 2px solid #EF4444;
+}
+
+.wbs-row.is-overdue {
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.overdue-alert {
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.empty-wbs {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* 親課題ガントバーの特別スタイル */
+.gantt-bar.parent-bar {
+  background-color: rgba(37, 99, 235, 0.05);
+  border: 2px dashed var(--accent-color);
+  box-shadow: none;
+  height: 24px;
+  top: 10px;
+}
+
+body[data-theme="light"] .gantt-bar.parent-bar {
+  background-color: rgba(9, 105, 218, 0.05);
+}
+
+.gantt-bar.parent-bar .bar-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+.gantt-bar.parent-bar .deadline-marker {
+  opacity: 0.7;
+}
+
+/* チェックリスト達成数バッジ */
+.checklist-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+body[data-theme="dark"] .checklist-badge {
+  background-color: rgba(0, 0, 0, 0.2);
+  color: #E8EAEE;
+}
+
+body[data-theme="light"] .checklist-badge {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #24292F;
+}
