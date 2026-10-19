@@ -26,6 +26,13 @@ export class KanbanColumn {
     }
   }
 
+  @Output() addTask = new EventEmitter<void>();
+
+  onAddTask(event: Event): void {
+    event.stopPropagation();
+    this.addTask.emit();
+  }
+
   @Output() taskDropped = new EventEmitter<CdkDragDrop<Task[]>>();
 
   onDrop(event: CdkDragDrop<Task[]>): void {

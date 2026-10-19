@@ -193,3 +193,174 @@
   font-size: 14px;
   font-weight: 600;
 }
+
+/* メインコンテンツ容器 */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* 親課題配下レイアウト (上下分割: サマリーバー + ワークスペース) */
+.project-detail-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 1. 上部親課題サマリーバー */
+.project-summary-bar {
+  background-color: var(--bg-master);
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 20px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.summary-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.summary-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.project-badge {
+  font-size: 11px;
+  font-weight: bold;
+  background-color: var(--bg-secondary);
+  color: var(--accent-color);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.project-title-text {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.summary-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.progress-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 180px;
+}
+
+.progress-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.progress-bar-bg {
+  flex: 1;
+  height: 8px;
+  background-color: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--accent-color);
+  transition: width 0.3s ease;
+}
+
+.btn-toggle-summary, .btn-edit-project-icon {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-toggle-summary:hover, .btn-edit-project-icon:hover {
+  background: var(--border-color);
+}
+
+/* サマリーバー展開時領域 */
+.summary-expanded-content {
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color);
+  font-size: 13px;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 2. メイン 2ペイン ワークスペース */
+.workspace-body {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.main-board-pane {
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* 右ドッキング詳細パネル */
+.docked-detail-pane {
+  height: 100%;
+  background-color: var(--bg-master);
+  border-left: 1px solid var(--border-color);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+/* 幅変更用ドラッグスプリッター */
+.pane-resizer {
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+}
+
+.pane-resizer:hover {
+  background-color: var(--accent-color);
+  opacity: 0.5;
+}

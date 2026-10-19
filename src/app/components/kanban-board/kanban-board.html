@@ -52,8 +52,7 @@
           </button>
        </div>
      </div>
-    
-     <button class="btn-primary" (click)="onAddTask()">＋ 新規タスク</button>
+
    </div>
 
   <!-- カンバンエリア（kanban-body クラス名を維持したまま cdkDropListGroup を追加） -->
@@ -65,7 +64,8 @@
       headerColor="#EF4444"
       [tasks]="todoTasks"
       (selectTask)="selectTask.emit($event)"
-      (taskDropped)="onTaskDropped($event, 'todo')">
+      (taskDropped)="onTaskDropped($event, 'todo')"
+      (addTask)="onAddTask()">
     </app-kanban-column>
 
     <!-- 進行中 カラム -->
@@ -75,7 +75,8 @@
       headerColor="#F59E0B"
       [tasks]="inProgressTasks"
       (selectTask)="selectTask.emit($event)"
-      (taskDropped)="onTaskDropped($event, 'in-progress')">
+      (taskDropped)="onTaskDropped($event, 'in-progress')"
+      (addTask)="onAddTask()">
     </app-kanban-column>
 
     <!-- 完了 カラム -->
@@ -85,7 +86,8 @@
       headerColor="#10B981"
       [tasks]="doneTasks"
       (selectTask)="selectTask.emit($event)"
-      (taskDropped)="onTaskDropped($event, 'done')">
+      (taskDropped)="onTaskDropped($event, 'done')"
+      (addTask)="onAddTask()">
     </app-kanban-column>
   </div>
 </div>

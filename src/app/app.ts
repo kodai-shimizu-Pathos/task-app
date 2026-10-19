@@ -50,6 +50,18 @@ export interface DelayLogInfo {
 export class AppComponent implements OnInit {
   private dataService = inject(TaskDataService);
   private pipService = inject(PipService);
+  private wasMasterPanelCollapsedBeforeForm: boolean = false;
+
+  private openTaskFormWithAutoCollapse(): void {
+    if (!this.isTaskFormOpen) {
+      // 開く直前の折り畳み状態を記憶
+      this.wasMasterPanelCollapsedBeforeForm = this.isMasterPanelCollapsed;
+      // 親課題パネルを折り畳む
+      this.isMasterPanelCollapsed = true;
+    }
+    this.isTaskFormOpen = true;
+  }
+
   delayLogQueue: DelayLogInfo[] = [];
 
   get activeDelayLogInfo(): DelayLogInfo | null {
@@ -79,6 +91,32 @@ export class AppComponent implements OnInit {
     } else if (event && event.target) {
       this.autoCollectDelayLog = (event.target as HTMLInputElement).checked;
     }
+  }
+
+  isSummaryExpanded: boolean = false;
+
+  // ★ 右ドッキングパネルの幅（初期値: 480px）
+  taskFormWidth: number = 480;
+
+  // ★ 右ドッキングパネルの幅変更（スプリッター）ドラッグ処理
+  onResizeStart(event: MouseEvent): void {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = this.taskFormWidth;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = startX - moveEvent.clientX;
+      // 最小 360px、最大 800px の範囲で可変
+      this.taskFormWidth = Math.max(360, Math.min(800, startWidth + deltaX));
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
   }
 
   // --- モーダル表示フラグ ---
@@ -293,14 +331,14 @@ export class AppComponent implements OnInit {
   onSelectTask(task: Task): void {
     if (task) {
       this.taskToEdit = { ...task };
-    this.isTaskFormOpen = true;
+    this.openTaskFormWithAutoCollapse();
     }
   }
 
   // 新規タスク追加フォームを開く
   onOpenNewTaskForm(): void {
     this.taskToEdit = null;
-    this.isTaskFormOpen = true;
+    this.openTaskFormWithAutoCollapse();
   }
 
   // タスクフォームを閉じる
@@ -308,6 +346,7 @@ export class AppComponent implements OnInit {
     this.isTaskFormOpen = false;
     this.taskToEdit = null;
     this.promotingMemoId = null;
+    this.isMasterPanelCollapsed = this.wasMasterPanelCollapsedBeforeForm;
   }
 
   // タスクの作成完了ハンドラ
@@ -483,7 +522,7 @@ export class AppComponent implements OnInit {
       tags: [],
       parentId: this.selectedProject?.id || (this.projects[0]?.id || '')
     };
-    this.isTaskFormOpen = true;
+    this.openTaskFormWithAutoCollapse();
   }
   
   // ★ メモを親課題（プロジェクト）のメモ・履歴へ追加

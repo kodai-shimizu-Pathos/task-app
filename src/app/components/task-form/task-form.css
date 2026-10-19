@@ -1,26 +1,20 @@
+/* バックドロップの暗転・位置固定を解除 */
 .side-panel-backdrop {
-  position: fixed;
-  top: 48px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  position: static;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
   display: flex;
-  justify-content: flex-end;
 }
 
 .side-panel-container {
-  width: 520px;
-  max-width: 100%;
+  width: 100%;
   height: 100%;
   background-color: var(--bg-master);
   color: var(--text-primary);
-  border-left: 1px solid var(--border-color);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
-  animation: slideInRight 0.2s ease-out;
 }
 
 @keyframes slideInRight {

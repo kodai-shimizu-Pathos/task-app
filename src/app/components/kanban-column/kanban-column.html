@@ -1,7 +1,16 @@
 <div class="kanban-column-container" [ngClass]="status">
   <!-- カラムヘッダー -->
   <div class="column-header" [ngClass]="status" [style.border-top-color]="headerColor">
-    <h3>{{ title }} <span class="task-count">({{ tasks.length }})</span></h3>
+    <div class="header-left-group">
+      <span class="status-indicator" [style.background-color]="headerColor"></span>
+      <h3 class="column-title">{{ title }}</h3>
+      <span class="task-count">{{ tasks.length }}</span>
+    </div>
+  
+    <!-- ★ 追加：カラムヘッダーの「＋」追加ボタン -->
+    <button type="button" class="btn-add-task-column" (click)="onAddTask($event)" title="この列にタスクを追加">
+      ＋ タスク追加
+    </button>
   </div>
 
   <!-- CdkDropList 領域 -->

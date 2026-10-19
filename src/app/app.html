@@ -12,11 +12,7 @@
     <header class="app-header">
       <div class="header-left">
         <h1 class="app-title" *ngIf="!selectedProject">BeSideFlow AI</h1>
-        <div class="breadcrumb" *ngIf="selectedProject">
-          <button class="btn-back" (click)="onUnselectProject()">← プロジェクト一覧</button>
-          <span class="separator">></span>
-          <span class="current-project">{{ selectedProject.title }}</span>
-        </div>
+        <button *ngIf="selectedProject" class="btn-back" (click)="onUnselectProject()">← プロジェクト一覧へ戻る</button>
         <button type="button" class="btn-add-project" (click)="onOpenNewProjectForm()">
           ＋ 親課題を追加
         </button>
@@ -41,7 +37,7 @@
 
       <div class="header-right">
         <button type="button" class="theme-toggle-btn" (click)="onOpenArchiveModal()" title="アーカイブ一覧">
-          📦 アーカイブ一覧 ( {{ archivedProjects.length }} )
+          📦 アーカイブ ( {{ archivedProjects.length }} )
         </button>
         <button type="button" class="theme-toggle-btn" (click)="toggleTheme()">
           {{ currentTheme === 'dark' ? '☀️ ライト' : '🌙 ダーク' }}
@@ -49,13 +45,11 @@
       </div>
     </header>
 
-    <!-- app.html の main タグ内 -->
+    <!-- ★ メインコンテンツ領域（2ペイン構造） -->
     <main class="main-content">
-      
-      <!-- 1. 課題管理画面（activeView が 'tasks' の時） -->
       <ng-container *ngIf="activeView === 'tasks'">
         
-        <!-- パターンA：親課題が未選択の時（全画面 Master UI） -->
+        <!-- パターンA：親課題未選択時（全画面 親課題カンバン/ガント） -->
         <div class="full-master-pane" *ngIf="!selectedProject">
           <app-master-kanban-board
             *ngIf="currentMode === 'KANBAN'"
@@ -76,47 +70,99 @@
           </app-gantt-board>
         </div>
 
-        <!-- パターンB：親課題が選択されている時（Master-Detail UI） -->
-        <ng-container *ngIf="selectedProject">
-          <!-- 左側: Master情報パネル -->
-          <aside class="master-pane" [class.collapsed]="isMasterPanelCollapsed">
-            <app-master-info-panel 
-              [project]="selectedProject"
-              [isCollapsed]="isMasterPanelCollapsed"
-              (toggleCollapse)="toggleMasterPanel()"
-              (editProject)="onEditProject()"
-              (addTask)="onOpenNewTaskForm()"
-              (archiveProject)="onArchiveSelectedProject()">
-            </app-master-info-panel>
-          </aside>
+        <!-- パターンB：親課題選択時（上部サマリーバー ＋ 2ペイン構造） -->
+        <div class="project-detail-layout" *ngIf="selectedProject">
+          
+          <!-- ★ 1. 上部親課題サマリーバー -->
+          <div class="project-summary-bar">
+            <div class="summary-main-row">
+              <div class="summary-left">
+                <span class="project-badge">📁 親課題</span>
+                <h2 class="project-title-text">{{ selectedProject.title }}</h2>
+                <span class="status-chip" [attr.data-status]="selectedProject.status">
+                  {{ selectedProject.status === 'done' ? '🟢 完了' : (selectedProject.status === 'in-progress' ? '🟡 進行中' : '🔴 未着手') }}
+                </span>
+              </div>
 
-          <!-- 右側: Detail表示エリア (子タスク カンバン/ガント) -->
-          <section class="detail-pane">
-            <app-kanban-board 
-              *ngIf="currentMode === 'KANBAN'"
-              [tasks]="currentTasks"
-              (selectTask)="onSelectTask($event)"
-              (addTask)="onOpenNewTaskForm()"
-              (taskUpdated)="onTaskUpdated($event)">
-            </app-kanban-board>
+              <div class="summary-right">
+                <!-- 進捗メーター -->
+                <div class="progress-box">
+                  <span class="progress-label">進捗率: {{ selectedProject.progressPercentage || 0 }}%</span>
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" [style.width.%]="selectedProject.progressPercentage || 0"></div>
+                  </div>
+                </div>
 
-            <app-gantt-board
-              *ngIf="currentMode === 'GANTT'"
-              [tasks]="currentTasks"
-              [project]="selectedProject"
-              [projects]="projects"
-              (selectTask)="onSelectTask($event)"
-              (selectProject)="onSelectProject($event)"
-              (addTask)="onOpenNewTaskForm()"
-              (taskUpdated)="onTaskUpdated($event)"
-              (projectUpdated)="onParentTaskUpdated($event)">
-            </app-gantt-board>
-          </section>
-        </ng-container>
+                <!-- アコーディオン切替ボタン -->
+                <button type="button" class="btn-toggle-summary" (click)="isSummaryExpanded = !isSummaryExpanded">
+                  {{ isSummaryExpanded ? '▲ 閉じる' : '▼ 概要・メモ' }}
+                </button>
+                <button type="button" class="btn-edit-project-icon" (click)="onEditProject()" title="親課題を編集">
+                  ✏️
+                </button>
+              </div>
+            </div>
 
+            <!-- サマリーバー展開領域（概要・メモ・関連リンク） -->
+            <div class="summary-expanded-content" *ngIf="isSummaryExpanded">
+              <p class="project-desc" *ngIf="selectedProject.description">
+                <strong>概要:</strong> {{ selectedProject.description }}
+              </p>
+              <div class="doc-links-chips" *ngIf="selectedProject.docLinks && selectedProject.docLinks.length > 0">
+                <strong>関連資料:</strong>
+                <a *ngFor="let doc of selectedProject.docLinks" [href]="doc.url" target="_blank" class="doc-chip">
+                  📎 {{ doc.title }}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- ★ 2. メイン 2ペイン ワークスペース -->
+          <div class="workspace-body">
+            <!-- 左〜中央：子タスクメインボード -->
+            <section class="main-board-pane">
+              <app-kanban-board 
+                *ngIf="currentMode === 'KANBAN'"
+                [tasks]="currentTasks"
+                (selectTask)="onSelectTask($event)"
+                (addTask)="onOpenNewTaskForm()"
+                (taskUpdated)="onTaskUpdated($event)">
+              </app-kanban-board>
+
+              <app-gantt-board
+                *ngIf="currentMode === 'GANTT'"
+                [tasks]="currentTasks"
+                [project]="selectedProject"
+                [projects]="projects"
+                (selectTask)="onSelectTask($event)"
+                (selectProject)="onSelectProject($event)"
+                (addTask)="onOpenNewTaskForm()"
+                (taskUpdated)="onTaskUpdated($event)"
+                (projectUpdated)="onParentTaskUpdated($event)">
+              </app-gantt-board>
+            </section>
+
+            <!-- 右：タスク詳細・編集ドッキングパネル -->
+            <div class="docked-detail-pane" *ngIf="isTaskFormOpen" [style.width.px]="taskFormWidth">
+              <!-- 可変幅リサイザーハンドル -->
+              <div class="pane-resizer" (mousedown)="onResizeStart($event)"></div>
+              
+              <app-task-form
+                [taskToEdit]="taskToEdit"
+                [projects]="projects"
+                [projectId]="selectedProject.id"
+                (taskCreated)="onTaskCreated($event)"
+                (taskUpdated)="onTaskUpdated($event)"
+                (taskDeleted)="onTaskDeleted($event)"
+                (closePanel)="onCloseTaskForm()">
+              </app-task-form>
+            </div>
+          </div>
+
+        </div>
       </ng-container>
 
-      <!-- 2. AIウィークリーレビュー画面（activeView が 'review' の時） -->
+      <!-- AIレビュー画面 -->
       <ng-container *ngIf="activeView === 'review'">
         <app-review-view
           [tasks]="allTasks"
@@ -125,7 +171,7 @@
         </app-review-view>
       </ng-container>
 
-      <!-- サイドポケット折り畳みパネル -->
+      <!-- 最右端：サイドポケット引き出し -->
       <app-side-pocket-panel
         [projects]="projects"
         [selectedProject]="selectedProject"
@@ -134,19 +180,7 @@
       </app-side-pocket-panel>
     </main>
 
-    <!-- 子タスク作成・編集スライドインフォーム -->
-    <app-task-form
-      *ngIf="isTaskFormOpen"
-      [taskToEdit]="taskToEdit"
-      [projects]="projects"
-      [projectId]="selectedProject?.id || ''"
-      (taskCreated)="onTaskCreated($event)"
-      (taskUpdated)="onTaskUpdated($event)"
-      (taskDeleted)="onTaskDeleted($event)"
-      (closePanel)="onCloseTaskForm()">
-    </app-task-form>
-
-    <!-- 親課題（Master）作成・編集モーダルフォーム -->
+    <!-- モーダル類 -->
     <app-project-form
       *ngIf="isProjectFormOpen"
       [projectToEdit]="projectToEdit"
@@ -156,7 +190,6 @@
       (closeModal)="onCloseProjectForm()">
     </app-project-form>
 
-    <!-- アーカイブ一覧モーダル -->
     <app-archive-modal
       *ngIf="isArchiveModalOpen"
       [archivedProjects]="archivedProjects"
@@ -165,7 +198,6 @@
       (deleteProject)="onProjectDeleted($event)">
     </app-archive-modal>
 
-    <!-- ★ 遅延理由収集ノンブロッキングトースト -->
     <app-delay-log-toast
       *ngIf="autoCollectDelayLog && activeDelayLogInfo"
       [taskId]="activeDelayLogInfo.taskId"
@@ -173,7 +205,6 @@
       [queueLength]="delayLogQueue.length"
       (selectReason)="onSelectDelayReason($event)"
       (skipAll)="onSkipAllDelayLogs()">
-    </app-delay-log-toast>  
-
+    </app-delay-log-toast>
   </div>
 </div>
