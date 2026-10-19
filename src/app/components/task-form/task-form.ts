@@ -40,6 +40,8 @@ export class TaskForm implements OnInit, OnChanges {
   originalEditText: string = ''; // 編集前のテキストをバックアップ
   isGeneratingAi: boolean = false; // AI生成中フラグ
 
+  isDescriptionOpen: boolean = false;
+
   constructor(private aiService: AiService) {}
 
   get isEditMode(): boolean {
@@ -60,7 +62,7 @@ export class TaskForm implements OnInit, OnChanges {
   }
 
   private populateForm(): void {
-    // 親課題IDのデフォルト値を設定（渡されたprojectId、またはprojectsの先頭要素のID）
+    // 親課題IDのデフォルト値を設定
     const defaultParentId = this.projectId || (this.projects && this.projects.length > 0 ? this.projects[0].id : '');
 
     if (this.taskToEdit) {
@@ -74,6 +76,8 @@ export class TaskForm implements OnInit, OnChanges {
       // 新規作成モード
       this.resetForm(defaultParentId);
     }
+
+    this.isDescriptionOpen = !!(this.taskData.description && this.taskData.description.trim());
   }
 
   private resetForm(defaultParentId: string): void {
@@ -90,6 +94,8 @@ export class TaskForm implements OnInit, OnChanges {
     };
     this.tagsInput = '';
     this.checklistInput = '';
+
+    this.isDescriptionOpen = false;
   }
 
   private parseTags(input: string): string[] {

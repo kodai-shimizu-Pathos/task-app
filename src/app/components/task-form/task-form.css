@@ -1,4 +1,3 @@
-/* バックドロップの暗転・位置固定を解除 */
 .side-panel-backdrop {
   position: static;
   width: 100%;
@@ -12,9 +11,11 @@
   height: 100%;
   background-color: var(--bg-master);
   color: var(--text-primary);
-  box-shadow: none;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  box-shadow: none; /* 画面固定用のかさばる影を削除 */
+  animation: none;  /* アニメーションを解除 */
 }
 
 @keyframes slideInRight {
@@ -53,22 +54,23 @@
 }
 
 .panel-body {
-  padding: 20px;
+  padding: 10px 14px; 
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px; 
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
 }
 
 .form-group label {
-  font-size: 0.875rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -79,28 +81,27 @@
 
 .form-row {
   display: flex;
-  gap: 12px;
+  gap: 12px; /* 2列の間に適度なマージンを確保 */
+  width: 100%;
 }
 
-.form-row .form-group {
+.form-row .form-group.flex-1 {
   flex: 1;
+  min-width: 0; /* フォーム要素が親からはみ出るのを防止 */
 }
 
-/* 🔴 フォーム入力全般：視認性向上 */
 input[type="text"],
 input[type="date"],
 select,
 textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 5px 8px; /* 入力欄内の上下パディングを6px→5pxに微修正 */
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background-color: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   box-sizing: border-box;
-  font-family: inherit;
-  transition: border-color 0.2s, background-color 0.2s;
 }
 
 /* ダークモード特別対応：背景を見やすく */
@@ -153,19 +154,27 @@ textarea {
 
 .footer-right {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 .btn-submit {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 6px;
   background-color: var(--accent-color);
   color: #ffffff;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
-  transition: opacity 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-submit:hover {
@@ -174,12 +183,19 @@ textarea {
 
 .btn-cancel {
   background-color: var(--bg-secondary);
-  color: var(--text-primary);
   border: 1px solid var(--border-color);
-  padding: 8px 16px;
+  color: var(--text-primary);
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
+  white-space: nowrap !important; 
+  flex-shrink: 0 !important;      
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;                 
   transition: background-color 0.2s;
 }
 
@@ -422,5 +438,25 @@ textarea {
 .progress-value {
   color: var(--text-primary);
   font-weight: 600;
+}
+
+.description-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-toggle-desc {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-toggle-desc:hover {
+  text-decoration: underline;
 }
 

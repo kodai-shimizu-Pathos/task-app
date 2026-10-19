@@ -50,24 +50,38 @@
       <ng-container *ngIf="activeView === 'tasks'">
         
         <!-- パターンA：親課題未選択時（全画面 親課題カンバン/ガント） -->
-        <div class="full-master-pane" *ngIf="!selectedProject">
-          <app-master-kanban-board
-            *ngIf="currentMode === 'KANBAN'"
-            [projects]="activeProjects"
-            (selectProject)="onSelectProject($event)"
-            (parentTaskUpdated)="onParentTaskUpdated($event)">
-          </app-master-kanban-board>
-
-          <app-gantt-board
-            *ngIf="currentMode === 'GANTT'"
-            [tasks]="[]"
-            [project]="null"
-            [projects]="activeProjects"
-            (selectProject)="onSelectProject($event)"
-            (selectTask)="onSelectTask($event)"
-            (addTask)="onOpenNewTaskForm()"
-            (projectUpdated)="onParentTaskUpdated($event)">
-          </app-gantt-board>
+        <div class="full-master-pane" *ngIf="!selectedProject" style="display: flex; width: 100%; height: 100%;">
+          <div style="flex: 1; height: 100%; min-width: 0; overflow: hidden;">
+            <app-master-kanban-board
+              *ngIf="currentMode === 'KANBAN'"
+              [projects]="activeProjects"
+              (selectProject)="onSelectProject($event)"
+              (parentTaskUpdated)="onParentTaskUpdated($event)">
+            </app-master-kanban-board>
+        
+            <app-gantt-board
+              *ngIf="currentMode === 'GANTT'"
+              [tasks]="[]"
+              [project]="null"
+              [projects]="activeProjects"
+              (selectProject)="onSelectProject($event)"
+              (selectTask)="onSelectTask($event)"
+              (addTask)="onOpenNewTaskForm()"
+              (projectUpdated)="onParentTaskUpdated($event)">
+            </app-gantt-board>
+          </div>
+        
+          <!-- 一覧画面での親課題フォーム右ドッキング -->
+          <div class="docked-detail-pane" *ngIf="isProjectFormOpen" [style.width.px]="taskFormWidth">
+            <div class="pane-resizer" (mousedown)="onResizeStart($event)"></div>
+            <app-project-form
+              [projectToEdit]="projectToEdit"
+              (projectCreated)="onProjectCreated($event)"
+              (projectUpdated)="onProjectUpdated($event)"
+              (projectDeleted)="onProjectDeleted($event)"
+              (closeModal)="onCloseProjectForm()">
+            </app-project-form>
+          </div>
         </div>
 
         <!-- パターンB：親課題選択時（上部サマリーバー ＋ 2ペイン構造） -->
@@ -142,12 +156,14 @@
               </app-gantt-board>
             </section>
 
-            <!-- 右：タスク詳細・編集ドッキングパネル -->
-            <div class="docked-detail-pane" *ngIf="isTaskFormOpen" [style.width.px]="taskFormWidth">
+            <!-- 右：ドッキング詳細パネル (タスクフォームまたは親課題フォーム) -->
+            <div class="docked-detail-pane" *ngIf="isTaskFormOpen || isProjectFormOpen" [style.width.px]="taskFormWidth">
               <!-- 可変幅リサイザーハンドル -->
               <div class="pane-resizer" (mousedown)="onResizeStart($event)"></div>
               
+              <!-- 子タスクフォーム -->
               <app-task-form
+                *ngIf="isTaskFormOpen"
                 [taskToEdit]="taskToEdit"
                 [projects]="projects"
                 [projectId]="selectedProject.id"
@@ -156,6 +172,16 @@
                 (taskDeleted)="onTaskDeleted($event)"
                 (closePanel)="onCloseTaskForm()">
               </app-task-form>
+
+              <!-- 親課題フォーム（右ドッキング化） -->
+              <app-project-form
+                *ngIf="isProjectFormOpen"
+                [projectToEdit]="projectToEdit"
+                (projectCreated)="onProjectCreated($event)"
+                (projectUpdated)="onProjectUpdated($event)"
+                (projectDeleted)="onProjectDeleted($event)"
+                (closeModal)="onCloseProjectForm()">
+              </app-project-form>
             </div>
           </div>
 
@@ -181,15 +207,6 @@
     </main>
 
     <!-- モーダル類 -->
-    <app-project-form
-      *ngIf="isProjectFormOpen"
-      [projectToEdit]="projectToEdit"
-      (projectCreated)="onProjectCreated($event)"
-      (projectUpdated)="onProjectUpdated($event)"
-      (projectDeleted)="onProjectDeleted($event)"
-      (closeModal)="onCloseProjectForm()">
-    </app-project-form>
-
     <app-archive-modal
       *ngIf="isArchiveModalOpen"
       [archivedProjects]="archivedProjects"

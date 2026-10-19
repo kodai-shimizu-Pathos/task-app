@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidePocketPanelComponent } from './components/side-pocket-panel/side-pocket-panel';
 import { SidePocketMemo } from './services/task-data';
@@ -51,6 +51,7 @@ export class AppComponent implements OnInit {
   private dataService = inject(TaskDataService);
   private pipService = inject(PipService);
   private wasMasterPanelCollapsedBeforeForm: boolean = false;
+  @ViewChild(SidePocketPanelComponent) sidePocketPanel!: SidePocketPanelComponent;
 
   private openTaskFormWithAutoCollapse(): void {
     if (!this.isTaskFormOpen) {
@@ -60,6 +61,11 @@ export class AppComponent implements OnInit {
       this.isMasterPanelCollapsed = true;
     }
     this.isTaskFormOpen = true;
+  
+    // ★ ここを追加：タスク詳細が開いたらサイドポケットを自動でたたむ
+    if (this.sidePocketPanel) {
+      this.sidePocketPanel.isCollapsed = true;
+    }
   }
 
   delayLogQueue: DelayLogInfo[] = [];
@@ -237,14 +243,24 @@ export class AppComponent implements OnInit {
   // 新規の親課題フォームを開く
   onOpenNewProjectForm(): void {
     this.projectToEdit = null;
+    this.isTaskFormOpen = false; // タスクフォームが開いていれば閉じる
     this.isProjectFormOpen = true;
+
+    if (this.sidePocketPanel) {
+      this.sidePocketPanel.isCollapsed = true; // サイドポケットを自動で閉じる
+    }
   }
 
   // 既存の親課題の編集フォームを開く
   onEditProject(): void {
     if (this.selectedProject) {
       this.projectToEdit = { ...this.selectedProject };
+      this.isTaskFormOpen = false; // タスクフォームが開いていれば閉じる
       this.isProjectFormOpen = true;
+  
+      if (this.sidePocketPanel) {
+        this.sidePocketPanel.isCollapsed = true; // サイドポケットを自動で閉じる
+      }
     }
   }
 
