@@ -4,14 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { TaskDataService, SidePocketMemo } from '../../services/task-data';
 import { ParentProject } from '../../models/project.model';
-import { AiService } from '../../services/ai.service';
 
 @Component({
   selector: 'app-side-pocket-panel',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <!-- A. 折り畳み状態 (細い縦バー表示) -->
+    <!-- A. 折り畳み状態 -->
     <div class="side-pocket-collapsed" *ngIf="isCollapsed" (click)="toggleCollapse()" title="サイドポケットを展開">
       <button class="expand-btn">◀</button>
       <div class="vertical-title">
@@ -21,39 +20,31 @@ import { AiService } from '../../services/ai.service';
       </div>
     </div>
 
-    <!-- B. 展開状態 (可変幅パネル) -->
+    <!-- B. 展開状態 -->
     <div class="side-pocket-expanded" *ngIf="!isCollapsed" [style.width.px]="panelWidth">
-      <!-- 1. 左端のドラッグリサイズバー -->
-      <div 
-        class="resize-handle" 
-        (mousedown)="onResizeStart($event)"
-        [class.active]="isResizing"
-        title="ドラッグしてパネル幅を変更">
-      </div>
+      <!-- リサイズハンドル -->
+      <div class="resize-handle" (mousedown)="onResizeStart($event)" [class.active]="isResizing"></div>
 
-      <!-- 2. パネルヘッダー -->
+      <!-- パネルヘッダー -->
       <div class="panel-header">
         <div class="header-title">
           <span class="icon">📥</span>
           <h3>サイドポケット</h3>
           <span class="count-chip">{{ memos.length }}件</span>
         </div>
-        <button class="collapse-btn" (click)="toggleCollapse()" title="パネルを折りたたむ">▶</button>
+        <button class="collapse-btn" (click)="toggleCollapse()">▶</button>
       </div>
 
-      <!-- 3. メモ一覧エリア -->
+      <!-- メモ一覧エリア -->
       <div class="panel-body">
-        <!-- 空の状態のガイダンス -->
         <div class="empty-state" *ngIf="memos.length === 0">
           <div class="empty-icon">🎯</div>
           <p class="empty-title">未整理メモはありません</p>
-          <p class="empty-desc">
-            集中モード（PiP）や音声入力でキャプチャした思考がここにリアルタイムで溜まります。
-          </p>
+          <p class="empty-desc">集中モード（PiP）や音声入力でキャプチャした思考がここに溜まります。</p>
         </div>
 
         <!-- メモカード一覧 -->
-        <div class="memo-card" *ngFor="let memo of memos; let i = index">
+        <div class="memo-card" *ngFor="let memo of memos">
           <div class="memo-header">
             <span class="memo-time">⏰ {{ formatTime(memo.createdAt) }}</span>
             <button class="btn-delete-icon" (click)="onDeleteMemo(memo)" title="メモを削除">✕</button>
@@ -61,91 +52,28 @@ import { AiService } from '../../services/ai.service';
 
           <p class="memo-content">{{ memo.content }}</p>
 
-                    <!-- 昇格パイプラインアクション -->
+          <!-- ★ AIボタンを廃止し、手動アクションのみのシンプルな構成へ -->
           <div class="memo-actions">
-            
-            <!-- 1. 通常状態 (AI未実行) -->
-            <ng-container *ngIf="!aiStates[memo.id]">
-              <div class="btn-group-row">
-                <button class="btn-action promote-task" (click)="onPromoteToTask(memo)">
-                  🚀 手動タスク化
-                </button>
-                <button class="btn-action ai-predict-btn" (click)="onPredictProject(memo)" [disabled]="projects.length === 0">
-                  🤖 AI分類
-                </button>
-              </div>
+            <button class="btn-action promote-task" (click)="onPromoteToTask(memo)">
+              🚀 手動タスク化
+            </button>
 
-              <div class="promote-project-group" *ngIf="projects.length > 0">
-                <select 
-                  class="project-select" 
-                  #projSelect 
-                  (change)="onPromoteToProjectMemo(memo, projSelect.value); projSelect.value=''">
-                  <option value="" disabled selected>📌 親課題メモに追加...</option>
-
-                  <option *ngIf="selectedProject" [value]="selectedProject.id">
-                    ★ {{ selectedProject.title }} (選択中)
+            <div class="promote-project-group" *ngIf="projects.length > 0">
+              <select 
+                class="project-select" 
+                #projSelect 
+                (change)="onPromoteToProjectMemo(memo, projSelect.value); projSelect.value=''">
+                <option value="" disabled selected>📌 親課題メモに追加...</option>
+                <option *ngIf="selectedProject" [value]="selectedProject.id">
+                  ★ {{ selectedProject.title }} (選択中)
+                </option>
+                <ng-container *ngFor="let proj of projects">
+                  <option *ngIf="proj.id !== selectedProject?.id" [value]="proj.id">
+                    {{ proj.title }}
                   </option>
-                  <ng-container *ngFor="let proj of projects">
-                    <option *ngIf="proj.id !== selectedProject?.id" [value]="proj.id">
-                      {{ proj.title }}
-                    </option>
-                  </ng-container>
-                </select>
-              </div>
-            </ng-container>
-
-            <!-- 2. AI推測中 (ローディング) -->
-            <div class="ai-loading" *ngIf="aiStates[memo.id]?.loading">
-              <span class="spinner">⏳</span> Geminiが親課題を推測中...
+                </ng-container>
+              </select>
             </div>
-
-            <!-- 3. AI推測結果 (二段階承認UI) -->
-            <div class="ai-result-box" *ngIf="aiStates[memo.id] && !aiStates[memo.id].loading">
-              <!-- 推測成功時 -->
-              <ng-container *ngIf="aiStates[memo.id].predictedProjectId">
-                <div class="ai-header">
-                  <span class="ai-badge">🤖 AI提案</span>
-                  <span class="ai-reason">💡 {{ aiStates[memo.id].reason }}</span>
-                </div>
-                
-                <div class="ai-field">
-                  <label>親課題:</label>
-                  <select class="ai-select" [(ngModel)]="aiStates[memo.id].predictedProjectId">
-                    <option *ngFor="let proj of projects" [value]="proj.id">{{ proj.title }}</option>
-                  </select>
-                </div>
-
-                <div class="ai-field">
-                  <label>タスク名:</label>
-                  <input type="text" class="ai-input" [(ngModel)]="aiStates[memo.id].taskTitle" />
-                </div>
-
-                <div class="ai-btn-group">
-                  <button class="btn-approve" (click)="onApproveAiTask(memo)">✓ 承認してタスク化</button>
-                  <button class="btn-cancel" (click)="onCancelAiPredict(memo.id)">✕</button>
-                </div>
-              </ng-container>
-
-              <!-- 該当なし時 -->
-              <ng-container *ngIf="!aiStates[memo.id].predictedProjectId">
-                <div class="ai-header error">
-                  <span>⚠️ 該当する親課題が見つかりませんでした</span>
-                </div>
-                <div class="ai-field">
-                  <select class="ai-select" [(ngModel)]="aiStates[memo.id].predictedProjectId">
-                    <option [value]="null" disabled selected>親課題を選択してください...</option>
-                    <option *ngFor="let proj of projects" [value]="proj.id">{{ proj.title }}</option>
-                  </select>
-                </div>
-                <div class="ai-btn-group">
-                  <button class="btn-approve" [disabled]="!aiStates[memo.id].predictedProjectId" (click)="onApproveAiTask(memo)">
-                    🚀 タスク化
-                  </button>
-                  <button class="btn-cancel" (click)="onCancelAiPredict(memo.id)">✕</button>
-                </div>
-              </ng-container>
-            </div>
-
           </div>
         </div>
       </div>
@@ -432,7 +360,6 @@ import { AiService } from '../../services/ai.service';
 export class SidePocketPanelComponent implements OnInit, OnDestroy {
   private dataService = inject(TaskDataService);
   private cdr = inject(ChangeDetectorRef);
-  private aiService = inject(AiService);
 
   @Input() projects: ParentProject[] = [];
   @Input() selectedProject: ParentProject | null = null;
@@ -441,7 +368,7 @@ export class SidePocketPanelComponent implements OnInit, OnDestroy {
   @Output() promoteToProjectMemo = new EventEmitter<{ memo: SidePocketMemo; projectId: string }>();
 
   isCollapsed = false;
-  panelWidth = 300; // 初期横幅 300px
+  panelWidth = 300;
   isResizing = false;
   private resizeStartX = 0;
   private resizeStartWidth = 300;
@@ -450,7 +377,6 @@ export class SidePocketPanelComponent implements OnInit, OnDestroy {
   private sub?: Subscription;
 
   ngOnInit(): void {
-    // データサービスからサイドポケットメモをサブスクライブ
     this.sub = this.dataService.sidePocketMemos$.subscribe(memos => {
       this.memos = memos;
       this.cdr.detectChanges();
@@ -458,9 +384,7 @@ export class SidePocketPanelComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.sub) {
-      this.sub.unsubscribe();
-    }
+    if (this.sub) this.sub.unsubscribe();
   }
 
   toggleCollapse(): void {
@@ -489,72 +413,8 @@ export class SidePocketPanelComponent implements OnInit, OnDestroy {
     const min = String(date.getMinutes()).padStart(2, '0');
     return `${mm}/${dd} ${hh}:${min}`;
   }
-  
-  aiStates: {
-    [memoId: string]: {
-      loading: boolean;
-      predictedProjectId: string | null;
-      taskTitle: string;
-      reason: string;
-      error?: string;
-    }
-  } = {};
 
-  async onPredictProject(memo: SidePocketMemo): Promise<void> {
-    this.aiStates[memo.id] = {
-      loading: true,
-      predictedProjectId: null,
-      taskTitle: memo.content,
-      reason: ''
-    };
-    this.cdr.detectChanges();
-
-    try {
-      const result = await this.aiService.predictParentProject(memo.content, this.projects);
-      this.aiStates[memo.id] = {
-        loading: false,
-        predictedProjectId: result.projectId,
-        taskTitle: result.suggestedTaskTitle,
-        reason: result.reason
-      };
-    } catch (err) {
-      this.aiStates[memo.id] = {
-        loading: false,
-        predictedProjectId: null,
-        taskTitle: memo.content,
-        reason: '',
-        error: 'AI推測に失敗しました'
-      };
-    }
-    this.cdr.detectChanges();
-  }
-
-
-  // --- 二段階承認 ---
-  onApproveAiTask(memo: SidePocketMemo): void {
-    const state = this.aiStates[memo.id];
-    if (!state || !state.predictedProjectId) return;
-
-    this.dataService.addTask({
-      title: state.taskTitle,
-      parentId: state.predictedProjectId,
-      status: 'todo',
-      priority: 'medium',
-      progress: 0,
-      tags: [],
-    });
-
-    this.dataService.deleteSidePocketMemo(memo.id);
-    delete this.aiStates[memo.id];
-  }
-
-  // --- AI推測のキャンセル ---
-  onCancelAiPredict(memoId: string): void {
-    delete this.aiStates[memoId];
-    this.cdr.detectChanges();
-  }
-
-  // --- ドラッグリサイズ制御 ---
+  /* ドラッグリサイズ制御 */
   onResizeStart(event: MouseEvent): void {
     event.preventDefault();
     this.isResizing = true;
@@ -565,11 +425,8 @@ export class SidePocketPanelComponent implements OnInit, OnDestroy {
   @HostListener('document:mousemove', ['\$event'])
   onResizing(event: MouseEvent): void {
     if (!this.isResizing) return;
-    // 左方向への移動で幅増加
     const diff = this.resizeStartX - event.clientX;
-    const newWidth = this.resizeStartWidth + diff;
-    // 最小 240px 〜 最大 520px に制限
-    this.panelWidth = Math.max(240, Math.min(520, newWidth));
+    this.panelWidth = Math.max(240, Math.min(520, this.resizeStartWidth + diff));
     this.cdr.detectChanges();
   }
 

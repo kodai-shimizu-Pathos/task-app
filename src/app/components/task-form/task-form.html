@@ -93,15 +93,20 @@
 
                 <!-- チェックリスト項目一覧 -->
                 <div class="checklist-items" *ngIf="taskData.checklist && taskData.checklist.length > 0">
-                    <div class="checklist-item" *ngFor="let item of taskData.checklist" [class.completed]="item.completed">
-                        <!-- チェックボックス：checked バインド + change イベント -->
-                        <input type="checkbox" 
+                    <div class="checklist-item" 
+                         *ngFor="let item of taskData.checklist" 
+                         [class.completed]="item.completed"
+                         [class.editing]="editingItemId === item.id">
+                        
+                        <!-- 1. チェックボックス（通常時のみ表示） -->
+                        <input *ngIf="editingItemId !== item.id"
+                               type="checkbox" 
                                [id]="'item-' + item.id" 
                                [checked]="item.completed" 
                                (change)="toggleChecklistItem(item, $event)" 
                                class="checkbox-input" />
                         
-                        <!-- 通常表示モード：テキスト表示と編集ボタン -->
+                        <!-- 2. テキスト表示（通常時のみ表示） -->
                         <label *ngIf="editingItemId !== item.id"
                                [for]="'item-' + item.id" 
                                class="checklist-text" 
@@ -109,7 +114,7 @@
                             {{ item.text }}
                         </label>
                         
-                        <!-- 編集ボタン（✏️）- クリックイベントでバブリング防止 -->
+                        <!-- 3. 編集ボタン ✏️（通常時のみ表示） -->
                         <button *ngIf="editingItemId !== item.id"
                                 type="button"
                                 class="btn-edit-icon" 
@@ -118,21 +123,43 @@
                             ✏️
                         </button>
                         
-                        <!-- 編集モード：インライン入力欄 -->
-                        <input *ngIf="editingItemId === item.id"
-                               type="text" 
-                               [(ngModel)]="item.text" 
-                               [ngModelOptions]="{ updateOn: 'change' }"
-                               (click)="$event.stopPropagation()"
-                               (blur)="saveEditingChecklistItem(item)"
-                               (keydown.enter)="saveEditingChecklistItem(item, $event)"
-                               (keydown.escape)="editingItemId = null"
-                               class="checklist-edit-input"
-                               [attr.id]="'edit-' + item.id"
-                               autofocus />
+                        <!-- ★ 編集モード（参照表示 ＋ 入力欄 ＋ 確定・キャンセルボタン） -->
+                        <div *ngIf="editingItemId === item.id" class="checklist-edit-container" (click)="$event.stopPropagation()">
+                            <div class="checklist-original-ref">
+                                <span class="ref-tag">編集前:</span> {{ originalEditText }}
+                            </div>
+                            <div class="checklist-edit-row">
+                                <!-- ★ standalone: true を追加してフォームと独立して即座にモデル更新 -->
+                                <input type="text" 
+                                    [(ngModel)]="item.text" 
+                                    [ngModelOptions]="{ standalone: true }"
+                                    (click)="$event.stopPropagation()"
+                                    (keydown.enter)="saveEditingChecklistItem(item, $event)"
+                                    (keydown.escape)="cancelEditingChecklistItem(item, $event)"
+                                    class="checklist-edit-input"
+                                    [attr.id]="'edit-' + item.id"
+                                    autofocus />
+                                
+                                <!-- ★ mousedown でフォーカス外れによるイベント衝突を防止 -->
+                                <button type="button" 
+                                        class="btn-save-inline" 
+                                        (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+                                        (click)="saveEditingChecklistItem(item, $event)" 
+                                        title="保存">✓</button>
+                                <button type="button" 
+                                        class="btn-cancel-inline" 
+                                        (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+                                        (click)="cancelEditingChecklistItem(item, $event)" 
+                                        title="キャンセル">✕</button>
+                            </div>
+                        </div>
                         
-                        <!-- 削除ボタン -->
-                        <button type="button" class="btn-delete-item" (click)="deleteChecklistItem(item.id)" title="削除">🗑️</button>
+                        <!-- 5. 削除ボタン 🗑️（通常時のみ表示） -->
+                        <button *ngIf="editingItemId !== item.id" 
+                                type="button" 
+                                class="btn-delete-item" 
+                                (click)="deleteChecklistItem(item.id)" 
+                                title="削除">🗑️</button>
                     </div>
                 </div>
 

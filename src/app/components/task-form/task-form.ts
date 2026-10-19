@@ -156,20 +156,17 @@ export class TaskForm implements OnInit, OnChanges {
 
   // チェックリスト項目の編集を確定・保存
   saveEditingChecklistItem(item: ChecklistItem, event?: Event): void {
-    // イベント伝播を完全に遮断し、フォーム送信を防ぐ
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
 
-    // テキストをトリム
+    // 入力されたテキストをトリムして上書き
     item.text = item.text ? item.text.trim() : '';
 
-    // 空文字の場合は項目を削除
     if (!item.text) {
       this.deleteChecklistItem(item.id);
     } else {
-      // 進捗率を再計算
       this.recalculateChecklistProgress();
     }
 
@@ -312,6 +309,18 @@ export class TaskForm implements OnInit, OnChanges {
       this.taskCreated.emit(newTask);
     }
     this.onClose();
+  }
+
+  cancelEditingChecklistItem(item: ChecklistItem, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    if (this.originalEditText !== undefined) {
+      item.text = this.originalEditText;
+    }
+    this.editingItemId = null;
+    this.originalEditText = '';
   }
 
   onDelete(): void {
