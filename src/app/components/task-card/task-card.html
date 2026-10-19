@@ -10,8 +10,14 @@
     <h4 class="#card-title">{{ task.title }}</h4>
       
     <!-- タグ一覧 -->
-    <div class="tags-list" *ngIf="task.tags && task.tags.length > 0">
-        <span class="tag-chip" *ngFor="let tag of task.tags">#{{ tag }}</span>
+    <div class="task-tags" *ngIf="task.tags && task.tags.length > 0">
+        <span
+          *ngFor="let tag of task.tags"
+          class="tag-chip clickable-tag"
+          (click)="onTagClick($event, tag)"
+          title="このタグでフィルター">
+          #{{ tag }}
+        </span>
     </div>
 
     <!-- 日付表示エリア -->

@@ -50,6 +50,17 @@
   flex-wrap: wrap;
 }
 
+.tag-chip.clickable-tag {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tag-chip.clickable-tag:hover {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+}
+
 /* 日付表示エリア */
 .dates-section {
   display: flex;

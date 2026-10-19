@@ -12,6 +12,12 @@ import { Task } from '../../models/task.model';
 export class TaskCard {
   @Input() task!: Task;
   @Output() selectTask = new EventEmitter<Task>(); // 追加: タスク選択イベント
+  @Output() tagSelected = new EventEmitter<string>();
+
+  onTagClick(event: MouseEvent, tag: string): void {
+    event.stopPropagation(); // カード選択（フォーム開く処理）のバブリングを防止
+    this.tagSelected.emit(tag);
+  }
 
   // 追加: カードクリック時の処理
   onCardClick(): void {

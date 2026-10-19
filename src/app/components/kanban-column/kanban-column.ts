@@ -18,6 +18,12 @@ export class KanbanColumn {
   @Input() status!: Status;
 
   @Output() selectTask = new EventEmitter<Task>();
+  @Output() tagSelected = new EventEmitter<string>();
+
+  onTagSelected(tag: string): void {
+    this.tagSelected.emit(tag);
+  }
+
 
   // カードがクリックされたら受け取ったtaskをそのままemitする
   onSelectTask(task: Task): void {

@@ -25,10 +25,7 @@
           </select>
 
            <!-- タグフィルター-->
-           <select [(ngModel)]="selectedTag" class="filter-select" (change)="onFilterChange()">
-            <option value="ALL">タグ： すべて</option>
-            <option *ngFor="let tag of availableTags" [value]="tag">#{{ tag }}</option>
-           </select>
+          <span *ngIf="selectedTag !== 'ALL'" class="active-tag-chip" (click)="selectedTag = 'ALL'" title="タグフィルターを解除">#{{ selectedTag }}</span>
 
           <!-- ソート項目-->
           <select [(ngModel)]="sortBy" class="filter-select">
@@ -57,7 +54,7 @@
 
   <!-- カンバンエリア（kanban-body クラス名を維持したまま cdkDropListGroup を追加） -->
   <div class="kanban-body" cdkDropListGroup>
-    <!-- 未着手 カラム -->
+    <!-- 未着手 -->
     <app-kanban-column
       status="todo"
       title="未着手"
@@ -65,10 +62,11 @@
       [tasks]="todoTasks"
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'todo')"
-      (addTask)="onAddTask()">
+      (addTask)="onAddTask()"
+      (tagSelected)="onTagSelected($event)"> <!-- ★ 追加 -->
     </app-kanban-column>
-
-    <!-- 進行中 カラム -->
+  
+    <!-- 進行中 -->
     <app-kanban-column
       status="in-progress"
       title="進行中"
@@ -76,10 +74,11 @@
       [tasks]="inProgressTasks"
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'in-progress')"
-      (addTask)="onAddTask()">
+      (addTask)="onAddTask()"
+      (tagSelected)="onTagSelected($event)"> <!-- ★ 追加 -->
     </app-kanban-column>
-
-    <!-- 完了 カラム -->
+  
+    <!-- 完了 -->
     <app-kanban-column
       status="done"
       title="完了"
@@ -87,7 +86,8 @@
       [tasks]="doneTasks"
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'done')"
-      (addTask)="onAddTask()">
+      (addTask)="onAddTask()"
+      (tagSelected)="onTagSelected($event)"> <!-- ★ 追加 -->
     </app-kanban-column>
   </div>
 </div>

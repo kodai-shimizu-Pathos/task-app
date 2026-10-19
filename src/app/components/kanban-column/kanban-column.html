@@ -23,14 +23,11 @@
     (cdkDropListDropped)="onDrop($event)">
     
     <!-- ドラッグ可能タスクカード -->
-    <div
-      *ngFor="let task of tasks"
-      cdkDrag
-      [cdkDragData]="task"
-      class="draggable-task-wrapper"
-      (click)="onSelectTask(task)">
-
-      <app-task-card [task]="task"></app-task-card>
+    <div *ngFor="let task of tasks" cdkDrag [cdkDragData]="task" class="draggable-task-wrapper" (click)="onSelectTask(task)">
+      <app-task-card
+        [task]="task"
+        (tagSelected)="onTagSelected($event)">
+      </app-task-card>
     </div>
 
     <!-- カラムが空の時のプレースホルダー -->

@@ -138,6 +138,10 @@ export class KanbanBoard implements OnChanges {
     return result;
   }
 
+  onTagSelected(tag: string): void {
+    this.selectedTag = tag;
+  }
+
   // ステータス文字列を安全に正規化するヘルパー
   private normalizeStatus(status: string): string {
     if (!status) return '';

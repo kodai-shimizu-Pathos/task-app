@@ -66,7 +66,6 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   searchQuery: string = '';
   selectedStatus: string = 'all';    // 'all' | 'exclude-done' | 'todo' | 'in-progress' | 'done'
   selectedPriority: string = 'all';  // 'all' | 'high' | 'medium' | 'low'
-  dateFilter: string = 'all';        // 'all' | 'today-onwards'
 
   get filteredTasks(): Task[] {
     if (!this.tasks) return [];
@@ -85,17 +84,6 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
       // 3. 優先度絞り込み
       if (this.selectedPriority !== 'all' && (task.priority || 'medium').toLowerCase() !== this.selectedPriority) {
         return false;
-      }
-      // 4. 日付絞り込み（今日以降）
-      if (this.dateFilter === 'today-onwards') {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const targetDateStr = task.deadline || task.scheduledEndDate || task.scheduledStartDate;
-        if (targetDateStr) {
-          const targetDate = new Date(targetDateStr.replace(/-/g, '/'));
-          targetDate.setHours(0, 0, 0, 0);
-          if (targetDate < today) return false;
-        }
       }
       return true;
     });
@@ -119,17 +107,6 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
       // 3. 優先度絞り込み
       if (this.selectedPriority !== 'all' && (proj.priority || 'medium').toLowerCase() !== this.selectedPriority) {
         return false;
-      }
-      // 4. 日付絞り込み（今日以降）
-      if (this.dateFilter === 'today-onwards') {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const targetDateStr = proj.deadline || proj.scheduledEndDate || proj.scheduledStartDate;
-        if (targetDateStr) {
-          const targetDate = new Date(targetDateStr.replace(/-/g, '/'));
-          targetDate.setHours(0, 0, 0, 0);
-          if (targetDate < today) return false;
-        }
       }
       return true;
     });
