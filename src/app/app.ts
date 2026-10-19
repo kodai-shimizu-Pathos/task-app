@@ -18,6 +18,15 @@ import { DelayLogToast } from './components/delay-log-toast/delay-log-toast';
 import { DelayReason } from './models/delay-log.model';
 import { ReviewViewComponent } from './components/review-view/review-view';
 
+
+// --- 遅延ログ情報インターフェース ---
+export interface DelayLogInfo {
+  taskId: string;
+  taskTitle: string;
+  previousDueDate: string;
+  newDueDate: string;
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -41,15 +50,27 @@ import { ReviewViewComponent } from './components/review-view/review-view';
 export class AppComponent implements OnInit {
   private dataService = inject(TaskDataService);
   private pipService = inject(PipService);
+  delayLogQueue: DelayLogInfo[] = [];
+
+  get activeDelayLogInfo(): DelayLogInfo | null {
+    return this.delayLogQueue.length > 0 ? this.delayLogQueue[0] : null;
+  }
+
+  private enqueueDelayLog(info: DelayLogInfo): void {
+    if (info.newDueDate <= info.previousDueDate) return;
+
+    if (this.delayLogQueue.length >= 3) {
+      const oldest = this.delayLogQueue.shift();
+      if (oldest) {
+        this.saveDelayLog(oldest.taskId, oldest.taskTitle, oldest.previousDueDate, oldest.newDueDate, 'unclassified');
+      }
+    }
+
+    this.delayLogQueue.push(info);
+  }
 
   // --- 遅延ログ関連プロパティ ---
   autoCollectDelayLog: boolean = true; // 自動収集 ON/OFF（デフォルトON）
-  activeDelayLogInfo: {
-    taskId: string;
-    taskTitle: string;
-    previousDueDate: string;
-    newDueDate: string;
-  } | null = null;
 
   // 遅延ログ自動収集の ON/OFF 切替ハンドラ
   onToggleAutoCollect(event: any): void {
@@ -223,18 +244,22 @@ export class AppComponent implements OnInit {
     }
 
     const oldProject = this.projects.find(p => p.id === project!.id);
-    // ★ _previousDueDate（Ganttドラッグ前日付）があれば優先使用
     const oldDueDate = (updatedProject as any)._previousDueDate || oldProject?.deadline || oldProject?.scheduledEndDate || '';
     const newDueDate = project.deadline || project.scheduledEndDate || '';
 
-    // ★ 親課題の期限変更を検知した場合、トーストを起動
-    if (this.autoCollectDelayLog && oldDueDate && newDueDate && oldDueDate !== newDueDate) {
-      this.activeDelayLogInfo = {
+    // 後ろ倒し発生時、親課題（配下タスク含む）として1回だけキューへ追加
+    if (this.autoCollectDelayLog && oldDueDate && newDueDate) {
+      const childCount = this.allTasks.filter(t => t.parentId === project!.id).length;
+      const titleLabel = childCount > 0 
+        ? `📁 ${project.title} (配下タスク${childCount}件)` 
+        : `📁 ${project.title}`;
+
+      this.enqueueDelayLog({
         taskId: project.id,
-        taskTitle: `📁 ${project.title} (配下タスク含む)`,
+        taskTitle: titleLabel,
         previousDueDate: oldDueDate,
         newDueDate: newDueDate
-      };
+      });
     }
 
     const index = this.projects.findIndex(p => p.id === project!.id);
@@ -313,20 +338,19 @@ export class AppComponent implements OnInit {
     }
 
     const oldTask = this.allTasks.find(t => t.id === task!.id);
-    // ★ _previousDueDate（Ganttドラッグ前日付）があれば優先使用
     const oldDueDate = (updatedTask as any)._previousDueDate || oldTask?.deadline || oldTask?.scheduledEndDate || '';
     const newDueDate = task.deadline || task.scheduledEndDate || '';
 
-    // ★ 現在、親課題のトーストが起動中の場合は、子タスク個別のトーストで上書きしない
-    const isParentToastActive = this.activeDelayLogInfo && this.activeDelayLogInfo.taskId === task.parentId;
+    // 親課題のトーストがすでにキューにある場合は重複追加しない
+    const isParentInQueue = this.delayLogQueue.some(q => q.taskId === task!.parentId);
 
-    if (this.autoCollectDelayLog && oldDueDate && newDueDate && oldDueDate !== newDueDate && !isParentToastActive) {
-      this.activeDelayLogInfo = {
+    if (this.autoCollectDelayLog && oldDueDate && newDueDate && !isParentInQueue) {
+      this.enqueueDelayLog({
         taskId: task.id,
         taskTitle: task.title,
         previousDueDate: oldDueDate,
         newDueDate: newDueDate
-      };
+      });
     }
 
     const index = this.allTasks.findIndex(t => t.id === task!.id);
@@ -342,48 +366,48 @@ export class AppComponent implements OnInit {
 
   // 遅延理由選択ハンドラ
   onSelectDelayReason(reason: DelayReason): void {
-    if (!this.activeDelayLogInfo) return;
+    const current = this.delayLogQueue.shift(); // 先頭のログを取り出して消化
+    if (!current) return;
 
-    const targetId = this.activeDelayLogInfo.taskId;
-    const isProject = this.projects.some(p => p.id === targetId);
+    this.saveDelayLog(current.taskId, current.taskTitle, current.previousDueDate, current.newDueDate, reason);
+  }
 
+  // 残りのキューを一括スキップ（未分類としてすべて保存）
+  onSkipAllDelayLogs(): void {
+    while (this.delayLogQueue.length > 0) {
+      const item = this.delayLogQueue.shift();
+      if (item) {
+        this.saveDelayLog(item.taskId, item.taskTitle, item.previousDueDate, item.newDueDate, 'unclassified');
+      }
+    }
+  }
+
+  // Firestoreへの保存共通ヘルパー
+  private saveDelayLog(taskId: string, title: string, oldDate: string, newDate: string, reason: DelayReason): void {
+    const isProject = this.projects.some(p => p.id === taskId);
     if (isProject) {
-      // ★ 親課題の一括変更の場合：配下の子タスク全件に遅延ログを一括保存
-      const childTasks = this.allTasks.filter(t => t.parentId === targetId);
-      
+      const childTasks = this.allTasks.filter(t => t.parentId === taskId);
       if (childTasks.length > 0) {
         childTasks.forEach(task => {
           this.dataService.addDelayLog({
             taskId: task.id,
             taskTitle: task.title,
-            previousDueDate: this.activeDelayLogInfo!.previousDueDate,
-            newDueDate: this.activeDelayLogInfo!.newDueDate,
+            previousDueDate: oldDate,
+            newDueDate: newDate,
             reason: reason
           });
         });
-      } else {
-        // 子タスクが無い場合は親課題自体のログとして保存
-        this.dataService.addDelayLog({
-          taskId: targetId,
-          taskTitle: this.activeDelayLogInfo.taskTitle,
-          previousDueDate: this.activeDelayLogInfo.previousDueDate,
-          newDueDate: this.activeDelayLogInfo.newDueDate,
-          reason: reason
-        });
+        return;
       }
-    } else {
-      // ★ 単一子タスクの変更の場合
-      this.dataService.addDelayLog({
-        taskId: targetId,
-        taskTitle: this.activeDelayLogInfo.taskTitle,
-        previousDueDate: this.activeDelayLogInfo.previousDueDate,
-        newDueDate: this.activeDelayLogInfo.newDueDate,
-        reason: reason
-      });
     }
 
-    // トーストを閉じる
-    this.activeDelayLogInfo = null;
+    this.dataService.addDelayLog({
+      taskId: taskId,
+      taskTitle: title,
+      previousDueDate: oldDate,
+      newDueDate: newDate,
+      reason: reason
+    });
   }
 
   // タスクの削除完了ハンドラ

@@ -168,9 +168,12 @@
     <!-- ★ 遅延理由収集ノンブロッキングトースト -->
     <app-delay-log-toast
       *ngIf="autoCollectDelayLog && activeDelayLogInfo"
+      [taskId]="activeDelayLogInfo.taskId"
       [taskTitle]="activeDelayLogInfo.taskTitle"
-      (selectReason)="onSelectDelayReason($event)">
-    </app-delay-log-toast>
+      [queueLength]="delayLogQueue.length"
+      (selectReason)="onSelectDelayReason($event)"
+      (skipAll)="onSkipAllDelayLogs()">
+    </app-delay-log-toast>  
 
   </div>
 </div>

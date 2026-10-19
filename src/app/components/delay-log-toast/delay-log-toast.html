@@ -1,19 +1,30 @@
 <div class="delay-toast-card">
-    <div class="toast-header">
-      <span class="toast-icon">📅</span>
-      <span class="toast-text">「{{ taskTitle }}」の期限を変更しました。理由は？</span>
-    </div>
-  
-    <div class="chip-group">
-      <button 
-        *ngFor="let r of reasons" 
-        class="chip-btn" 
-        (click)="onSelect(r)">
-        {{ labels[r].icon }} {{ labels[r].label }}
-      </button>
-    </div>
-  
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" [style.width.%]="progressWidth"></div>
-    </div>
+  <div class="toast-header">
+    <span class="toast-icon">📅</span>
+    <span class="toast-text">「{{ taskTitle }}」の期限が延びました。理由は？</span>
+    
+    <!-- ★ キューが複数ある場合の一括スキップボタン -->
+    <button 
+      *ngIf="queueLength > 1" 
+      type="button" 
+      class="btn-skip-all" 
+      (click)="onSkipAll()"
+      title="残りのトーストをすべてスキップ">
+      残り {{ queueLength - 1 }} 件をスキップ ✕
+    </button>
   </div>
+
+  <div class="chip-group">
+    <button 
+      *ngFor="let r of reasons" 
+      class="chip-btn" 
+      (click)="onSelect(r)">
+      {{ labels[r].icon }} {{ labels[r].label }}
+    </button>
+  </div>
+
+  <!-- プログレスバー -->
+  <div class="progress-bar-bg" [class.paused]="isHovered">
+    <div class="progress-bar-fill" [style.width.%]="progressWidth"></div>
+  </div>
+</div>
