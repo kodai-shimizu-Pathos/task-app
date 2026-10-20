@@ -1,9 +1,8 @@
-import { Component, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ParentProject } from '../../models/project.model';
 import { Status, PriorityLevel } from '../../models/task.model';
-import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-project-form',
@@ -13,10 +12,6 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './project-form.css',
 })
 export class ProjectForm implements OnInit, OnChanges {
-  private authService = inject(AuthService);
-  // ========================================
-  // @Input / @Output
-  // ========================================
   @Input() projectToEdit?: ParentProject | null = null;
 
   @Output() projectCreated = new EventEmitter<ParentProject>();
@@ -24,9 +19,6 @@ export class ProjectForm implements OnInit, OnChanges {
   @Output() projectDeleted = new EventEmitter<string>();
   @Output() closeModal = new EventEmitter<void>();
 
-  // ========================================
-  // フォーム状態
-  // ========================================
   title = '';
   description = '';
   status = 'todo';
@@ -34,17 +26,11 @@ export class ProjectForm implements OnInit, OnChanges {
   scheduledStartDate = '';
   scheduledEndDate = '';
   deadline = '';
+  tagsInput = ''; // ★ タグ入力用（カンマ区切り文字列）
   
-  /** ドキュメントリンク一覧 */
-  docLinks: { title: string; url: string }[] = [];
-
-  /** 新規ドキュメント追加時の入力フィールド */
   docTitle = '';
   docUrl = '';
-
-  // ========================================
-  // ライフサイクル
-  // ========================================
+  docLinks: { title: string; url: string }[] = [];
 
   ngOnInit(): void {
     this.populateForm();
@@ -56,13 +42,41 @@ export class ProjectForm implements OnInit, OnChanges {
     }
   }
 
-  // ========================================
-  // Public メソッド
-  // ========================================
+  private populateForm(): void {
+    if (this.projectToEdit) {
+      this.title = this.projectToEdit.title;
+      this.description = this.projectToEdit.description || '';
+      this.status = this.projectToEdit.status || 'todo';
+      this.priority = this.projectToEdit.priority || 'medium';
+      this.scheduledStartDate = this.projectToEdit.scheduledStartDate || '';
+      this.scheduledEndDate = this.projectToEdit.scheduledEndDate || '';
+      this.deadline = this.projectToEdit.deadline || '';
+      // ★ タグの読み込み
+      this.tagsInput = Array.isArray(this.projectToEdit.tags) ? this.projectToEdit.tags.join(', ') : '';
+      this.docLinks = this.projectToEdit.docLinks ? [...this.projectToEdit.docLinks] : [];
+    } else {
+      this.resetForm();
+    }
+  }
 
-  /**
-   * ドキュメントリンクを追加
-   */
+  private resetForm(): void {
+    this.title = '';
+    this.description = '';
+    this.scheduledStartDate = '';
+    this.scheduledEndDate = '';
+    this.deadline = '';
+    this.tagsInput = ''; // ★ リセット
+    this.docLinks = [];
+    this.docTitle = '';
+    this.docUrl = '';
+  }
+
+  // ★ カンマ区切りの文字列を配列に変換するヘルパー
+  private parseTags(input: string): string[] {
+    if (!input || !input.trim()) return [];
+    return input.split(',').map(tag => tag.trim().replace(/^#/, '')).filter(tag => tag.length > 0);
+  }
+
   addDoc(): void {
     if (this.docTitle.trim() && this.docUrl.trim()) {
       this.docLinks.push({
@@ -74,33 +88,26 @@ export class ProjectForm implements OnInit, OnChanges {
     }
   }
 
-  /**
-   * ドキュメントリンクを削除
-   */
   removeDoc(index: number): void {
     this.docLinks.splice(index, 1);
   }
 
-  /**
-   * フォーム送信（新規作成 or 更新）
-   */
   onSubmit(): void {
     if (!this.title.trim()) {
       alert('親課題名を入力してください');
       return;
     }
 
-    const currentUserId = this.authService.currentUserId || '';
+    const parsedTags = this.parseTags(this.tagsInput); // ★ 入力タグのパース
 
     if (this.projectToEdit) {
-      // 既存親課題更新
       const updatedProject: ParentProject = {
         ...this.projectToEdit,
-        userId: this.projectToEdit.userId || currentUserId,
         title: this.title,
         description: this.description || undefined,
         status: this.status as Status,
         priority: this.priority as PriorityLevel,
+        tags: parsedTags, // ★ パースしたタグを反映
         scheduledStartDate: this.scheduledStartDate || undefined,
         scheduledEndDate: this.scheduledEndDate || undefined,
         deadline: this.deadline || undefined,
@@ -109,15 +116,13 @@ export class ProjectForm implements OnInit, OnChanges {
       };
       this.projectUpdated.emit(updatedProject);
     } else {
-      // 新規親課題作成
       const newProject: ParentProject = {
         id: `proj-${Date.now()}`,
-        userId: currentUserId,
         title: this.title,
         description: this.description || undefined,
         status: 'todo',
         priority: 'medium',
-        tags: [],
+        tags: parsedTags, // ★ パースしたタグを反映
         scheduledStartDate: this.scheduledStartDate || undefined,
         scheduledEndDate: this.scheduledEndDate || undefined,
         deadline: this.deadline || undefined,
@@ -132,9 +137,6 @@ export class ProjectForm implements OnInit, OnChanges {
     this.onClose();
   }
 
-  /**
-   * 親課題削除
-   */
   onDelete(): void {
     if (this.projectToEdit && confirm(`親課題「${this.projectToEdit.title}」とそれに紐づく子タスクを削除してもよろしいですか？`)) {
       this.projectDeleted.emit(this.projectToEdit.id);
@@ -142,46 +144,7 @@ export class ProjectForm implements OnInit, OnChanges {
     }
   }
 
-  /**
-   * フォームを閉じる
-   */
   onClose(): void {
     this.closeModal.emit();
-  }
-
-  // ========================================
-  // Private ヘルパーメソッド
-  // ========================================
-
-  /**
-   * フォームの初期化：編集モード or 新規作成モード
-   */
-  private populateForm(): void {
-    if (this.projectToEdit) {
-      this.title = this.projectToEdit.title;
-      this.description = this.projectToEdit.description || '';
-      this.status = this.projectToEdit.status || 'todo';
-      this.priority = this.projectToEdit.priority || 'medium';
-      this.scheduledStartDate = this.projectToEdit.scheduledStartDate || '';
-      this.scheduledEndDate = this.projectToEdit.scheduledEndDate || '';
-      this.deadline = this.projectToEdit.deadline || '';
-      this.docLinks = this.projectToEdit.docLinks ? [...this.projectToEdit.docLinks] : [];
-    } else {
-      this.resetForm();
-    }
-  }
-
-  /**
-   * フォームをリセット（新規作成時の初期状態に戻す）
-   */
-  private resetForm(): void {
-    this.title = '';
-    this.description = '';
-    this.scheduledStartDate = '';
-    this.scheduledEndDate = '';
-    this.deadline = '';
-    this.docLinks = [];
-    this.docTitle = '';
-    this.docUrl = '';
   }
 }

@@ -12,9 +12,16 @@ import { ParentProject } from '../../models/project.model';
 export class ProjectCard {
   @Input() project!: ParentProject;
   @Output() selectProject = new EventEmitter<ParentProject>();
+  @Output() tagSelected = new EventEmitter<string>(); // ★ この定義が必要です！
 
   onCardClick(): void {
     this.selectProject.emit(this.project);
+  }
+
+  // タグチップクリック時に親へ文字列をemit
+  onTagClick(event: MouseEvent, tag: string): void {
+    event.stopPropagation(); // カードクリック（モーダル起動等）のバブリングを防止
+    this.tagSelected.emit(tag);
   }
 
   isOverdue(deadline?: string): boolean {
@@ -26,7 +33,6 @@ export class ProjectCard {
     return deadlineDate < today;
   }
 
-  // 優先度を日本語ラベルに変換
   getPriorityLabel(priority?: string): string {
     if (!priority) return '中';
     const lower = priority.toLowerCase();

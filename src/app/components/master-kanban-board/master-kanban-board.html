@@ -1,29 +1,26 @@
 <div class="master-kanban-wrapper">
-  <!-- ツールバー-->
+  <!-- ツールバー -->
   <div class="master-toolbar">
-    <!-- 1. キーワード検索-->
-    <input
-      type="text"
-      [(ngModel)]="searchKeyword"
-      placeholder="検索..."
-      class="search-input"
-    />
+    <!-- 1. 検索ボックス（アイコン付き・固定幅） -->
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        [(ngModel)]="searchKeyword"
+        placeholder="親課題を検索..."
+        class="filter-input-text"
+      />
+    </div>
 
-    <!-- 2. 優先度フィルター-->
+    <!-- 2. 優先度フィルター -->
     <select [(ngModel)]="priorityFilter" class="filter-select">
-      <option value="ALL">優先度： すべて</option>
-      <option value="HIGH">高</option>
-      <option value="MEDIUM">中</option>
-      <option value="LOW">低</option>
-    </select>
-
-    <!-- 3. タグフィルター-->
-    <select [(ngModel)]="selectedTag" class="filter-select">
-      <option value="ALL">タグ： すべて</option>
-      <option *ngFor="let tag of availableTags" [value]="tag">#{{ tag }}</option>
+      <option value="ALL">優先度：すべて</option>
+      <option value="HIGH">優先度：高</option>
+      <option value="MEDIUM">優先度：中</option>
+      <option value="LOW">優先度：低</option>
     </select>
     
-    <!-- 4. ソート順選択-->
+    <!-- 3. ソート項目選択 -->
     <select [(ngModel)]="sortBy" class="filter-select">
       <option value="createdAt">作成日順</option>
       <option value="deadline">最終期限順</option>
@@ -31,23 +28,38 @@
       <option value="progress">進捗度順</option>
     </select>
 
-    <!-- 5. ソート順切り替え-->
-    <button (click)="toggleSortOrder()" class="sort-button">
-      {{ sortOrder === 'desc' ? '▼' : '▲' }}
+    <!-- 4. 昇順/降順切り替え -->
+    <button (click)="toggleSortOrder()" class="btn-sort-order" title="昇順/降順切り替え">
+      {{ sortOrder === 'asc' ? '▲' : '▼' }}
     </button>
 
-    <!-- 6. フィルターリセット-->
-    <button (click)="resetFilters()" class="reset-button">
-      リセット
+    <!-- 5. 選択中の複数アクティブタグチップ群 -->
+    <div class="active-tags-container" *ngIf="selectedTags.length > 0">
+      <div class="active-tag-chip" *ngFor="let tag of selectedTags">
+        <span class="tag-label">#{{ tag }}</span>
+        <button type="button" class="btn-clear-tag" (click)="removeTagFilter(tag)" title="このタグを解除">✕</button>
+      </div>
+    </div>
+
+    <!-- 6. 動的リセットボタン（条件変更時のみ表示） -->
+    <button 
+      *ngIf="isFilterActive"
+      (click)="resetFilters()" 
+      class="btn-reset-filter"
+      title="すべての検索・フィルター条件を初期状態に戻す">
+      🔄 すべてリセット
     </button>
   </div>
 
-    <div class="master-kanban-container" cdkDropListGroup>
+  <div class="master-kanban-container" cdkDropListGroup>
     <!-- 未着手 カラム -->
     <div class="master-column todo">
-      <div class="column-header" [ngClass]="'todo'">
-        <span class="column-title">🔴 未着手</span>
-        <span class="count-badge">{{ todoProjects.length }}</span>
+      <div class="column-header">
+        <div class="header-left-group">
+          <span class="status-indicator" style="background-color: #64748B;"></span>
+          <span class="column-title">未着手</span>
+          <span class="count-badge">{{ todoProjects.length }}</span>
+        </div>
       </div>
       <div 
         class="column-droplist"
@@ -56,7 +68,6 @@
         [cdkDropListData]="todoProjects"
         (cdkDropListDropped)="onProjectDropped($event, 'todo')">
         
-        <!-- ドラッグ可能な親課題カード -->
         <div
           *ngFor="let project of todoProjects"
           cdkDrag
@@ -64,11 +75,11 @@
           class="draggable-project-wrapper">
           <app-project-card
             [project]="project"
-            (selectProject)="onSelectProject($event)">
+            (selectProject)="onSelectProject($event)"
+            (tagSelected)="onTagSelected($event)">
           </app-project-card>
         </div>
 
-        <!-- カラムが空の時のプレースホルダー -->
         <div *ngIf="todoProjects.length === 0" class="empty-placeholder">
           親課題をここへドラッグ
         </div>
@@ -77,9 +88,12 @@
 
     <!-- 進行中 カラム -->
     <div class="master-column in-progress">
-      <div class="column-header" [ngClass]="'in-progress'">
-        <span class="column-title">🟠 進行中</span>
-        <span class="count-badge">{{ inProgressProjects.length }}</span>
+      <div class="column-header">
+        <div class="header-left-group">
+          <span class="status-indicator" style="background-color: #2563EB;"></span>
+          <span class="column-title">進行中</span>
+          <span class="count-badge">{{ inProgressProjects.length }}</span>
+        </div>
       </div>
       <div 
         class="column-droplist"
@@ -88,7 +102,6 @@
         [cdkDropListData]="inProgressProjects"
         (cdkDropListDropped)="onProjectDropped($event, 'in-progress')">
         
-        <!-- ドラッグ可能な親課題カード -->
         <div
           *ngFor="let project of inProgressProjects"
           cdkDrag
@@ -96,11 +109,11 @@
           class="draggable-project-wrapper">
           <app-project-card
             [project]="project"
-            (selectProject)="onSelectProject($event)">
+            (selectProject)="onSelectProject($event)"
+            (tagSelected)="onTagSelected($event)">
           </app-project-card>
         </div>
 
-        <!-- カラムが空の時のプレースホルダー -->
         <div *ngIf="inProgressProjects.length === 0" class="empty-placeholder">
           親課題をここへドラッグ
         </div>
@@ -109,9 +122,12 @@
 
     <!-- 完了 カラム -->
     <div class="master-column done">
-      <div class="column-header" [ngClass]="'done'">
-        <span class="column-title">🟢 完了</span>
-        <span class="count-badge">{{ doneProjects.length }}</span>
+      <div class="column-header">
+        <div class="header-left-group">
+          <span class="status-indicator" style="background-color: #059669;"></span>
+          <span class="column-title">完了</span>
+          <span class="count-badge">{{ doneProjects.length }}</span>
+        </div>
       </div>
       <div 
         class="column-droplist"
@@ -120,7 +136,6 @@
         [cdkDropListData]="doneProjects"
         (cdkDropListDropped)="onProjectDropped($event, 'done')">
         
-        <!-- ドラッグ可能な親課題カード -->
         <div
           *ngFor="let project of doneProjects"
           cdkDrag
@@ -128,11 +143,11 @@
           class="draggable-project-wrapper">
           <app-project-card
             [project]="project"
-            (selectProject)="onSelectProject($event)">
+            (selectProject)="onSelectProject($event)"
+            (tagSelected)="onTagSelected($event)">
           </app-project-card>
         </div>
 
-        <!-- カラムが空の時のプレースホルダー -->
         <div *ngIf="doneProjects.length === 0" class="empty-placeholder">
           親課題をここへドラッグ
         </div>

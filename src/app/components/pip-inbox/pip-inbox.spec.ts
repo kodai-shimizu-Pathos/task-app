@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PipInbox } from './pip-inbox';
+import { PipInboxComponent } from './pip-inbox';
 
 describe('PipInbox', () => {
-  let component: PipInbox;
-  let fixture: ComponentFixture<PipInbox>;
+  let component: PipInboxComponent;
+  let fixture: ComponentFixture<PipInboxComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PipInbox]
+      imports: [PipInboxComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(PipInbox);
+    fixture = TestBed.createComponent(PipInboxComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

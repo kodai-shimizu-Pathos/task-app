@@ -1,38 +1,54 @@
-<div class="project-card" *ngIf="project" (click)="onCardClick()">
-    <!-- ヘッダー：優先度バッジ -->
-    <div class="card-header">
-      <span class="badge-priority" [ngClass]="'priority-' + project.priority.toLowerCase()">
+<div 
+  class="project-card" 
+  *ngIf="project" 
+  [ngClass]="{
+    'done-card': project.status === 'done',
+    'overdue-deadline': isOverdue(project.deadline)
+  }" 
+  (click)="onCardClick()">
+
+  <!-- 1行目：【左】優先度バッジ ＋ タイトル ／ 【右】クリック可能タグ -->
+  <div class="card-top-row">
+    <div class="title-group">
+      <span class="badge-priority" [ngClass]="'priority-' + (project.priority || 'medium').toLowerCase()">
         {{ getPriorityLabel(project.priority) }}
       </span>
-      <span class="status-label" *ngIf="project.status === 'done'">✅ 完了</span>
+      <h4 class="card-title" [title]="project.title">{{ project.title }}</h4>
     </div>
-  
-    <!-- 親課題タイトル -->
-    <h4 class="card-title">{{ project.title }}</h4>
-  
-    <!-- ハッシュタグ -->
+
     <div class="tags-list" *ngIf="project.tags && project.tags.length > 0">
-      <span class="tag-chip" *ngFor="let tag of project.tags">#{{ tag }}</span>
-    </div>
-  
-    <!-- 進捗率プログレスバー -->
-    <div class="progress-section">
-      <div class="progress-labels">
-        <span class="label-text">進捗</span>
-        <span class="progress-count">
-          {{ project.completedTaskCount || 0 }}/{{ project.totalTaskCount || 0 }} ({{ project.progressPercentage || 0 }}%)
-        </span>
-      </div>
-      <div class="progress-bar-track">
-        <div class="progress-bar-fill" [style.width.%]="project.progressPercentage || 0"></div>
-      </div>
-    </div>
-  
-    <!-- 最終期限 -->
-    <div class="dates-section" *ngIf="project.deadline">
-      <div class="date-chip deadline" [ngClass]="{'overdue': isOverdue(project.deadline)}">
-        <span class="date-label">{{ isOverdue(project.deadline) ? '🚨 期限超過：' : '⏰ 最終期限：' }}</span>
-        <span class="date-value">{{ project.deadline }}</span>
-      </div>
+      <span 
+        *ngFor="let tag of project.tags" 
+        class="tag-chip clickable-tag"
+        (click)="onTagClick($event, tag)"
+        title="このタグでフィルター">
+        #{{ tag }}
+      </span>
     </div>
   </div>
+
+  <!-- 2行目：進捗バー ＋ 進捗状況数値 -->
+  <div class="progress-section">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" [style.width.%]="project.progressPercentage || 0"></div>
+    </div>
+    <span class="progress-text">
+      {{ project.completedTaskCount || 0 }}/{{ project.totalTaskCount || 0 }} ({{ project.progressPercentage || 0 }}%)
+    </span>
+  </div>
+
+  <!-- 3行目：【左】最終期限 ／ 【右】完了ステータスラベル -->
+  <div class="card-bottom-row" *ngIf="project.deadline || project.status === 'done'">
+    <div class="dates-group">
+      <span 
+        *ngIf="project.deadline" 
+        class="date-chip chip-deadline" 
+        [class.overdue]="isOverdue(project.deadline)">
+        <span class="chip-label">最終期限</span>
+        <span class="chip-val">{{ project.deadline }}</span>
+      </span>
+    </div>
+
+    <span class="status-done-label" *ngIf="project.status === 'done'">完了</span>
+  </div>
+</div>

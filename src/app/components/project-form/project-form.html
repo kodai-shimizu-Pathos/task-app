@@ -7,18 +7,17 @@
       <button type="button" class="close-btn" (click)="onClose()">✕</button>
     </div>
 
-    <!-- フォーム本体 (Flexboxでボディのみ可変・フッター常時固定) -->
+    <!-- フォーム本体 -->
     <form (ngSubmit)="onSubmit()" class="form-container">
-      
-      <!-- スクロール可能な入力ボディ -->
       <div class="panel-body">
+        
         <!-- 1行目: 親課題名 -->
         <div class="form-group">
           <label for="proj-title">親課題名 <span class="required">*</span></label>
           <input type="text" id="proj-title" name="title" [(ngModel)]="title" placeholder="例: 開発フェーズ1 仕様策定" required />
         </div>
 
-        <!-- 2行目: ステータスと優先度 (2列横並び) -->
+        <!-- 2行目: ステータスと優先度 -->
         <div class="form-row">
           <div class="form-group">
             <label for="proj-status">ステータス<span class="required">*</span></label>
@@ -44,7 +43,7 @@
           <textarea id="proj-desc" name="description" [(ngModel)]="description" rows="2" placeholder="課題の目的や背景、全体メモを入力..."></textarea>
         </div>
 
-        <!-- 4行目: スケジュール (2列横並び) -->
+        <!-- 4行目: スケジュール -->
         <div class="form-row">
           <div class="form-group">
             <label for="proj-start">開始予定日</label>
@@ -62,7 +61,13 @@
           <input type="date" id="proj-deadline" name="deadline" [(ngModel)]="deadline" />
         </div>
 
-        <!-- 6行目: 関連資料リンク -->
+        <!-- ★ 6行目: タグ（新規追加） -->
+        <div class="form-group">
+          <label for="proj-tagsInput">タグ (カンマ区切り)</label>
+          <input type="text" id="proj-tagsInput" name="tagsInput" [(ngModel)]="tagsInput" placeholder="例: 開発, リファクタリング" />
+        </div>
+
+        <!-- 7行目: 関連資料リンク -->
         <div class="form-group">
           <label>関連資料・リンク</label>
           <div class="doc-input-row">
@@ -71,7 +76,6 @@
             <button type="button" class="btn-add-doc" (click)="addDoc()">追加</button>
           </div>
 
-          <!-- 登録済みリンク一覧 -->
           <ul class="doc-list" *ngIf="docLinks.length > 0">
             <li *ngFor="let doc of docLinks; let i = index">
               <span>📎 {{ doc.title }}</span>
@@ -81,7 +85,7 @@
         </div>
       </div>
 
-      <!-- 最下部固定フッター -->
+      <!-- 固定フッター -->
       <div class="panel-footer">
         <button *ngIf="projectToEdit" type="button" class="btn-delete" (click)="onDelete()">
           🗑️ 親課題を削除

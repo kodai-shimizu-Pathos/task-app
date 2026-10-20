@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ProjectCard } from '../project-card/project-card';
 import { ParentProject } from '../../models/project.model';
 import { Status } from '../../models/task.model';
@@ -18,58 +18,71 @@ export class MasterKanbanBoard implements OnChanges {
   @Output() selectProject = new EventEmitter<ParentProject>();
   @Output() parentTaskUpdated = new EventEmitter<ParentProject>();
 
-  // タグ一覧プロパティ
-  availableTags: string[] = [];
-
   // フィルター・ソート状態
   searchKeyword: string = '';
   priorityFilter: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW' = 'ALL';
-  selectedTag: string = 'ALL';
+  selectedTags: string[] = []; // ★ 複数タグ選択（配列管理）
   sortBy: 'createdAt' | 'deadline' | 'priority' | 'progress' = 'createdAt';
   sortOrder: 'asc' | 'desc' = 'desc';
 
-  // 親から projects データが渡された・更新された際にタグ一覧を再構築
+  availableTags: string[] = [];
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['projects']) {
       this.updateAvailableTags();
     }
   }
 
-  // タグ抽出処理
-  private updateAvailableTags(): void {
-    if (!this.projects || this.projects.length === 0) {
-      this.availableTags = [];
-      return;
+  // フィルター条件が初期状態から変更されているか判定
+  get isFilterActive(): boolean {
+    return (
+      this.searchKeyword.trim() !== '' ||
+      this.priorityFilter !== 'ALL' ||
+      this.selectedTags.length > 0 ||
+      this.sortBy !== 'createdAt' ||
+      this.sortOrder !== 'desc'
+    );
+  }
+
+  // カード上のタグ押下時のトグル処理（AND検索）
+  onTagSelected(tagInput: string | any): void {
+    const rawTag = typeof tagInput === 'string' ? tagInput : (tagInput?.detail || '');
+    if (!rawTag) return;
+
+    const cleaned = this.cleanTag(rawTag);
+    const index = this.selectedTags.findIndex(t => this.cleanTag(t) === cleaned);
+
+    if (index >= 0) {
+      this.selectedTags.splice(index, 1); // 選択解除
+    } else {
+      this.selectedTags.push(cleaned);   // 選択追加
     }
-
-    const tagSet = new Set<string>();
-    this.projects.forEach(project => {
-      if (Array.isArray(project.tags)) {
-        project.tags.forEach(tag => {
-          const cleaned = tag.trim().replace(/^#/, '');
-          if (cleaned) tagSet.add(cleaned);
-        });
-      }
-    });
-    this.availableTags = Array.from(tagSet);
   }
 
-  private cleanTag(tag: string): string {
-    if (!tag) return '';
-    return tag.trim().replace(/^#/, '').toLowerCase();
+  // 個別タグの解除
+  removeTagFilter(tag: string): void {
+    const target = this.cleanTag(tag);
+    this.selectedTags = this.selectedTags.filter(t => this.cleanTag(t) !== target);
   }
 
-  private normalizeStatus(status: string): string {
-    if (!status) return '';
-    return status.trim().toLowerCase().replace('_', '-');
+  // フィルター全リセット
+  resetFilters(): void {
+    this.searchKeyword = '';
+    this.priorityFilter = 'ALL';
+    this.selectedTags = [];
+    this.sortBy = 'createdAt';
+    this.sortOrder = 'desc';
   }
 
-  // フィルタリング・ソート済みの親課題リスト
+  toggleSortOrder(): void {
+    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+  }
+
   get filteredAndSortedProjects(): ParentProject[] {
     if (!this.projects) return [];
     let result = [...this.projects];
 
-    // 1. キーワード検索（タイトル ＆ 概要・メモ）
+    // 1. キーワード検索
     if (this.searchKeyword.trim()) {
       const kw = this.searchKeyword.toLowerCase().trim();
       result = result.filter(p => 
@@ -83,12 +96,13 @@ export class MasterKanbanBoard implements OnChanges {
       result = result.filter(p => p.priority && p.priority.toUpperCase() === this.priorityFilter);
     }
 
-    // 3. タグフィルター
-    if (this.selectedTag !== 'ALL') {
-      const target = this.cleanTag(this.selectedTag);
-      result = result.filter(p => 
-        p.tags && Array.isArray(p.tags) && p.tags.some(tag => this.cleanTag(tag) === target)
-      );
+    // 3. 複数タグAND判定
+    if (this.selectedTags.length > 0) {
+      result = result.filter(p => {
+        if (!p.tags || p.tags.length === 0) return false;
+        const projectTags = p.tags.map(tag => this.cleanTag(tag));
+        return this.selectedTags.every(selected => projectTags.includes(this.cleanTag(selected)));
+      });
     }
 
     // 4. ソート処理
@@ -100,9 +114,7 @@ export class MasterKanbanBoard implements OnChanges {
         comparison = dateA - dateB;
       } else if (this.sortBy === 'priority') {
         const weight: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1, high: 3, medium: 2, low: 1 };
-        const weightA = weight[a.priority] || 0;
-        const weightB = weight[b.priority] || 0;
-        comparison = weightB - weightA;
+        comparison = (weight[b.priority] || 0) - (weight[a.priority] || 0);
       } else if (this.sortBy === 'progress') {
         comparison = (a.progressPercentage || 0) - (b.progressPercentage || 0);
       } else {
@@ -116,7 +128,6 @@ export class MasterKanbanBoard implements OnChanges {
     return result;
   }
 
-  // 各ステータスごとの親課題フィルタリング
   get todoProjects(): ParentProject[] {
     return this.filteredAndSortedProjects.filter(p => this.normalizeStatus(p.status) === 'todo');
   }
@@ -129,48 +140,38 @@ export class MasterKanbanBoard implements OnChanges {
     return this.filteredAndSortedProjects.filter(p => this.normalizeStatus(p.status) === 'done');
   }
 
-  // フィルターリセット処理
-  resetFilters(): void {
-    this.searchKeyword = '';
-    this.priorityFilter = 'ALL';
-    this.selectedTag = 'ALL';
-    this.sortBy = 'createdAt';
-    this.sortOrder = 'desc';
+  private updateAvailableTags(): void {
+    if (!this.projects) return;
+    const set = new Set<string>();
+    this.projects.forEach(p => p.tags?.forEach(tag => set.add(this.cleanTag(tag))));
+    this.availableTags = Array.from(set);
   }
 
-  // ソート順切り替え処理
-  toggleSortOrder(): void {
-    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+  private cleanTag(tag: string): string {
+    return (tag || '').trim().replace(/^#/, '').toLowerCase();
+  }
+
+  private normalizeStatus(status: string): string {
+    if (!status) return '';
+    return status.trim().toLowerCase().replace('_', '-');
   }
 
   onSelectProject(project: ParentProject): void {
     this.selectProject.emit(project);
   }
 
-  /**
-   * 親課題カードがカラム間でドロップされた際のハンドラー
-   * @param event CdkDragDrop イベント
-   * @param targetStatus ドロップ先のステータス ('todo' | 'in-progress' | 'done')
-   */
   onProjectDropped(event: CdkDragDrop<ParentProject[]>, targetStatus: Status): void {
     if (event.previousContainer === event.container) {
-      // 同一カラム内での順番入れ替え
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
-      // 1. ドラッグデータを取得
       let projectId: string | null = null;
       const itemData = event.item.data;
 
-      // 分岐A：cdkDragDataからオブジェクトが取得できた場合
       if (typeof itemData === 'object' && itemData != null && itemData['id']) {
         projectId = itemData.id;
-      }
-      // 分岐B：cdkDragDataからID文字列が取得できた場合
-      else if (typeof itemData === 'string') {
+      } else if (typeof itemData === 'string') {
         projectId = itemData;
-      }
-      // 分岐C：previousContainerから復元を試みる
-      else {
+      } else {
         const previousData = event.previousContainer.data;
         if (Array.isArray(previousData) && event.previousIndex >= 0 && previousData[event.previousIndex]) {
           const prevProject = previousData[event.previousIndex];
@@ -180,29 +181,16 @@ export class MasterKanbanBoard implements OnChanges {
         }
       }
 
-      // IDが取得できなかった場合はエラー
-      if (!projectId) {
-        console.error('更新対象の親課題IDが見つかりません:', itemData);
-        return;
-      }
+      if (!projectId) return;
 
-      // 2. this.projects配列から親課題オブジェクトを取得・復元
       const projectIndex = this.projects.findIndex(p => p.id === projectId);
-      if (projectIndex === -1) {
-        console.error('親課題が配列に見つかりません:', projectId);
-        return;
-      }
+      if (projectIndex === -1) return;
 
       const project = this.projects[projectIndex];
-
-      // 3. 親課題のプロパティを更新
       project.status = targetStatus;
       project.updatedAt = new Date().toISOString();
 
-      // 4. 配列も更新
       this.projects[projectIndex] = { ...project };
-
-      // 5. 親コンポーネントに更新された親課題を通知
       this.parentTaskUpdated.emit({ ...project });
     }
   }
