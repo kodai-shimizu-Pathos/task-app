@@ -1,52 +1,54 @@
-<div class="task-card" *ngIf="task" [ngClass]="{'done-card':task.status === 'done'}" (click)="onCardClick()">
-    <!-- ヘッダー：優先度バッジ-->
-    <div class="card-header">
-        <span class="badge-priority" [ngClass]="'priority-' + task.priority.toLowerCase()">
-            {{ getPriorityLabel(task.priority) }}
-        </span>
+<div 
+  class="task-card" 
+  *ngIf="task" 
+  [ngClass]="{
+    'done-card': task.status === 'done',
+    'overdue-scheduled': isScheduledOverdue() && !isDeadlineOverdue(),
+    'overdue-deadline': isDeadlineOverdue()
+  }" 
+  (click)="onCardClick()">
+  
+  <!-- 1行目（上段）：【左】優先度 ＋ タイトル ／ 【右】タグ -->
+  <div class="card-top-row">
+    <div class="title-group">
+      <span class="badge-priority" [ngClass]="'priority-' + (task.priority || 'medium').toLowerCase()">
+        {{ getPriorityLabel(task.priority) }}
+      </span>
+      <h4 class="card-title" [title]="task.title">{{ task.title }}</h4>
     </div>
-     
-    <!-- タスクタイトル -->
-    <h4 class="#card-title">{{ task.title }}</h4>
-      
-    <!-- タグ一覧 -->
+
     <div class="task-tags" *ngIf="task.tags && task.tags.length > 0">
-        <span
-          *ngFor="let tag of task.tags"
-          class="tag-chip clickable-tag"
-          (click)="onTagClick($event, tag)"
-          title="このタグでフィルター">
-          #{{ tag }}
-        </span>
+      <span
+        *ngFor="let tag of task.tags"
+        class="tag-chip clickable-tag"
+        (click)="onTagClick($event, tag)"
+        title="このタグでフィルター">
+        #{{ tag }}
+      </span>
+    </div>
+  </div>
+
+  <!-- 2行目（下段）：【左】完了予定 ＆ 最終期限 ／ 【右】サブタスク進捗 -->
+  <div class="card-bottom-row" *ngIf="task.scheduledEndDate || task.deadline || hasChecklist()">
+    <div class="date-badges-group">
+      
+      <!-- 1. 完了予定日 -->
+      <span class="date-chip chip-scheduled" *ngIf="task.scheduledEndDate" [class.overdue]="isScheduledOverdue()">
+        <span class="chip-label">完了予定</span>
+        <span class="chip-val">{{ task.scheduledEndDate }}</span>
+      </span>
+
+      <!-- 2. 最終期限 -->
+      <span class="date-chip chip-deadline" *ngIf="task.deadline" [class.overdue]="isDeadlineOverdue()">
+        <span class="chip-label">最終期限</span>
+        <span class="chip-val">{{ task.deadline }}</span>
+      </span>
+
     </div>
 
-    <!-- 日付表示エリア -->
-    <div class="dates-section" *ngIf="task.scheduledStartDate || task.scheduledEndDate || task.deadline">
-        <!-- 1. 作業予定日 (開始日 ～ 完了日) -->
-        <div class="date-chip scheduled" *ngIf="task.scheduledStartDate || task.scheduledEndDate">
-            <span class="date-label">📅 作業予定：</span>
-            <span class="date-value">
-                {{ task.scheduledStartDate || '未定' }} ~ {{ task.scheduledEndDate || '未定' }}
-            </span>
-        </div>
-
-        <!-- 2. 締切日 (予定日よりも目立たせる)-->
-        <div class="date-chip deadline" *ngIf="task.deadline" 
-        [ngClass]="{'overdue': isOverdue(task.deadline), 'upcoming': !isOverdue(task.deadline)}">
-            <span class="date-label">
-            {{ isOverdue(task.deadline) ? '🚨期限超過：' : '⏰最終期限：' }}
-            </span>
-            <span class="date-value">{{ task.deadline }}</span>
-        </div>
+    <!-- 右下：サブタスク進捗 -->
+    <div class="checklist-compact" *ngIf="hasChecklist()">
+      <span class="stats">☑ {{ getChecklistStats().completed }}/{{ getChecklistStats().total }}</span>
     </div>
-
-    <!-- チェックリスト進捗バー（チェックリスト1件以上の場合のみ表示） -->
-    <div class="checklist-progress-section" *ngIf="hasChecklist()">
-        <div class="progress-bar-container">
-            <div class="progress-bar-track">
-                <div class="progress-bar-fill" [style.width.%]="task.progress || 0"></div>
-            </div>
-            <span class="progress-text">進捗: {{ getChecklistStats().completed }}/{{ getChecklistStats().total }} ({{ task.progress || 0 }}%)</span>
-        </div>
-    </div>
+  </div>
 </div>

@@ -1,71 +1,70 @@
 /* ==========================================
-   1. テーマ変数定義
+   1. グローバルテーマ変数定義 (CSS Variables)
    ========================================== */
 
-/* 🌙 ダークモード (仕様書準拠) */
+/* 🌙 ダークモード (静かなモノトーン主調) */
 body[data-theme="dark"], body {
-  /* ベースカラー */
-  --bg-main: #1A1D24;          /* アプリ全体の背景 */
-  --bg-master: #242832;        /* 左Masterパネル背景 */
-  --bg-panel: #242832;         /* 右カンバンカラム背景 */
-  --bg-card: #2D3139;          /* タスクカード背景 */
-  --border-color: #3B444E;     /* 枠線・区切り線 */
+  --bg-main: #121418;          /* 最下層：全体背景 */
+  --bg-master: #191C21;        /* 中間層：ヘッダー */
+  --bg-panel: #191C21;         /* カラム背景 */
+  --bg-card: #22262F;          /* カード背景 */
+  --bg-secondary: #2B303C;     
+  --border-color: #333946;     /* 枠線 */
 
-  --text-primary: #E8EAEE;     /* メイン文字色 */
-  --text-muted: #9CA3AF;       /* サブ文字色 */
-  --accent-color: #2563EB;     /* アクセント（プライマリブルー） */
+  --text-primary: #F0F2F5;     /* メイン文字 */
+  --text-muted: #9EA5B1;       /* サブ文字 */
+  --text-subtle: #6C727F;      
 
-  /* セカンダリカラー */
-  --bg-header: #1A1D24;
-  --bg-secondary: #3B444E;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 
-  /* カンバンヘッダーカラー */
-  --header-todo-bg: #DC2626;
-  --header-todo-text: #ffffff;
-  --header-progress-bg: #EA580C;
-  --header-progress-text: #ffffff;
-  --header-done-bg: #16A34A;
-  --header-done-text: #ffffff;
+  /* タグ（無彩色） */
+  --tag-bg: rgba(255, 255, 255, 0.05);
+  --tag-text: var(--text-muted);
+  --tag-border: rgba(255, 255, 255, 0.08);
 
-  /* 優先度カラー */
-  --priority-high: #EF4444;    /* 赤系 */
-  --priority-medium: #F59E0B;  /* 黄系 */
-  --priority-low: #3B82F6;     /* 青系 */
+  /* カラムヘッダー（色ラインを完全消去） */
+  --header-todo-bg: transparent;
+  --header-progress-bg: transparent;
+  --header-done-bg: transparent;
+
+  /* シグナルカラー（優先度・ボタン用のみ） */
+  --accent-color: #3B82F6;     
+  --priority-high: #EF4444;    
+  --priority-medium: #F59E0B;  
+  --priority-low: #6B7280;     
 }
 
-/* ☀️ ライトモード (カラフル・明るい配色) */
+/* ☀️ ライトモード */
 body[data-theme="light"] {
-  /* ベースカラー */
-  --bg-main: #FAFBFC;          /* 全体背景 */
-  --bg-master: #F0F3F7;        /* 左Masterパネル背景 */
-  --bg-panel: #FFFFFF;         /* カンバンボード背景 */
-  --bg-card: #FFFFFF;          /* タスクカード */
-  --border-color: #D0D7DE;     /* 枠線 */
+  --bg-main: #F1F5F9;          
+  --bg-master: #E2E8F0;
+  --bg-panel: #E2E8F0;
+  --bg-card: #FFFFFF;          
+  --bg-secondary: #E2E8F0;
+  --border-color: #CBD5E1;     
 
-  --text-primary: #24292F;     /* メイン文字色 */
-  --text-muted: #57606A;       /* サブ文字色 */
-  --accent-color: #0969DA;     /* アクセント（GitHubブルー） */
+  --text-primary: #0F172A;     
+  --text-muted: #475569;       
+  --text-subtle: #8C95A0;
 
-  /* セカンダリカラー */
-  --bg-header: #FFFFFF;
-  --bg-secondary: #F6F8FA;
+  --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 
-  /* カンバンヘッダーカラー */
-  --header-todo-bg: #DA3633;   /* 未着手：赤 */
-  --header-todo-text: #ffffff;
-  --header-progress-bg: #FB8500; /* 進行中：オレンジ */
-  --header-progress-text: #ffffff;
-  --header-done-bg: #1A7F37;   /* 完了：グリーン */
-  --header-done-text: #ffffff;
+  --tag-bg: #E2E8F0;
+  --tag-text: #334155;
+  --tag-border: #94A3B8;
 
-  /* 優先度カラー */
-  --priority-high: #DA3633;    /* 赤系 */
-  --priority-medium: #FB8500;  /* 黄系 */
-  --priority-low: #1A7F37;     /* 青系 */
+  --header-todo-bg: transparent;
+  --header-progress-bg: transparent;
+  --header-done-bg: transparent;
+
+  --accent-color: #0969DA;
+  --priority-high: #DA3633;
+  --priority-medium: #D97706;
+  --priority-low: #64748B;
 }
 
 /* ==========================================
-   2. リセット＆ベースレイアウト
+   2. リセット ＆ 基本レイアウト
    ========================================== */
 html, body {
   height: 100%;
@@ -73,8 +72,8 @@ html, body {
   padding: 0;
   background-color: var(--bg-main);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  overflow: hidden; /* ウインドウ自体のスクロールを禁止 */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
@@ -82,7 +81,6 @@ html, body {
   box-sizing: inherit;
 }
 
-/* メインコンテンツエリアの高さ固定 */
 .app-container, .main-content {
   height: 100vh;
   display: flex;
@@ -90,147 +88,97 @@ html, body {
   overflow: hidden;
 }
 
-/* ==========================================
-   3. 優先度バッジ統一スタイル
-   ========================================== */
 
-/* 基本バッジスタイル */
+/* ==========================================
+   3. 優先度バッジ (共通スタイル)
+   ========================================== */
+/* 優先度バッジ基底スタイル */
 .badge-priority {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
   border: 1px solid;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-/* 高優先度：赤系 */
-.badge-priority.priority-high,
-.badge.priority.high {
+.badge-priority.priority-high {
   color: var(--priority-high);
   background-color: rgba(239, 68, 68, 0.12);
-  border-color: var(--priority-high);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
-body[data-theme="light"] .badge-priority.priority-high,
-body[data-theme="light"] .badge.priority.high {
-  background-color: #FFEBE6;
-}
-
-/* 中優先度：黄系 */
-.badge-priority.priority-medium,
-.badge.priority.medium {
+.badge-priority.priority-medium {
   color: var(--priority-medium);
   background-color: rgba(245, 158, 11, 0.12);
-  border-color: var(--priority-medium);
+  border-color: rgba(245, 158, 11, 0.3);
 }
 
-body[data-theme="light"] .badge-priority.priority-medium,
-body[data-theme="light"] .badge.priority.medium {
-  background-color: #FFF8E6;
+/* ★ 優先度「低」：ダーク・ライト問わずハッキリ読めるように調整 */
+.badge-priority.priority-low {
+  color: #94A3B8;
+  background-color: rgba(148, 163, 184, 0.15);
+  border-color: rgba(148, 163, 184, 0.35);
 }
 
-/* 低優先度：青系 */
-.badge-priority.priority-low,
-.badge.priority.low {
-  color: var(--priority-low);
-  background-color: rgba(59, 130, 246, 0.12);
-  border-color: var(--priority-low);
-}
-
-body[data-theme="light"] .badge-priority.priority-low,
-body[data-theme="light"] .badge.priority.low {
-  background-color: #EEF6FF;
+body[data-theme="light"] .badge-priority.priority-low {
+  color: #475569;
+  background-color: #E2E8F0;
+  border-color: #CBD5E1;
 }
 
 /* ==========================================
-   4. タグチップ統一スタイル
+   4. リンク ＆ 関連資料（ノイズにならないモノトーン化）
    ========================================== */
-.tag-chip {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 3px 8px;
-  border-radius: 4px;
-  background-color: rgba(37, 99, 235, 0.08);
-  color: var(--accent-color);
-  border: 1px solid rgba(37, 99, 235, 0.2);
-  white-space: nowrap;
-}
-
-body[data-theme="light"] .tag-chip {
-  background-color: #EAF0FF;
-  border-color: rgba(9, 105, 218, 0.15);
-}
-
-/* ==========================================
-   5. 日付・期限チップスタイル
-   ========================================== */
-.date-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 4px;
+a, a:visited, .doc-chip {
+  color: var(--text-primary) !important;
   background-color: var(--bg-secondary);
-  color: var(--text-muted);
   border: 1px solid var(--border-color);
-  white-space: nowrap;
-}
-
-/* 📅 作業予定日（青系トーン） */
-.date-chip.scheduled {
-  color: var(--accent-color);
-  border-color: var(--accent-color);
-  background-color: rgba(37, 99, 235, 0.08);
-}
-
-body[data-theme="light"] .date-chip.scheduled {
-  background-color: #EAF0FF;
-}
-
-/* ⏰ 最終締切（通常の赤系トーン） */
-.date-chip.deadline {
-  color: var(--priority-high);
-  background-color: rgba(239, 68, 68, 0.1);
-  border-color: var(--priority-high);
-}
-
-body[data-theme="light"] .date-chip.deadline {
-  background-color: #FFEBE6;
-}
-
-/* 🚨 期限超過アラート（背景赤＋太字で強調） */
-.date-chip.deadline.overdue {
-  color: #ffffff;
-  background-color: var(--priority-high);
-  border-color: var(--priority-high);
-  font-weight: bold;
-}
-
-/* リンクカラーの統一 */
-a, a:visited {
-  color: var(--accent-color) !important;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
   text-decoration: none;
-  transition: color 0.2s, text-decoration 0.2s;
+  transition: all 0.2s ease;
 }
 
-a:hover {
-  text-decoration: underline;
+a:hover, .doc-chip:hover {
+  background-color: var(--border-color);
+  color: #ffffff !important;
+  border-color: var(--text-muted);
 }
 
-/* AI連携用スタイルの追加 */
+/* ==========================================
+   5. 空状態（プレースホルダー）の表現
+   ========================================== */
+.empty-column-placeholder, 
+.side-pocket-empty,
+.kanban-empty-dropzone {
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  color: var(--text-subtle);
+  font-size: 12px;
+  background-color: rgba(0, 0, 0, 0.08);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.empty-column-placeholder:hover,
+.kanban-empty-dropzone.drag-over {
+  opacity: 0.9;
+  border-color: var(--text-muted);
+}
+
+/* ==========================================
+   6. AI連携用スタイル
+   ========================================== */
 .btn-group-row {
   display: flex;
   gap: 6px;
-}
-
-.btn-group-row .btn-action {
-  flex: 1;
 }
 
 .ai-predict-btn {
@@ -241,6 +189,7 @@ a:hover {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
+  padding: 4px 8px;
 }
 
 .ai-predict-btn:hover {
@@ -252,35 +201,14 @@ a:hover {
   cursor: not-allowed;
 }
 
-.ai-loading {
-  font-size: 11px;
-  color: #8B5CF6;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 0;
-}
-
 .ai-result-box {
-  background-color: var(--bg-secondary, #2A2E38);
+  background-color: var(--bg-secondary);
   border: 1px solid #8B5CF6;
   border-radius: 6px;
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.ai-header {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.ai-header.error {
-  color: var(--priority-high, #EF4444);
-  font-size: 11px;
-  font-weight: 600;
 }
 
 .ai-badge {
@@ -295,63 +223,6 @@ a:hover {
 
 .ai-reason {
   font-size: 10px;
-  color: var(--text-muted, #9CA3AF);
+  color: var(--text-muted);
   line-height: 1.3;
-}
-
-.ai-field {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.ai-field label {
-  font-size: 10px;
-  color: var(--text-muted, #9CA3AF);
-}
-
-.ai-select, .ai-input {
-  width: 100%;
-  height: 26px;
-  padding: 0 6px;
-  font-size: 11px;
-  border-radius: 4px;
-  border: 1px solid var(--border-color, #3B444E);
-  background-color: var(--bg-main, #1A1D24);
-  color: var(--text-primary, #E8EAEE);
-  outline: none;
-  box-sizing: border-box;
-}
-
-.ai-btn-group {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.btn-approve {
-  flex: 1;
-  height: 26px;
-  background-color: #10B981;
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: bold;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-approve:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.btn-cancel {
-  width: 26px;
-  height: 26px;
-  background-color: transparent;
-  border: 1px solid var(--border-color, #3B444E);
-  color: var(--text-muted, #9CA3AF);
-  border-radius: 4px;
-  cursor: pointer;
 }

@@ -1,94 +1,95 @@
 <div class="kanban-board-wrapper">
-  <!-- ヘッダー操作ツールバー -->
+  <!-- ツールバー -->
   <div class="board-header">
     <div class="kanban-toolbar">
-      <!-- 左側: 検索・フィルター・ソートコントロール -->
-      <div class="filter-bar">
-        <!-- キーワード検索 -->
-        <div class="search-box">
-          <span class="search-icon">🔍</span>
-          <input
-            type="text"
-            [(ngModel)]="searchKeyword"
-            placeholder="タスクを検索..."
-            class="filter-input-text" />
-        </div>
-
-        <!-- 優先度フィルター -->
-        <select [(ngModel)]="priorityFilter" class="filter-select">
-          <option value="ALL">優先度： すべて</option>
-          <option value="HIGH">高</option>
-          <option value="MEDIUM">中</option>
-          <option value="LOW">低</option>
-        </select>
-
-        <!-- アクティブタグチップ -->
-        <span *ngIf="selectedTag !== 'ALL'" class="active-tag-chip" (click)="selectedTag = 'ALL'" title="タグフィルターを解除">#{{ selectedTag }}</span>
-
-        <!-- ソート項目 -->
-        <select [(ngModel)]="sortBy" class="filter-select">
-          <option value="createdAt">作成日順</option>
-          <option value="deadline">最終期限順</option>
-          <option value="priority">優先度順</option>
-        </select>
-
-        <!-- 昇順/降順ボタン -->
-        <button class="btn-sort-order" (click)="toggleSortOrder()" [title]="sortOrder === 'asc' ? '降順' : '昇順'">
-          {{ sortOrder === 'asc' ? '▼' : '▲' }}
-        </button>
-
-        <!-- フィルターリセットボタン -->
-        <button
-          *ngIf="searchKeyword || priorityFilter !== 'ALL' || sortBy !== 'createdAt'"
-          class="btn-reset-filter"
-          (click)="resetFilters()"
-          title="フィルター条件をリセット">
-          <span class="reset-icon">✕ クリア</span>
-        </button>
+      
+      <!-- 1. 検索ボックス -->
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchKeyword"
+          placeholder="タスクを検索..."
+          class="filter-input-text" />
       </div>
 
-      <!-- 右側: 「＋ 新規タスク」追加ボタン -->
-      <button type="button" class="btn-primary" (click)="onAddTask()">
-        ＋ 新規タスク
+      <!-- 2. 優先度フィルター -->
+      <select [(ngModel)]="priorityFilter" class="filter-select">
+        <option value="ALL">優先度： すべて</option>
+        <option value="HIGH">優先度： 高</option>
+        <option value="MEDIUM">優先度： 中</option>
+        <option value="LOW">優先度： 低</option>
+      </select>
+
+      <!-- 3. ソート項目 -->
+      <select [(ngModel)]="sortBy" class="filter-select">
+        <option value="createdAt">作成日順</option>
+        <option value="deadline">最終期限順</option>
+        <option value="priority">優先度順</option>
+      </select>
+
+      <!-- 4. 昇順/降順切替 -->
+      <button 
+        type="button" 
+        class="btn-sort-order" 
+        (click)="toggleSortOrder()" 
+        [title]="sortOrder === 'asc' ? '昇順（クリックで降順）' : '降順（クリックで昇順）'">
+        {{ sortOrder === 'asc' ? '▲' : '▼' }}
       </button>
+
+      <!-- ★ 5. 選択中の複数アクティブタグチップ群 -->
+      <div class="active-tags-container" *ngIf="selectedTags.length > 0">
+        <div class="active-tag-chip" *ngFor="let tag of selectedTags">
+          <span class="tag-label">#{{ tag }}</span>
+          <button type="button" class="btn-clear-tag" (click)="removeTagFilter(tag)" title="このタグを解除">✕</button>
+        </div>
+      </div>
+
+      <!-- 6. すべてリセットボタン -->
+      <button
+        *ngIf="isFilterActive"
+        type="button"
+        class="btn-reset-filter"
+        (click)="resetAllFilters()"
+        title="すべての検索・フィルター条件を初期状態に戻す">
+        🔄 すべてリセット
+      </button>
+
     </div>
   </div>
 
   <!-- カンバンエリア -->
   <div class="kanban-body" cdkDropListGroup>
-    <!-- 未着手 -->
     <app-kanban-column
       status="todo"
       title="未着手"
-      headerColor="#EF4444"
+      headerColor="#64748B"
       [tasks]="todoTasks"
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'todo')"
-      (addTask)="onAddTask()"
+      (addTask)="onAddTask('todo')"
       (tagSelected)="onTagSelected($event)">
     </app-kanban-column>
-  
-    <!-- 進行中 -->
+
     <app-kanban-column
       status="in-progress"
       title="進行中"
-      headerColor="#F59E0B"
+      headerColor="#2563EB"
       [tasks]="inProgressTasks"
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'in-progress')"
-      (addTask)="onAddTask()"
+      (addTask)="onAddTask('in-progress')"
       (tagSelected)="onTagSelected($event)">
     </app-kanban-column>
-  
-    <!-- 完了 -->
+
     <app-kanban-column
       status="done"
       title="完了"
-      headerColor="#10B981"
+      headerColor="#059669"
       [tasks]="doneTasks"
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'done')"
-      (addTask)="onAddTask()"
+      (addTask)="onAddTask('done')"
       (tagSelected)="onTagSelected($event)">
     </app-kanban-column>
   </div>

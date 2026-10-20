@@ -4,8 +4,7 @@
   width: 100%;
 }
 
-/* カンバン全体ラッパー */
-.kanban-board-wrapper, .kanban-wrapper {
+.kanban-board-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -15,23 +14,15 @@
   overflow: hidden;
 }
 
-/* ヘッダー領域 */
+/* ツールバー領域 */
 .board-header {
   flex-shrink: 0;
-  padding: 12px 20px; /* ★ 上下の張り付きを解消する十分なパディング */
+  padding: 10px 16px;
+  background-color: var(--bg-master);
+  border-bottom: 1px solid var(--border-color);
 }
 
-/* ツールバー全体を flex にして左右配置 */
 .kanban-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* フィルターバーコンテナ */
-.filter-bar {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -56,27 +47,27 @@
 .filter-input-text {
   padding: 5px 8px 5px 26px !important;
   font-size: 12px !important;
-  height: 32px;
+  height: 30px;
   width: 150px;
-  border-radius: 6px;
+  border-radius: 5px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   outline: none;
+  transition: width 0.2s ease, border-color 0.2s ease;
 }
 
 .filter-input-text:focus {
-  width: 190px;
+  width: 180px;
   border-color: var(--accent-color);
-  transition: width 0.2s ease;
 }
 
-/* ドロップダウンセレクト */
+/* セレクトボックス */
 .filter-select {
-  height: 32px;
-  padding: 4px 8px !important;
+  height: 30px;
+  padding: 0 8px !important;
   font-size: 12px !important;
-  border-radius: 6px;
+  border-radius: 5px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   color: var(--text-primary);
@@ -88,83 +79,97 @@
   border-color: var(--accent-color);
 }
 
-/* ソート順・クリアボタン */
-.btn-sort-order,
-.btn-reset-filter {
-  height: 32px;
-  padding: 0 10px;
-  font-size: 12px;
+/* 昇順/降順ボタン */
+.btn-sort-order {
+  height: 30px;
+  padding: 0 8px;
+  font-size: 11px;
   font-weight: bold;
-  border-radius: 6px;
+  border-radius: 5px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.btn-sort-order:hover,
-.btn-reset-filter:hover {
+.btn-sort-order:hover {
   background-color: var(--border-color);
 }
 
-.btn-reset-filter {
-  color: var(--priority-high);
-  border-color: rgba(239, 68, 68, 0.3);
+/* ★ 複数タグ用コンテナ＆チップスタイル */
+.active-tags-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .active-tag-chip {
-  background-color: var(--accent-color);
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: bold;
-  padding: 4px 10px;
-  border-radius: 12px;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  transition: opacity 0.2s;
+  background-color: rgba(59, 130, 246, 0.15);
+  color: var(--accent-color);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  height: 30px;
+  box-sizing: border-box;
 }
 
-.active-tag-chip:hover {
-  opacity: 0.85;
-}
-
-/* プライマリボタン（「＋ 新規タスク」） */
-.btn-primary {
-  background-color: var(--accent-color, #2563EB);
-  color: #ffffff;
+.btn-clear-tag {
+  background: none;
   border: none;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: bold;
+  color: var(--accent-color);
+  font-size: 11px;
   cursor: pointer;
-  transition: background-color 0.2s, box-shadow 0.2s;
-  flex-shrink: 0;
+  padding: 0 2px;
+  line-height: 1;
+  transition: opacity 0.15s ease;
+}
+
+.btn-clear-tag:hover {
+  opacity: 0.7;
+}
+
+/* すべてリセットボタン */
+.btn-reset-filter {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 5px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  cursor: pointer;
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
+  gap: 4px;
+  margin-left: 4px;
 }
 
-.btn-primary:hover {
-  opacity: 0.9;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+.btn-reset-filter:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: #EF4444;
 }
 
-/* カンバンボード本体 (高さ自動収縮 + 余白) */
+/* カンバンボード本体 */
 .kanban-body {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(280px, 1fr));
   gap: 16px;
-  padding: 0 20px 16px 20px;
+  padding: 12px 16px 16px 16px;
   box-sizing: border-box;
   overflow-x: auto;
   overflow-y: hidden;

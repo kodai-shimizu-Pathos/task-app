@@ -12,31 +12,19 @@
   box-sizing: border-box;
 }
 
-.kanban-column {
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  height: 100%;
-  min-height: 0;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* カラムヘッダー：1行でコンパクトに納める設定 */
+/* カラムヘッダー：大きな色ラインは無しでスッキリ */
 .column-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-top: 3px solid transparent;
+  border-top: none !important;
+  border-left: none !important;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-panel);
   flex-shrink: 0;
-  white-space: nowrap; /* ★ 改行を完全に禁止 */
-  height: 40px; /* ★ 高さをコンパクトに固定 */
+  white-space: nowrap;
+  height: 40px;
   box-sizing: border-box;
 }
 
@@ -47,20 +35,21 @@
   min-width: 0;
 }
 
+/* ★ 丸印（ステータスドット）：目立ちすぎない小ぶりな7pxドット */
 .status-indicator {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
+  opacity: 0.85;
 }
 
 .column-title {
-  margin: 0 !important; /* ★ ブラウザデフォルトの上下余白を消去 */
+  margin: 0 !important;
   padding: 0;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
-  white-space: nowrap;
   line-height: 1;
 }
 
@@ -76,21 +65,15 @@
   line-height: 1;
 }
 
-/* ＋ ボタン：高さを崩さないコンパクト設計 */
 .btn-add-task-column {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 4px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
@@ -99,124 +82,23 @@
   color: var(--text-primary);
 }
 
-/* ==================== */
-/* ダークモード（デフォルト） */
-/* ==================== */
-
-/* ステータスカラー定義 - ダークモード（左ボーダーのみで色分け） */
-.column-header.todo {
-  border-left-color: #EF4444;
-}
-
-.column-header.in-progress {
-  border-left-color: #F59E0B;
-}
-
-.column-header.done {
-  border-left-color: #10B981;
-}
-
-.column-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-/* タスクカウントバッジ */
-.task-count {
-  background-color: var(--bg-tertiary);
-  color: var(--text-secondary);
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-/* ==================== */
-/* ライトモード */
-/* ==================== */
-
-/* 未着手 (todo) */
-:host-context(body[data-theme="light"]) .kanban-column.todo {
-  background-color: #FAFAFA;
-  border-color: #E5E5E5;
-}
-
-:host-context(body[data-theme="light"]) .kanban-column.todo .column-header {
-  background-color: #FFF5F5;
-  border-left-color: #EF4444;
-  color: #7F1D1D;
-}
-
-/* 進行中 (in-progress) */
-:host-context(body[data-theme="light"]) .kanban-column.in-progress {
-  background-color: #FAFAFA;
-  border-color: #E5E5E5;
-}
-
-:host-context(body[data-theme="light"]) .kanban-column.in-progress .column-header {
-  background-color: #FFFAF0;
-  border-left-color: #F59E0B;
-  color: #78350F;
-}
-
-/* 完了 (done) */
-:host-context(body[data-theme="light"]) .kanban-column.done {
-  background-color: #FAFAFA;
-  border-color: #E5E5E5;
-}
-
-:host-context(body[data-theme="light"]) .kanban-column.done .column-header {
-  background-color: #F5FFF8;
-  border-left-color: #10B981;
-  color: #15803D;
-}
-
-/* 子タスクカード一覧ドロップエリア */
 .column-droplist {
-  flex: 1;
-  min-height: 0; /* ★ min-height: 300px から 0 へ変更 */
-  overflow-y: auto; /* ★ 縦スクロールを有効化 */
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-right: 4px;
-  border-radius: 6px;
-  box-sizing: border-box;
-}
-
-/* ドロップリスト領域のホバーエフェクト */
-.column-droplist.cdk-drop-list-dragging {
-  background-color: rgba(37, 99, 235, 0.05);
-}
-
-/* カードリスト領域 */
-.card-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-right: 4px;
+  gap: 8px;
+  padding: 8px 4px;
+  box-sizing: border-box;
 }
 
-.empty-message {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-   padding: 32px 0;
-  border: 2px dashed var(--border-color);
-  border-radius: 8px;
-}
-
-/* 空の時のプレースホルダー */
 .empty-placeholder {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: var(--text-subtle);
   font-size: 12px;
   padding: 32px 0;
   text-align: center;

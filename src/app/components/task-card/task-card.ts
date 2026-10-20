@@ -35,6 +35,21 @@ export class TaskCard {
     return deadlineDate < today;
   }
 
+  // 作業予定日を超過しているか判定
+  isScheduledOverdue(): boolean {
+    if (!this.task.scheduledEndDate || this.task.status === 'done') return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const scheduledDate = new Date(this.task.scheduledEndDate.replace(/-/g, '/'));
+    scheduledDate.setHours(0, 0, 0, 0);
+    return scheduledDate < today;
+  }
+
+  // 最終期限を超過しているか判定
+  isDeadlineOverdue(): boolean {
+    return this.isOverdue(this.task.deadline);
+  }
+
   // 優先度を日本語ラベルに変換
   getPriorityLabel(priority?: string): string {
     if (!priority) return '中';

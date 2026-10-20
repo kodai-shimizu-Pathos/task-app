@@ -1,13 +1,13 @@
 <div class="kanban-column-container" [ngClass]="status">
   <!-- カラムヘッダー -->
-  <div class="column-header" [ngClass]="status" [style.border-top-color]="headerColor">
+  <div class="column-header">
     <div class="header-left-group">
+      <!-- ★ 小さな丸印（ステータスドット）だけを残す -->
       <span class="status-indicator" [style.background-color]="headerColor"></span>
       <h3 class="column-title">{{ title }}</h3>
       <span class="task-count">{{ tasks.length }}</span>
     </div>
   
-    <!-- ★ 追加：カラムヘッダーの「＋」追加ボタン -->
     <button type="button" class="btn-add-task-column" (click)="onAddTask($event)" title="この列にタスクを追加">
       ＋ タスク追加
     </button>
@@ -22,7 +22,6 @@
     [cdkDropListData]="tasks"
     (cdkDropListDropped)="onDrop($event)">
     
-    <!-- ドラッグ可能タスクカード -->
     <div *ngFor="let task of tasks" cdkDrag [cdkDragData]="task" class="draggable-task-wrapper" (click)="onSelectTask(task)">
       <app-task-card
         [task]="task"
@@ -30,7 +29,6 @@
       </app-task-card>
     </div>
 
-    <!-- カラムが空の時のプレースホルダー -->
     <div *ngIf="tasks.length === 0" class="empty-placeholder">
       タスクをここへドラッグ
     </div>
