@@ -1,39 +1,54 @@
-<!-- gantt-board.html -->
 <div class="gantt-board-wrapper">
-    <!-- ヘッダー操作ツールバー (カンバンボードとデザイン・配置を完全統一) -->
+    <!-- ヘッダーコントロールバー -->
     <div class="gantt-header-bar">
         <div class="gantt-toolbar">
-            <!-- 左側: 検索・フィルターコントロール -->
             <div class="filter-bar">
-                <!-- キーワード検索 -->
+                <!-- 検索ボックス -->
                 <div class="search-box">
                     <span class="search-icon">🔍</span>
-                    <input
-                        type="text"
-                        [(ngModel)]="searchQuery"
-                        placeholder="検索..."
-                        class="filter-input-text" />
+                    <input type="text" [(ngModel)]="searchQuery" placeholder="課題/タスクを検索..." class="filter-input-text" />
                 </div>
 
                 <!-- ステータス絞り込み -->
                 <select [(ngModel)]="selectedStatus" class="filter-select">
-                    <option value="all">ステータス： すべて</option>
-                    <option value="exclude-done">⚡ 完了以外</option>
-                    <option value="todo">🔴 未着手</option>
-                    <option value="in-progress">🟡 進行中</option>
-                    <option value="done">🟢 完了</option>
+                    <option value="all">すべてのステータス</option>
+                    <option value="exclude-done">完了以外</option>
+                    <option value="todo">未着手</option>
+                    <option value="in-progress">進行中</option>
+                    <option value="done">完了</option>
                 </select>
 
                 <!-- 優先度絞り込み -->
                 <select [(ngModel)]="selectedPriority" class="filter-select">
-                    <option value="all">優先度： すべて</option>
-                    <option value="high">🔴 高</option>
-                    <option value="medium">🟡 中</option>
-                    <option value="low">🔵 低</option>
+                    <option value="all">すべての優先度</option>
+                    <option value="high">優先度：高</option>
+                    <option value="medium">優先度：中</option>
+                    <option value="low">優先度：低</option>
                 </select>
+
+                <!-- ソート順選択 -->
+                <select [(ngModel)]="sortBy" class="filter-select">
+                    <option value="deadline">最終期限順</option>
+                    <option value="scheduledEndDate">完了予定日順</option>
+                    <option value="createdAt">作成日順</option>
+                    <option value="priority">優先度順</option>
+                </select>
+
+                <!-- 昇順/降順切り替え -->
+                <button (click)="toggleSortOrder()" class="btn-sort-order" title="昇順/降順切り替え">
+                    {{ sortOrder === 'asc' ? '▲' : '▼' }}
+                </button>
+
+                <!-- 動的リセットボタン -->
+                <button 
+                    *ngIf="isFilterActive"
+                    (click)="resetFilters()" 
+                    class="btn-reset-filter"
+                    title="すべての検索・フィルター条件を初期状態に戻す">
+                    🔄 すべてリセット
+                </button>
             </div>
 
-            <!-- 右側: ズーム操作・今日ボタン・新規追加ボタン -->
             <div class="header-controls">
                 <!-- ズーム機能 -->
                 <div class="zoom-controls">
@@ -45,7 +60,7 @@
                 <!-- 今日へのスクロールボタン -->
                 <button type="button" class="btn-today" (click)="onScrollToToday()" title="本日の位置へスクロール">📍 今日</button>
 
-                <!-- 新規タスク/親課題追加 -->
+                <!-- 新規タスク追加ボタン -->
                 <button type="button" class="btn-primary" (click)="onAddNewTask()">＋ 新規タスク</button>
             </div>
         </div>
@@ -61,29 +76,41 @@
             </div>
 
             <div class="wbs-body">
-                <!-- パターン1：単一親課題 -->
-                <div class="wbs-row parent-row" *ngIf="project" (click)="onProjectClick(project, $event)">
+                <!-- 単一親課題 -->
+                <div class="wbs-row parent-row" *ngIf="project" 
+                     [class.done-row]="project.status === 'done'"
+                     [class.overdue-scheduled]="isScheduledOverdue(project)"
+                     [class.overdue-deadline]="isDeadlineOverdue(project)"
+                     (click)="onProjectClick(project, $event)">
                     <div class="col-title">
                         <span class="tree-icon">📂</span>
-                        <span class="title-text">{{ project.title }}</span>
+                        <span class="title-text" [class.done-text]="project.status === 'done'">{{ project.title }}</span>
+                        <span *ngIf="isScheduledOverdue(project)" class="overdue-alert yellow-alert" title="完了予定日超過">⚠️</span>
+                        <span *ngIf="isDeadlineOverdue(project)" class="overdue-alert red-alert" title="最終期限超過">🚨</span>
                     </div>
                     <div class="col-priority">
-                        <span class="badge-priority" [ngClass]="'priority-' + (project.priority | lowercase)">
+                        <span class="badge-priority" [ngClass]="'priority-' + (project.priority || 'medium').toLowerCase()">
                             {{ getPriorityLabel(project.priority) }}
                         </span>
                     </div>
                 </div>
 
-                <!-- パターン2：親課題一覧表示 -->
+                <!-- 親課題一覧表示 -->
                 <ng-container *ngIf="!project">
-                    <div *ngFor="let proj of filteredProjects" class="wbs-row parent-row" (click)="onProjectClick(proj, $event)">
+                    <div *ngFor="let proj of filteredProjects" class="wbs-row parent-row" 
+                         [class.done-row]="proj.status === 'done'"
+                         [class.overdue-scheduled]="isScheduledOverdue(proj)"
+                         [class.overdue-deadline]="isDeadlineOverdue(proj)"
+                         (click)="onProjectClick(proj, $event)">
                         <div class="col-title">
                             <span class="tree-icon">📁</span>
-                            <span class="title-text">{{ proj.title }}</span>
+                            <span class="title-text" [class.done-text]="proj.status === 'done'">{{ proj.title }}</span>
                             <span class="task-count-badge">({{ proj.completedTaskCount || 0 }}/{{ proj.totalTaskCount || 0 }})</span>
+                            <span *ngIf="isScheduledOverdue(proj)" class="overdue-alert yellow-alert" title="完了予定日超過">⚠️</span>
+                            <span *ngIf="isDeadlineOverdue(proj)" class="overdue-alert red-alert" title="最終期限超過">🚨</span>
                         </div>
                         <div class="col-priority">
-                            <span class="badge-priority" [ngClass]="'priority-' + (proj.priority | lowercase)">
+                            <span class="badge-priority" [ngClass]="'priority-' + (proj.priority || 'medium').toLowerCase()">
                                 {{ getPriorityLabel(proj.priority) }}
                             </span>
                         </div>
@@ -91,20 +118,24 @@
                 </ng-container>
 
                 <!-- 子タスク行一覧 -->
-                <div *ngFor="let task of filteredTasks" class="wbs-row task-row" [class.is-overdue]="isTaskOverdue(task)" (click)="onTaskClick(task, $event)">
+                <div *ngFor="let task of filteredTasks" class="wbs-row task-row" 
+                     [class.done-row]="task.status === 'done'"
+                     [class.overdue-scheduled]="isScheduledOverdue(task)"
+                     [class.overdue-deadline]="isDeadlineOverdue(task)"
+                     (click)="onTaskClick(task, $event)">
                     <div class="col-title">
                         <span class="tree-indent"> └ ♦ </span>
                         <span class="title-text" [class.done-text]="task.status === 'done'">{{ task.title }}</span>
-                        <span *ngIf="isTaskOverdue(task)" class="overdue-alert" title="期限超過">⚠️</span>
+                        <span *ngIf="isScheduledOverdue(task)" class="overdue-alert yellow-alert" title="完了予定日超過">⚠️</span>
+                        <span *ngIf="isDeadlineOverdue(task)" class="overdue-alert red-alert" title="最終期限超過">🚨</span>
                     </div>
                     <div class="col-priority">
-                        <span class="badge-priority" [ngClass]="'priority-' + (task.priority | lowercase)">
+                        <span class="badge-priority" [ngClass]="'priority-' + (task.priority || 'medium').toLowerCase()">
                             {{ getPriorityLabel(task.priority) }}
                         </span>
                     </div>
                 </div>
 
-                <!-- 該当なし表示 -->
                 <div *ngIf="!project && filteredProjects.length === 0" class="empty-wbs">
                     条件に一致する親課題がありません
                 </div>
@@ -137,11 +168,21 @@
                 <div class="timeline-row parent-row" *ngIf="project">
                     <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday" [class.holiday-cell]="col.isWeekend || col.isHoliday"></div>
                     <ng-container *ngIf="getTaskBarPositionPx($any(project)) as bar">
-                        <div *ngIf="bar.visible" class="gantt-bar parent-bar" [ngClass]="[project.status, 'priority-' + (project.priority | lowercase)]" [class.is-overdue]="isTaskOverdue($any(project))" [style.left.px]="bar.left" [style.width.px]="bar.width" (mousedown)="onBarMouseDown($any(project), $event, 'move')">
+                        <div *ngIf="bar.visible" class="gantt-bar parent-bar" 
+                             [ngClass]="[project.status, 'priority-' + (project.priority || 'medium').toLowerCase()]" 
+                             [class.overdue-scheduled]="isScheduledOverdue($any(project))"
+                             [class.overdue-deadline]="isDeadlineOverdue($any(project))"
+                             [style.left.px]="bar.left" [style.width.px]="bar.width" 
+                             [title]="project.title"
+                             (mousedown)="onBarMouseDown($any(project), $event, 'move')">
                             <div class="resize-handle resize-left" (mousedown)="onBarMouseDown($any(project), $event, 'resize-left')" (click)="$event.stopPropagation()"></div>
-                            <span class="bar-label">📁 {{ project.title }}</span>
+                            
+                            <div class="bar-content-wrapper">
+                                <span class="bar-label">📁 {{ project.title }}</span>
+                            </div>
+
                             <span *ngIf="project.scheduledEndDate" class="scheduled-end-marker" [style.left.px]="getScheduledEndPositionPx($any(project)) - bar.left">🚩</span>
-                            <span *ngIf="project.deadline" class="deadline-marker">⏰ {{ project.deadline | date:'MM/dd' }}</span>
+                            <span *ngIf="project.deadline" class="deadline-marker">{{ project.deadline | date:'MM/dd' }}</span>
                             <div class="resize-handle resize-right" (mousedown)="onBarMouseDown($any(project), $event, 'resize-right')" (click)="$event.stopPropagation()"></div>
                         </div>
                     </ng-container>
@@ -150,13 +191,23 @@
                 <!-- 親課題一覧ガントバー -->
                 <ng-container *ngIf="!project">
                     <div *ngFor="let proj of filteredProjects" class="timeline-row parent-row" (click)="onProjectClick(proj, $event)">
-                        <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday"></div>
+                        <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday" [class.holiday-cell]="col.isWeekend || col.isHoliday"></div>
                         <ng-container *ngIf="getTaskBarPositionPx($any(proj)) as bar">
-                            <div *ngIf="bar.visible" class="gantt-bar parent-bar" [ngClass]="[proj.status, 'priority-' + (proj.priority | lowercase)]" [class.is-overdue]="isTaskOverdue($any(proj))" [style.left.px]="bar.left" [style.width.px]="bar.width" (mousedown)="onBarMouseDown($any(proj), $event, 'move')">
+                            <div *ngIf="bar.visible" class="gantt-bar parent-bar" 
+                                 [ngClass]="[proj.status, 'priority-' + (proj.priority || 'medium').toLowerCase()]" 
+                                 [class.overdue-scheduled]="isScheduledOverdue($any(proj))"
+                                 [class.overdue-deadline]="isDeadlineOverdue($any(proj))"
+                                 [style.left.px]="bar.left" [style.width.px]="bar.width" 
+                                 [title]="proj.title"
+                                 (mousedown)="onBarMouseDown($any(proj), $event, 'move')">
                                 <div class="resize-handle resize-left" (mousedown)="onBarMouseDown($any(proj), $event, 'resize-left')" (click)="$event.stopPropagation()"></div>
-                                <span class="bar-label">📁 {{ proj.title }}</span>
+                                
+                                <div class="bar-content-wrapper">
+                                    <span class="bar-label">📁 {{ proj.title }}</span>
+                                </div>
+
                                 <span *ngIf="proj.scheduledEndDate" class="scheduled-end-marker" [style.left.px]="getScheduledEndPositionPx($any(proj)) - bar.left">🚩</span>
-                                <span *ngIf="proj.deadline" class="deadline-marker">⏰ {{ proj.deadline | date:'MM/dd' }}</span>
+                                <span *ngIf="proj.deadline" class="deadline-marker">{{ proj.deadline | date:'MM/dd' }}</span>
                                 <div class="resize-handle resize-right" (mousedown)="onBarMouseDown($any(proj), $event, 'resize-right')" (click)="$event.stopPropagation()"></div>
                             </div>
                         </ng-container>
@@ -167,12 +218,23 @@
                 <div *ngFor="let task of filteredTasks" class="timeline-row task-row" (click)="onTaskClick(task, $event)">
                     <div *ngFor="let col of timelineColumns" class="grid-cell" [style.width.px]="columnWidth" [class.today-cell]="col.isToday" [class.holiday-cell]="col.isWeekend || col.isHoliday"></div>
                     <ng-container *ngIf="getTaskBarPositionPx(task) as bar">
-                        <div *ngIf="bar.visible" class="gantt-bar" [ngClass]="[task.status, 'priority-' + (task.priority | lowercase)]" [class.is-overdue]="isTaskOverdue(task)" [style.left.px]="bar.left" [style.width.px]="bar.width" (mousedown)="onBarMouseDown(task, $event, 'move')">
+                        <div *ngIf="bar.visible" class="gantt-bar" 
+                             [ngClass]="[task.status, 'priority-' + (task.priority || 'medium').toLowerCase()]" 
+                             [class.overdue-scheduled]="isScheduledOverdue(task)"
+                             [class.overdue-deadline]="isDeadlineOverdue(task)"
+                             [style.left.px]="bar.left" [style.width.px]="bar.width" 
+                             [title]="task.title"
+                             (mousedown)="onBarMouseDown(task, $event, 'move')">
                             <div class="resize-handle resize-left" (mousedown)="onBarMouseDown(task, $event, 'resize-left')"></div>
-                            <span class="bar-label">{{ task.title }}</span>
-                            <span class="checklist-badge" *ngIf="hasChecklist(task)">
-                              ({{ getChecklistStats(task).completed }}/{{ getChecklistStats(task).total }})
-                            </span>
+                            
+                            <!-- ラベルとバッジを外側に溢れさせても見やすく保持するラッパー -->
+                            <div class="bar-content-wrapper">
+                                <span class="bar-label">{{ task.title }}</span>
+                                <span class="checklist-badge" *ngIf="hasChecklist(task)">
+                                  ({{ getChecklistStats(task).completed }}/{{ getChecklistStats(task).total }})
+                                </span>
+                            </div>
+
                             <span *ngIf="task.scheduledEndDate" class="scheduled-end-marker" [style.left.px]="getScheduledEndPositionPx(task) - bar.left" (mousedown)="onFlagMouseDown(task, $event)">🚩</span>
                             <div class="resize-handle resize-right" (mousedown)="onBarMouseDown(task, $event, 'resize-right')"></div>
                         </div>
