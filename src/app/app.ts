@@ -218,6 +218,7 @@ export class AppComponent implements OnInit {
    */
   onViewchange(view: 'tasks' | 'review'): void {
     this.activeView = view;
+    this.closeAllForms();
   }
 
   /**
@@ -292,6 +293,7 @@ export class AppComponent implements OnInit {
   onSelectProject(project: ParentProject): void {
     this.selectedProject = project;
     this.isMasterPanelCollapsed = false;
+    this.closeAllForms();
   }
 
   /**
@@ -300,6 +302,7 @@ export class AppComponent implements OnInit {
   onUnselectProject(): void {
     this.selectedProject = null;
     this.isMasterPanelCollapsed = false;
+    this.closeAllForms();
   }
 
   /**
@@ -678,6 +681,14 @@ export class AppComponent implements OnInit {
     if (this.sidePocketPanel) {
       this.sidePocketPanel.isCollapsed = true;
     }
+  }
+
+  /**
+   * すべての入力・編集フォームを閉じる
+   */
+  closeAllForms(): void {
+    this.onCloseTaskForm();
+    this.onCloseProjectForm();
   }
 
   /**
