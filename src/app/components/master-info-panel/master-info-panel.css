@@ -4,7 +4,9 @@
   box-sizing: border-box;
 }
 
-/* 1. パネル全体コンテナ */
+/* ==========================================
+   1. パネル全体コンテナ
+   ========================================== */
 .master-panel,
 .master-info-container {
   display: flex;
@@ -16,20 +18,40 @@
   padding-right: 4px;
 }
 
-/* 2. ヘッダー領域 */
+/* ==========================================
+   2. ヘッダー領域 ＆ タイトルグループ
+   ========================================== */
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding-bottom: 12px;
+  gap: 8px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
+/* 左側：ステータスドット ＋ 優先度バッジ ＋ タイトル */
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* カンバンカラムと同サイズ（7px）のステータスドット */
+.status-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
 .panel-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
   color: var(--text-primary);
   white-space: nowrap;
@@ -38,10 +60,11 @@
   flex: 1;
 }
 
+/* 右側：操作ボタン群 */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
 }
 
@@ -50,9 +73,9 @@
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.2s;
@@ -64,23 +87,28 @@
 }
 
 .close-btn,
-.btn-close-panel {
+.btn-close-panel,
+.collapse-btn {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 3px 6px;
   border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 .close-btn:hover,
-.btn-close-panel:hover {
-  background-color: var(--border-color);
+.btn-close-panel:hover,
+.collapse-btn:hover {
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
 }
 
-/* 3. タグ一覧 */
+/* ==========================================
+   3. タグ一覧
+   ========================================== */
 .tags-list,
 .tags-container {
   display: flex;
@@ -88,16 +116,20 @@
   gap: 6px;
 }
 
-.tag-item {
+.tag-item,
+.tag-chip {
   font-size: 11px;
   color: var(--accent-color);
   background-color: rgba(37, 99, 235, 0.08);
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: 4px;
   border: 1px solid rgba(37, 99, 235, 0.2);
+  white-space: nowrap;
 }
 
-/* 4. 進捗プログレスバー */
+/* ==========================================
+   4. 全体進捗プログレスバー
+   ========================================== */
 .progress-section {
   display: flex;
   flex-direction: column;
@@ -140,7 +172,9 @@
   transition: width 0.3s ease;
 }
 
-/* 5. 情報ブロック共通 */
+/* ==========================================
+   5. 情報ブロック共通（スケジュール・概要・メモ）
+   ========================================== */
 .info-block,
 .section-block {
   display: flex;
@@ -158,7 +192,7 @@
   letter-spacing: 0.5px;
 }
 
-/* メモ・概要のテキスト表示 */
+/* メモ・概要テキスト表示 */
 .description-text,
 .memo-content {
   margin: 0;
@@ -192,7 +226,7 @@
 /* スケジュール表示 */
 .schedule-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   background-color: var(--bg-secondary);
   padding: 10px;
@@ -212,7 +246,7 @@
   align-items: center;
   font-size: 12px;
   background-color: var(--bg-secondary);
-  padding: 8px 10px;
+  padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid var(--border-color);
 }
@@ -237,7 +271,9 @@
   font-weight: bold;
 }
 
-/* 6. 関連資料・リンク */
+/* ==========================================
+   6. 関連資料・リンク
+   ========================================== */
 .links-grid,
 .doc-list {
   display: flex;
@@ -268,59 +304,41 @@
   background-color: rgba(37, 99, 235, 0.08);
 }
 
-/* =========================================
-   折りたたみ機能用の追加スタイル
-   ========================================= */
-
-/* 展開時の◀ボタン */
-.collapse-btn {
-  background: none;
-  border: none;
-  font-size: 16px;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-.collapse-btn:hover {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-/* 折りたたみ時 (細いバー) の全体コンテナ */
+/* ==========================================
+   7. パネル折りたたみ（Collapsed）状態の表示
+   ========================================== */
 .master-panel-collapsed {
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 100%;
   padding: 16px 0;
-  gap: 24px;
+  gap: 16px;
   cursor: pointer;
   transition: background-color 0.2s;
-  /* 親の余白を打ち消してバー全体をクリック可能にする */
   margin: -16px; 
   padding-top: 24px;
 }
+
 .master-panel-collapsed:hover {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* 折りたたみ時の▶ボタン */
 .expand-btn {
   background: none;
   border: none;
   font-size: 14px;
   color: var(--text-muted);
   cursor: pointer;
-  pointer-events: none; /* クリック判定を親の .master-panel-collapsed に任せる */
+  pointer-events: none;
 }
+
 .master-panel-collapsed:hover .expand-btn {
   color: var(--accent-color);
 }
 
-/* 折りたたみ時の縦書きタイトル */
 .vertical-title {
-  writing-mode: vertical-rl; /* 縦書き指定 */
+  writing-mode: vertical-rl;
   text-orientation: mixed;
   color: var(--text-muted);
   font-weight: 600;
@@ -329,5 +347,5 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: 80%; /* 画面の下にはみ出さないように制限 */
+  max-height: 80%;
 }

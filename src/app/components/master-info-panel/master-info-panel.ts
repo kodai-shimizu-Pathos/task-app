@@ -12,44 +12,66 @@ import { ParentProject } from '../../models/project.model';
 export class MasterInfoPanel {
   @Input() project!: ParentProject;
   @Input() isCollapsed: boolean = false;
+  
   @Output() editProject = new EventEmitter<void>();
   @Output() toggleCollapse = new EventEmitter<void>();
+  @Output() closePanel = new EventEmitter<void>();
+  @Output() addTask = new EventEmitter<void>();
+  @Output() archiveProject = new EventEmitter<void>();
 
   onEdit(): void {
     this.editProject.emit();
   }
 
-  onToggle():void {
+  onToggle(): void {
     this.toggleCollapse.emit();
   }
-
-  @Output() closePanel = new EventEmitter<void>();
 
   onClose(): void {
     this.closePanel.emit();
   }
-  @Output() addTask = new EventEmitter<void>();
 
   onAddTask(): void {
     this.addTask.emit();
   }
 
-  @Output() archiveProject = new EventEmitter<void>();
   onArchiveProject(): void {
     if (confirm('この親課題をアーカイブしますか？')) {
       this.archiveProject.emit();
     }
   }
 
+  /**
+   * ★ カンバンカラムと同色のステータスカラーを取得
+   */
+  getStatusColor(status?: string): string {
+    if (!status) return '#64748B';
+    const normalized = status.toLowerCase().replace('_', '-');
+    if (normalized === 'done') return '#059669';       // 完了：グリーン
+    if (normalized === 'in-progress' || normalized === 'inprogress') return '#2563EB'; // 進行中：ブルー
+    return '#64748B';                                  // 未着手：スレートグレー
+  }
+
+  /**
+   * ★ 優先度ラベル変換
+   */
+  getPriorityLabel(priority?: string): string {
+    if (!priority) return '中';
+    const lower = priority.toLowerCase();
+    if (lower === 'high') return '高';
+    if (lower === 'medium') return '中';
+    if (lower === 'low') return '低';
+    return '中';
+  }
+
   // 期限超過チェック
   isOverdue(deadline?: string): boolean {
-    // 締切なしもしくはステータスが「完了」の場合は期限超過とみなさない
     if (!deadline || this.project.status === 'done') {
       return false;
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const deadlineDate = new Date(deadline);
+    const deadlineDate = new Date(deadline.replace(/-/g, '/'));
     deadlineDate.setHours(0, 0, 0, 0);
     return deadlineDate < today;
   }

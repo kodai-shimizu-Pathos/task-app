@@ -136,14 +136,25 @@
         <!-- パターンB：親課題選択時 -->
         <div class="project-detail-layout" *ngIf="selectedProject">
           <div class="detail-main-area">
+            <!-- 1. 上部親課題ヒーローカード -->
             <div class="project-summary-card">
               <div class="summary-top-row">
                 <div class="summary-title-group">
                   <span class="project-badge">📁 親課題</span>
-                  <h2 class="project-title-text">{{ selectedProject.title }}</h2>
-                  <span class="status-chip" [attr.data-status]="selectedProject.status">
-                    {{ selectedProject.status === 'done' ? '🟢 完了' : (selectedProject.status === 'in-progress' ? '🟡 進行中' : '🔴 未着手') }}
+                  
+                  <!-- ★ カンバンと同色のステータスドット ＋ テキスト -->
+                  <div class="status-chip-group">
+                    <span class="status-indicator" [style.background-color]="getStatusColor(selectedProject.status)"></span>
+                    <span class="status-text">{{ getStatusLabel(selectedProject.status) }}</span>
+                  </div>
+
+                  <!-- ★ 親課題の優先度バッジ -->
+                  <span class="badge-priority" [ngClass]="'priority-' + (selectedProject.priority || 'medium').toLowerCase()">
+                    {{ getPriorityLabel(selectedProject.priority) }}
                   </span>
+
+                  <!-- 親課題タイトル -->
+                  <h2 class="project-title-text">{{ selectedProject.title }}</h2>
                 </div>
 
                 <div class="summary-actions">
@@ -156,6 +167,7 @@
                 </div>
               </div>
 
+              <!-- 下段: 進捗メーター -->
               <div class="summary-bottom-row">
                 <div class="progress-box">
                   <span class="progress-label">進捗率: {{ selectedProject.progressPercentage || 0 }}%</span>
@@ -165,6 +177,7 @@
                 </div>
               </div>
 
+              <!-- サマリー展開領域 -->
               <div class="summary-expanded-content" *ngIf="isSummaryExpanded">
                 <p class="project-desc" *ngIf="selectedProject.description">
                   <strong>概要:</strong> {{ selectedProject.description }}

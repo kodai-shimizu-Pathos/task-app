@@ -54,7 +54,7 @@ export class AppComponent implements OnInit {
       await this.authService.logout();
     }
   }
-  
+
   authService = inject(AuthService);
 
   isLoginModalOpen = false;
@@ -623,6 +623,40 @@ export class AppComponent implements OnInit {
   // ========================================
   // Private ヘルパーメソッド
   // ========================================
+
+  /**
+   * カンバンカラムと同色のステータスカラーを取得
+   */
+  getStatusColor(status?: string): string {
+    if (!status) return '#64748B';
+    const normalized = status.toLowerCase().replace('_', '-');
+    if (normalized === 'done') return '#059669';       // 完了：グリーン
+    if (normalized === 'in-progress' || normalized === 'inprogress') return '#2563EB'; // 進行中：ブルー
+    return '#64748B';                                  // 未着手：スレートグレー
+  }
+
+  /**
+   * 優先度日本語ラベル取得
+   */
+  getPriorityLabel(priority?: string): string {
+    if (!priority) return '中';
+    const lower = priority.toLowerCase();
+    if (lower === 'high') return '高';
+    if (lower === 'medium') return '中';
+    if (lower === 'low') return '低';
+    return '中';
+  }
+
+  /**
+   * ステータス日本語ラベル取得
+   */
+  getStatusLabel(status?: string): string {
+    if (!status) return '未着手';
+    const normalized = status.toLowerCase().replace('_', '-');
+    if (normalized === 'done') return '完了';
+    if (normalized === 'in-progress' || normalized === 'inprogress') return '進行中';
+    return '未着手';
+  }
 
   /**
    * タスクフォームを開く際に親課題パネルを自動で折り畳む

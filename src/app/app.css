@@ -374,6 +374,35 @@
   gap: 6px;
 }
 
+.summary-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ステータスチップ（ドット ＋ 文字） */
+.status-chip-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+/* ステータスドット（7px） */
+.status-chip-group .status-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 /* メイン ワークスペース */
 .workspace-body {
   flex: 1;

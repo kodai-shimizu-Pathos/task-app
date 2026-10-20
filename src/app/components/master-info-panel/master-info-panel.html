@@ -1,88 +1,97 @@
 <ng-container *ngIf="project">
 
-    <!-- A.親課題パネル展開時(isCollapsed=false) -->
+    <!-- A. 親課題パネル展開時(isCollapsed=false) -->
     <div class="master-panel" *ngIf="!isCollapsed">
-        <!-- パネルヘッダー & 閉じるボタン-->
-        <div class="panel-header">
-            <h3 class="panel-title">{{ project.title }}</h3>
-            <div class="header-actions">
-                <button class="edit-btn" (click)="onEdit()">📝 編集</button>
-                <button class="edit-btn" (click)="onArchiveProject()" title="アーカイブへ移動">📦 アーカイブ</button>
-                <button class="collapse-btn" (click)="onToggle()" title="パネルを折りたたむ">◀</button>
-            </div>
+      <!-- パネルヘッダー：ステータスドット ＋ 優先度バッジ ＋ タイトル -->
+      <div class="panel-header">
+        <div class="header-title-group">
+          <!-- ★ カンバンカラムと同色のステータスドット -->
+          <span class="status-indicator" [style.background-color]="getStatusColor(project.status)" [title]="'ステータス: ' + project.status"></span>
+          
+          <!-- ★ 親課題の優先度バッジ -->
+          <span class="badge-priority" [ngClass]="'priority-' + (project.priority || 'medium').toLowerCase()">
+            {{ getPriorityLabel(project.priority) }}
+          </span>
+  
+          <h3 class="panel-title" [title]="project.title">{{ project.title }}</h3>
         </div>
-
-        <!-- タグ一覧 -->
-        <div class="tags-list" *ngIf="project.tags?.length">
-            <span class="tag-chip" *ngFor="let tag of project.tags">#{{ tag }}</span>
+  
+        <div class="header-actions">
+          <button class="edit-btn" (click)="onEdit()">📝 編集</button>
+          <button class="edit-btn" (click)="onArchiveProject()" title="アーカイブへ移動">📦 アーカイブ</button>
+          <button class="collapse-btn" (click)="onToggle()" title="パネルを折りたたむ">◀</button>
         </div>
-
-        <!-- 全体進捗プログレスバー -->
-        <div class="progress-section"> 
-            <div class="progress-labels">
-                <span class="label-text">タスクの進捗</span>
-                <span class="progress-count">
-                    {{ project.completedTaskCount || 0 }}/{{ project.totalTaskCount || 0 }} ({{ project.progressPercentage || 0 }}%)
-                </span>
-            </div>
-            <div class="progress-bar-track">
-                <!-- style.width を文字列結合形式に変更 -->
-                <div 
-                class="progress-bar-fill" [style.width]="(project.progressPercentage || 0) + '%'">
-                </div>
-            </div>
+      </div>
+  
+      <!-- タグ一覧 -->
+      <div class="tags-list" *ngIf="project.tags?.length">
+        <span class="tag-chip" *ngFor="let tag of project.tags">#{{ tag }}</span>
+      </div>
+  
+      <!-- 全体進捗プログレスバー -->
+      <div class="progress-section"> 
+        <div class="progress-labels">
+          <span class="label-text">子タスクの進捗</span>
+          <span class="progress-count">
+            {{ project.completedTaskCount || 0 }}/{{ project.totalTaskCount || 0 }} ({{ project.progressPercentage || 0 }}%)
+          </span>
         </div>
-
-        <!-- スケジュール -->
-        <div class="info-block" *ngIf="project.scheduledStartDate || project.scheduledEndDate || project.deadline">
-            <h4>📅 スケジュール</h4>
-            <div class="date-chip scheduled" *ngIf="project.scheduledStartDate || project.scheduledEndDate">
-                <span class="date-label">📅 作業予定：</span>
-                <span class="date-value">
-                    {{ project.scheduledStartDate || '未定' }} ~ {{ project.scheduledEndDate || '未定' }}
-                </span>
-            </div>
-            <div class="date-chip deadline" *ngIf="project.deadline" 
-            [ngClass]="{'overdue': isOverdue(project.deadline), 'upcoming': !isOverdue(project.deadline)}">
-                <span class="date-label">
-                    {{ isOverdue(project.deadline) ? '🚨 期限超過：' : '⏰ 最終期限：' }}
-                </span>
-                <span class="date-value">{{ project.deadline }}</span>
-            </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" [style.width.%]="project.progressPercentage || 0"></div>
         </div>
-        
-        <!-- 関連リンク（仕様書・設計図） -->
-        <div class="info-block" *ngIf="project.docLinks?.length">
-            <h4>🔗 関連資料</h4>
-            <div class="links-grid">
-                <a *ngFor="let link of project.docLinks" [href]="link.url" target="_blank" class="doc-link">
-                    {{ link.title }} ↗
-                </a>
-            </div>
+      </div>
+  
+      <!-- スケジュール -->
+      <div class="info-block" *ngIf="project.scheduledStartDate || project.scheduledEndDate || project.deadline">
+        <h4>📅 スケジュール</h4>
+        <div class="date-chip scheduled" *ngIf="project.scheduledStartDate || project.scheduledEndDate">
+          <span class="date-label">完了予定：</span>
+          <span class="date-value">
+            {{ project.scheduledStartDate || '未定' }} ~ {{ project.scheduledEndDate || '未定' }}
+          </span>
         </div>
-
-        <!-- 概要・説明-->
-        <div class="info-block" *ngIf="project.description">
-            <h4>📝 概要・説明</h4>
-            <p class="description-text">{{ project.description }}</p>
+        <div class="date-chip deadline" *ngIf="project.deadline" 
+             [ngClass]="{'overdue': isOverdue(project.deadline), 'upcoming': !isOverdue(project.deadline)}">
+          <span class="date-label">
+            {{ isOverdue(project.deadline) ? '🚨 期限超過：' : '⏰ 最終期限：' }}
+          </span>
+          <span class="date-value">{{ project.deadline }}</span>
         </div>
-        
-        <!-- メモ・履歴 -->
-        <div class="info-block memo-block" *ngIf="project.memos?.length">
-            <h4>📝 メモ・更新履歴</h4>
-            <div class="memo-list">
-                <div *ngFor="let memo of project.memos" class="memo-item">
-                    <span class="memo-time">{{ memo.timestamp }}</span>
-                    <p class="memo-content">{{ memo.content }}</p>
-                </div>
-            </div>
+      </div>
+      
+      <!-- 関連リンク -->
+      <div class="info-block" *ngIf="project.docLinks?.length">
+        <h4>🔗 関連資料</h4>
+        <div class="links-grid">
+          <a *ngFor="let link of project.docLinks" [href]="link.url" target="_blank" class="doc-link">
+            {{ link.title }} ↗
+          </a>
         </div>
+      </div>
+  
+      <!-- 概要・説明 -->
+      <div class="info-block" *ngIf="project.description">
+        <h4>📝 概要・説明</h4>
+        <p class="description-text">{{ project.description }}</p>
+      </div>
+      
+      <!-- メモ・履歴 -->
+      <div class="info-block memo-block" *ngIf="project.memos?.length">
+        <h4>📝 メモ・更新履歴</h4>
+        <div class="memo-list">
+          <div *ngFor="let memo of project.memos" class="memo-item">
+            <span class="memo-time">{{ memo.timestamp }}</span>
+            <p class="memo-content">{{ memo.content }}</p>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <!-- B.親課題パネル折り畳み時(isCollapsed=true) -->
-    <div class="master-panel collapsed" *ngIf="isCollapsed" (click)="onToggle()" title="パネルを展開する">
-        <button class="expand-btn">▶</button>
-        <div class="vertical-title">{{ project.title }}</div>
+  
+    <!-- B. 親課題パネル折り畳み時(isCollapsed=true) -->
+    <div class="master-panel-collapsed" *ngIf="isCollapsed" (click)="onToggle()" title="パネルを展開する">
+      <button class="expand-btn">▶</button>
+      <span class="status-indicator" [style.background-color]="getStatusColor(project.status)"></span>
+      <div class="vertical-title">{{ project.title }}</div>
     </div>
-    
-</ng-container>
+      
+  </ng-container>
