@@ -21,7 +21,7 @@
         <option value="LOW">優先度： 低</option>
       </select>
 
-      <!-- 3. ソート項目（「完了予定日順」追加） -->
+      <!-- 3. ソート項目 -->
       <select [(ngModel)]="sortBy" class="filter-select">
         <option value="deadline">最終期限順</option>
         <option value="scheduledEndDate">完了予定日順</option>
@@ -56,6 +56,11 @@
         🔄 すべてリセット
       </button>
 
+      <!-- ★ 7. ツールバー右端に配置された「＋ タスク」作成ボタン -->
+      <button type="button" class="btn-add-task-toolbar" (click)="onAddTask()">
+        ＋ タスク
+      </button>
+
     </div>
   </div>
 
@@ -68,7 +73,6 @@
       [tasks]="todoTasks"
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'todo')"
-      (addTask)="onAddTask('todo')"
       (tagSelected)="onTagSelected($event)">
     </app-kanban-column>
 
@@ -79,7 +83,6 @@
       [tasks]="inProgressTasks"
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'in-progress')"
-      (addTask)="onAddTask('in-progress')"
       (tagSelected)="onTagSelected($event)">
     </app-kanban-column>
 
@@ -90,7 +93,6 @@
       [tasks]="doneTasks"
       (selectTask)="selectTask.emit($event)"
       (taskDropped)="onTaskDropped($event, 'done')"
-      (addTask)="onAddTask('done')"
       (tagSelected)="onTagSelected($event)">
     </app-kanban-column>
   </div>

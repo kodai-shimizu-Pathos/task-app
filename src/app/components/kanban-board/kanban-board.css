@@ -14,7 +14,6 @@
   overflow: hidden;
 }
 
-/* ツールバー領域 */
 .board-header {
   flex-shrink: 0;
   padding: 10px 16px;
@@ -29,7 +28,6 @@
   flex-wrap: wrap;
 }
 
-/* 検索ボックス */
 .search-box {
   position: relative;
   display: flex;
@@ -62,7 +60,6 @@
   border-color: var(--accent-color);
 }
 
-/* セレクトボックス */
 .filter-select {
   height: 30px;
   padding: 0 8px !important;
@@ -79,7 +76,6 @@
   border-color: var(--accent-color);
 }
 
-/* 昇順/降順ボタン */
 .btn-sort-order {
   height: 30px;
   padding: 0 8px;
@@ -100,7 +96,6 @@
   background-color: var(--border-color);
 }
 
-/* ★ 複数タグ用コンテナ＆チップスタイル */
 .active-tags-container {
   display: flex;
   align-items: center;
@@ -138,7 +133,6 @@
   opacity: 0.7;
 }
 
-/* すべてリセットボタン */
 .btn-reset-filter {
   height: 30px;
   padding: 0 10px;
@@ -154,12 +148,35 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  margin-left: 4px;
 }
 
 .btn-reset-filter:hover {
   background-color: rgba(239, 68, 68, 0.2);
   border-color: #EF4444;
+}
+
+/* ★ ツールバー右端の「＋ タスク」作成ボタン */
+.btn-add-task-toolbar {
+  margin-left: auto;
+  background-color: var(--accent-color, #2563eb);
+  color: #ffffff;
+  border: none;
+  padding: 0 12px;
+  height: 30px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+
+.btn-add-task-toolbar:hover {
+  opacity: 0.9;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 /* カンバンボード本体 */

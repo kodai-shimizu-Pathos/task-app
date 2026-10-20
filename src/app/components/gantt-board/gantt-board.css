@@ -193,25 +193,26 @@
 }
 
 .btn-primary {
-  background-color: var(--accent-color, #2563EB);
+  background-color: var(--accent-color, #2563eb);
   color: #ffffff;
   border: none;
   padding: 0 12px;
+  height: 30px;
   border-radius: 5px;
-  font-size: 11px;
+  font-size: 12px; /* 11pxから12pxへ統一 */
   font-weight: bold;
   cursor: pointer;
-  height: 30px;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s, box-shadow 0.2s;
   flex-shrink: 0;
+  transition: opacity 0.2s, box-shadow 0.2s;
 }
 
 .btn-primary:hover {
   opacity: 0.9;
-  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 /* メインコンテナ */

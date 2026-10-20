@@ -20,7 +20,7 @@
       <option value="LOW">優先度：低</option>
     </select>
     
-    <!-- 3. ソート項目選択（「完了予定日順」追加） -->
+    <!-- 3. ソート項目選択 -->
     <select [(ngModel)]="sortBy" class="filter-select">
       <option value="deadline">最終期限順</option>
       <option value="scheduledEndDate">完了予定日順</option>
@@ -49,6 +49,11 @@
       class="btn-reset-filter"
       title="すべての検索・フィルター条件を初期状態に戻す">
       🔄 すべてリセット
+    </button>
+
+    <!-- ★ 7. ツールバー右端に配置された「＋ 親課題」作成ボタン -->
+    <button type="button" class="btn-add-project-toolbar" (click)="onOpenNewProjectForm()">
+      ＋ 親課題
     </button>
   </div>
 

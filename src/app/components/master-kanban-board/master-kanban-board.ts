@@ -17,6 +17,7 @@ export class MasterKanbanBoard implements OnChanges {
   @Input() projects: ParentProject[] = [];
   @Output() selectProject = new EventEmitter<ParentProject>();
   @Output() parentTaskUpdated = new EventEmitter<ParentProject>();
+  @Output() openNewProjectForm = new EventEmitter<void>(); // ★ 新規親課題作成イベント
 
   // フィルター・ソート状態（デフォルト：最終期限の昇順）
   searchKeyword: string = '';
@@ -31,6 +32,10 @@ export class MasterKanbanBoard implements OnChanges {
     if (changes['projects']) {
       this.updateAvailableTags();
     }
+  }
+
+  onOpenNewProjectForm(): void {
+    this.openNewProjectForm.emit();
   }
 
   get isFilterActive(): boolean {
@@ -74,50 +79,40 @@ export class MasterKanbanBoard implements OnChanges {
     this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
   }
 
-  // 多段階ソート比較メソッド
   private compareProjects(a: ParentProject, b: ParentProject): number {
     const getWeight = (p?: string) => ({ HIGH: 3, MEDIUM: 2, LOW: 1 }[p?.toUpperCase() || ''] || 0);
     const parseDate = (d?: string) => (d ? new Date(d.replace(/-/g, '/')).getTime() : Infinity);
 
-    // 1. 完了予定日順
     if (this.sortBy === 'scheduledEndDate') {
       const dateA = parseDate(a.scheduledEndDate);
       const dateB = parseDate(b.scheduledEndDate);
       let diff = dateA - dateB;
       if (this.sortOrder === 'desc') diff = -diff;
-
       if (diff !== 0) return diff;
-      return getWeight(b.priority) - getWeight(a.priority); // 同日の場合は優先度高順
+      return getWeight(b.priority) - getWeight(a.priority);
     }
 
-    // 2. 最終期限順
     if (this.sortBy === 'deadline') {
       const dateA = parseDate(a.deadline || a.scheduledEndDate);
       const dateB = parseDate(b.deadline || b.scheduledEndDate);
       let diff = dateA - dateB;
       if (this.sortOrder === 'desc') diff = -diff;
-
       if (diff !== 0) return diff;
-      return getWeight(b.priority) - getWeight(a.priority); // 同日の場合は優先度高順
+      return getWeight(b.priority) - getWeight(a.priority);
     }
 
-    // 3. 優先度順
     if (this.sortBy === 'priority') {
       let diff = getWeight(b.priority) - getWeight(a.priority);
       if (this.sortOrder === 'desc') diff = -diff;
-
       if (diff !== 0) return diff;
-      // 同優先度の場合は期限が近い順
       return parseDate(a.deadline || a.scheduledEndDate) - parseDate(b.deadline || b.scheduledEndDate);
     }
 
-    // 4. 進捗度順
     if (this.sortBy === 'progress') {
       const diff = (a.progressPercentage || 0) - (b.progressPercentage || 0);
       return this.sortOrder === 'asc' ? diff : -diff;
     }
 
-    // 5. 作成日順
     const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
     return this.sortOrder === 'asc' ? tA - tB : tB - tA;

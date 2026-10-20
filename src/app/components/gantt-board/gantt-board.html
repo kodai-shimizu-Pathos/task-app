@@ -60,8 +60,10 @@
                 <!-- 今日へのスクロールボタン -->
                 <button type="button" class="btn-today" (click)="onScrollToToday()" title="本日の位置へスクロール">📍 今日</button>
 
-                <!-- 新規タスク追加ボタン -->
-                <button type="button" class="btn-primary" (click)="onAddNewTask()">＋ 新規タスク</button>
+                <!-- ★ 動的追加ボタン（親課題一覧時: 「＋ 親課題」、詳細画面時: 「＋ タスク」） -->
+                <button type="button" class="btn-primary" (click)="onAddNewItem()">
+                    {{ project ? '＋ タスク' : '＋ 親課題' }}
+                </button>
             </div>
         </div>
     </div>
@@ -227,7 +229,6 @@
                              (mousedown)="onBarMouseDown(task, $event, 'move')">
                             <div class="resize-handle resize-left" (mousedown)="onBarMouseDown(task, $event, 'resize-left')"></div>
                             
-                            <!-- ラベルとバッジを外側に溢れさせても見やすく保持するラッパー -->
                             <div class="bar-content-wrapper">
                                 <span class="bar-label">{{ task.title }}</span>
                                 <span class="checklist-badge" *ngIf="hasChecklist(task)">

@@ -5,11 +5,11 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: var(--bg-main, #1a1d24);
-  color: var(--text-primary, #ffffff);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
 }
 
-/* メインエリア（ヘッダー ＋ メインコンテンツ） */
+/* メインエリア */
 .app-main-layout {
   flex: 1;
   display: flex;
@@ -19,7 +19,7 @@
   overflow: hidden;
 }
 
-/* グローバルヘッダー（高さ固定 48px） */
+/* ★ グローバルヘッダー (高さ48px固定・ライト/ダークテーマ完全自動追従) */
 .app-header {
   height: 48px;
   background-color: var(--bg-header);
@@ -27,22 +27,24 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 24px;
-  gap: 16px;
+  padding: 0 16px;
+  gap: 12px;
   flex-shrink: 0;
+  z-index: 100;
+  box-sizing: border-box;
 }
 
 .header-left, .header-center, .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* アプリタイトルのデザイン */
 .app-title {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  color: var(--accent-color, #2563eb);
+  color: var(--accent-color);
   margin: 0;
   cursor: pointer;
   letter-spacing: -0.02em;
@@ -53,35 +55,79 @@
 /* メインビュー切替（課題管理 ↔ AIレビュー） */
 .main-view-switcher {
   display: flex;
-  background-color: var(--bg-secondary, #2e3440);
+  background-color: var(--bg-secondary);
   border-radius: 6px;
   padding: 2px;
-  border: 1px solid var(--border-color, #3b4252);
-  margin-left: 8px;
+  border: 1px solid var(--border-color);
 }
 
 .main-view-switcher button {
   background: none;
   border: none;
-  color: var(--text-muted, #8892b0);
-  padding: 5px 10px;
+  color: var(--text-muted);
+  padding: 4px 10px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .main-view-switcher button.active {
-  background-color: var(--accent-color, #2563eb);
+  background-color: var(--accent-color);
   color: #ffffff;
 }
 
-/* ★ 🎯 集中モードボタン（オレンジ黄金グラデーションで強調） */
+/* 一覧へ戻るボタン */
+.btn-back {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.btn-back:hover {
+  background-color: var(--border-color);
+}
+
+/* 表示切替（カンバン / ガント） */
+.view-switcher {
+  display: flex;
+  background-color: var(--bg-secondary);
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid var(--border-color);
+}
+
+.view-switcher button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.view-switcher button.active {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* 🎯 集中モードボタン*/
 .btn-concentration {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.25));
-  border: 1px solid rgba(245, 158, 11, 0.5);
-  color: #f59e0b;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+  color: #ffffff; /* 白文字で高いコントラストを確保 */
   font-size: 12px;
   font-weight: 700;
   padding: 5px 12px;
@@ -89,34 +135,41 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  white-space: nowrap;
   transition: all 0.2s ease;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.15);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
 }
 
 .btn-concentration:hover {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.4));
-  border-color: #f59e0b;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, #d97706, #b45309);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
   transform: translateY(-1px);
 }
 
-/* アイコン型ボタン共通 */
+/* ユーティリティアイコンボタン (テキストラベル・件数バッジ付き) */
 .header-icon-btn {
-  background: var(--bg-secondary, #2e3440);
-  border: 1px solid var(--border-color, #3b4252);
-  color: var(--text-primary, #ffffff);
-  padding: 5px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 4px 10px;
   font-size: 12px;
+  font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.header-icon-btn:hover {
+  background-color: var(--border-color);
 }
 
 .header-icon-btn .badge {
-  background-color: var(--accent-color, #2563eb);
+  background-color: var(--accent-color);
   color: #ffffff;
   font-size: 10px;
   padding: 1px 5px;
@@ -124,10 +177,10 @@
   font-weight: bold;
 }
 
-/* ユーザーアバター (ヘッダー用) */
+/* ユーザーアバター */
 .header-user-avatar {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background-color: var(--bg-secondary);
   display: flex;
@@ -151,7 +204,7 @@
 }
 
 .avatar-text {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   color: var(--text-primary);
 }
@@ -161,63 +214,10 @@
   background-color: var(--accent-color);
   color: #ffffff;
   border: none;
-  padding: 6px 12px;
+  padding: 5px 12px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: bold;
-  cursor: pointer;
-}
-
-/* 親課題追加ボタン */
-.btn-add-project {
-  background-color: var(--accent-color);
-  color: #ffffff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.btn-add-project:hover {
-  opacity: 0.85;
-}
-
-/* 表示切替（カンバン / ガント） */
-.view-switcher {
-  display: flex;
-  background-color: var(--bg-secondary);
-  border-radius: 6px;
-  padding: 2px;
-  border: 1px solid var(--border-color);
-}
-
-.view-switcher button {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  padding: 6px 12px;
-  font-size: 12px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.view-switcher button.active {
-  background-color: var(--accent-color);
-  color: #ffffff;
-  font-weight: bold;
-}
-
-/* テーマ切替ボタン */
-.theme-toggle-btn {
-  background: none;
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 6px 12px;
-  font-size: 12px;
-  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -239,17 +239,17 @@
   overflow: hidden;
 }
 
-/* ★ パターンB：親課題選択時レイアウト (横並びFlex構造) */
+/* パターンB：親課題選択時レイアウト */
 .project-detail-layout {
   flex: 1;
   display: flex;
-  flex-direction: row; /* ★ 右パネルを全高化するため横並びに指定 */
+  flex-direction: row;
   height: 100%;
   width: 100%;
   overflow: hidden;
 }
 
-/* 左〜中央メインエリア (サマリーカード ＋ カンバン/ガント) */
+/* メインエリア */
 .detail-main-area {
   flex: 1;
   display: flex;
@@ -259,7 +259,7 @@
   overflow: hidden;
 }
 
-/* 上部親課題ヒーローカード */
+/* 親課題ヒーローカード */
 .project-summary-card {
   background-color: var(--bg-master);
   border: 1px solid var(--border-color);
@@ -284,7 +284,7 @@
 .summary-title-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .project-badge {
@@ -363,7 +363,6 @@
   background: var(--border-color);
 }
 
-/* サマリー展開領域 */
 .summary-expanded-content {
   padding-top: 8px;
   border-top: 1px dashed var(--border-color);
@@ -374,13 +373,6 @@
   gap: 6px;
 }
 
-.summary-title-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* ステータスチップ（ドット ＋ 文字） */
 .status-chip-group {
   display: inline-flex;
   align-items: center;
@@ -395,7 +387,6 @@
   white-space: nowrap;
 }
 
-/* ステータスドット（7px） */
 .status-chip-group .status-indicator {
   width: 7px;
   height: 7px;
@@ -403,7 +394,6 @@
   flex-shrink: 0;
 }
 
-/* メイン ワークスペース */
 .workspace-body {
   flex: 1;
   display: flex;
@@ -422,7 +412,6 @@
   overflow: hidden;
 }
 
-/* ★ 右ドッキング詳細パネル (画面ヘッダー下から最下部までの全高パネル) */
 .docked-detail-pane {
   height: 100%;
   background-color: var(--bg-master);
@@ -436,7 +425,6 @@
   overflow: hidden;
 }
 
-/* 幅変更用ドラッグスプリッター */
 .pane-resizer {
   position: absolute;
   top: 0;
@@ -450,21 +438,4 @@
 .pane-resizer:hover {
   background-color: var(--accent-color);
   opacity: 0.5;
-}
-
-.btn-back {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 6px;
-  transition: background-color 0.2s;
-}
-
-.btn-back:hover {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
 }

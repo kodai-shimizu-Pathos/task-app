@@ -35,6 +35,7 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
   @Output() selectTask = new EventEmitter<Task>();
   @Output() selectProject = new EventEmitter<ParentProject>();
   @Output() addTask = new EventEmitter<void>();
+  @Output() addProject = new EventEmitter<void>(); // ★ 新規親課題作成用イベント
   @Output() taskUpdated = new EventEmitter<Task>();
   @Output() projectUpdated = new EventEmitter<any>();
 
@@ -129,8 +130,13 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-  onAddNewTask(): void {
-    this.addTask.emit();
+  // ★ 親課題一覧時は「＋ 親課題」、親課題詳細画面（子タスク表示）時は「＋ タスク」を発火
+  onAddNewItem(): void {
+    if (this.project) {
+      this.addTask.emit();
+    } else {
+      this.addProject.emit();
+    }
   }
 
   getPriorityLabel(priority?: string): string {
@@ -142,10 +148,9 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     return '中';
   }
 
-  // 完了予定日超過判定 (⚠️)
   isScheduledOverdue(item: Task | ParentProject): boolean {
     if (item.status === 'done' || !item.scheduledEndDate) return false;
-    if (this.isDeadlineOverdue(item)) return false; // 最終期限超過を優先
+    if (this.isDeadlineOverdue(item)) return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const target = new Date(item.scheduledEndDate.replace(/-/g, '/'));
@@ -153,7 +158,6 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     return target < today;
   }
 
-  // 最終期限超過判定 (🚨)
   isDeadlineOverdue(item: Task | ParentProject): boolean {
     if (item.status === 'done' || !item.deadline) return false;
     const today = new Date();
@@ -403,12 +407,7 @@ export class GanttBoard implements OnInit, OnChanges, AfterViewInit {
     if (this.boundMouseUp) document.removeEventListener('mouseup', this.boundMouseUp);
   }
 
-  /**
-   * ★ ガントバーの表示位置とサイズを計算
-   * 【最優先修正】右端は「最終期限（deadline）」を最優先参照し、無ければ「完了予定日（scheduledEndDate）」を採用！
-   */
   getTaskBarPositionPx(item: Task | ParentProject): { left: number; width: number; visible: boolean } {
-    // ★ 右端の優先順位を deadline 優先に変更！
     const targetEndDate = item.deadline || item.scheduledEndDate;
     
     if (!item.scheduledStartDate || !targetEndDate) {

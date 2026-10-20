@@ -2,15 +2,10 @@
   <!-- カラムヘッダー -->
   <div class="column-header">
     <div class="header-left-group">
-      <!-- ★ 小さな丸印（ステータスドット）だけを残す -->
       <span class="status-indicator" [style.background-color]="headerColor"></span>
       <h3 class="column-title">{{ title }}</h3>
       <span class="task-count">{{ tasks.length }}</span>
     </div>
-  
-    <button type="button" class="btn-add-task-column" (click)="onAddTask($event)" title="この列にタスクを追加">
-      ＋ タスク追加
-    </button>
   </div>
 
   <!-- CdkDropList 領域 -->

@@ -1,16 +1,13 @@
 <div class="app-container">
-  <!-- メインレイアウト -->
   <div class="app-main-layout">
     
-    <!-- ★ 統合グローバルヘッダー -->
+    <!-- ★ 1段統合グローバルヘッダー (高さ48px固定) -->
     <header class="app-header">
       
-      <!-- 【左側】ロゴ ＋ メインビュー切替 ＋ 親課題操作 -->
+      <!-- 【左ゾーン】ロゴ ＋ メインビュー切替 ＋ 一覧へ戻るボタン -->
       <div class="header-left">
-        <!-- ロゴ（⚡なし・テキストのみ） -->
         <h1 class="app-title" (click)="onUnselectProject()" title="トップへ戻る">BeSideFlow AI</h1>
 
-        <!-- メインビュー切替（課題管理 ↔ AIレビュー） -->
         <div class="main-view-switcher">
           <button 
             type="button" 
@@ -26,16 +23,12 @@
           </button>
         </div>
 
-        <!-- 課題管理時：一覧へ戻る ＆ 親課題追加ボタン -->
         <button *ngIf="selectedProject && activeView === 'tasks'" class="btn-back" (click)="onUnselectProject()">
           ← 一覧へ
         </button>
-        <button type="button" class="btn-add-project" (click)="onOpenNewProjectForm()">
-          ＋ 親課題
-        </button>
       </div>
 
-      <!-- 【中央】表示モード切替（課題管理タブ選択時のみ） -->
+      <!-- 【中央ゾーン】表示モード切替（課題管理時のみ表示） -->
       <div class="header-center">
         <div class="view-switcher" *ngIf="activeView === 'tasks'">
           <button
@@ -53,26 +46,29 @@
         </div>
       </div>
 
-      <!-- 【右側】集中モード(目立たせる) ＋ ユーティリティ ＋ アカウント -->
+      <!-- 【右ゾーン】集中モード ＋ ユーティリティ ＋ アカウント -->
       <div class="header-right">
-        <!-- ★ 🎯 集中モード（黄〜オレンジのグラデーション＆発光で強調） -->
+        <!-- 🎯 集中モード -->
         <button 
           type="button" 
           class="btn-concentration" 
           (click)="onToggleConcentrationMode()" 
           title="集中モード (PiP)">
           <span class="icon">🎯</span>
-          <span>集中モード</span>
+          <span class="btn-text">集中モード</span>
         </button>
 
         <!-- 📦 アーカイブ -->
         <button type="button" class="header-icon-btn" (click)="onOpenArchiveModal()" title="アーカイブ一覧">
-          📦 <span class="badge">{{ archivedProjects.length }}</span>
+          <span class="icon">📦</span>
+          <span class="btn-label">アーカイブ</span>
+          <span class="badge">{{ archivedProjects.length }}</span>
         </button>
 
-        <!-- ☀️/🌙 テーマ切替 -->
+        <!-- ★ ☀️/🌙 テーマ切替（「切り替え先のアクション」を明確化） -->
         <button type="button" class="header-icon-btn" (click)="toggleTheme()" title="テーマ切替">
-          {{ currentTheme === 'dark' ? '☀️' : '🌙' }}
+          <span class="icon">{{ currentTheme === 'dark' ? '☀️' : '🌙' }}</span>
+          <span class="btn-label">{{ currentTheme === 'dark' ? 'ライトモードへ' : 'ダークモードへ' }}</span>
         </button>
 
         <!-- 👤 アカウント / 🔑 ログイン -->
@@ -95,18 +91,18 @@
       </div>
     </header>
 
-    <!-- ★ メインコンテンツ領域（ヘッダー以下全高） -->
+    <!-- メインコンテンツ（以下変更なし） -->
     <main class="main-content">
       <ng-container *ngIf="activeView === 'tasks'">
         
-        <!-- パターンA：親課題未選択時 -->
         <div class="full-master-pane" *ngIf="!selectedProject" style="display: flex; width: 100%; height: 100%;">
           <div style="flex: 1; height: 100%; min-width: 0; overflow: hidden;">
             <app-master-kanban-board
               *ngIf="currentMode === 'KANBAN'"
               [projects]="activeProjects"
               (selectProject)="onSelectProject($event)"
-              (parentTaskUpdated)="onParentTaskUpdated($event)">
+              (parentTaskUpdated)="onParentTaskUpdated($event)"
+              (openNewProjectForm)="onOpenNewProjectForm()">
             </app-master-kanban-board>
         
             <app-gantt-board
@@ -116,6 +112,7 @@
               [projects]="activeProjects"
               (selectProject)="onSelectProject($event)"
               (selectTask)="onSelectTask($event)"
+              (addProject)="onOpenNewProjectForm()"
               (addTask)="onOpenNewTaskForm()"
               (projectUpdated)="onParentTaskUpdated($event)">
             </app-gantt-board>
@@ -133,27 +130,22 @@
           </div>
         </div>
 
-        <!-- パターンB：親課題選択時 -->
         <div class="project-detail-layout" *ngIf="selectedProject">
           <div class="detail-main-area">
-            <!-- 1. 上部親課題ヒーローカード -->
             <div class="project-summary-card">
               <div class="summary-top-row">
                 <div class="summary-title-group">
                   <span class="project-badge">📁 親課題</span>
                   
-                  <!-- ★ カンバンと同色のステータスドット ＋ テキスト -->
                   <div class="status-chip-group">
                     <span class="status-indicator" [style.background-color]="getStatusColor(selectedProject.status)"></span>
                     <span class="status-text">{{ getStatusLabel(selectedProject.status) }}</span>
                   </div>
 
-                  <!-- ★ 親課題の優先度バッジ -->
                   <span class="badge-priority" [ngClass]="'priority-' + (selectedProject.priority || 'medium').toLowerCase()">
                     {{ getPriorityLabel(selectedProject.priority) }}
                   </span>
 
-                  <!-- 親課題タイトル -->
                   <h2 class="project-title-text">{{ selectedProject.title }}</h2>
                 </div>
 
@@ -167,7 +159,6 @@
                 </div>
               </div>
 
-              <!-- 下段: 進捗メーター -->
               <div class="summary-bottom-row">
                 <div class="progress-box">
                   <span class="progress-label">進捗率: {{ selectedProject.progressPercentage || 0 }}%</span>
@@ -177,7 +168,6 @@
                 </div>
               </div>
 
-              <!-- サマリー展開領域 -->
               <div class="summary-expanded-content" *ngIf="isSummaryExpanded">
                 <p class="project-desc" *ngIf="selectedProject.description">
                   <strong>概要:</strong> {{ selectedProject.description }}
@@ -209,6 +199,7 @@
                   (selectTask)="onSelectTask($event)"
                   (selectProject)="onSelectProject($event)"
                   (addTask)="onOpenNewTaskForm()"
+                  (addProject)="onOpenNewProjectForm()"
                   (taskUpdated)="onTaskUpdated($event)"
                   (projectUpdated)="onParentTaskUpdated($event)">
                 </app-gantt-board>
@@ -258,7 +249,6 @@
       </app-side-pocket-panel>
     </main>
 
-    <!-- モーダル類 -->
     <app-archive-modal
       *ngIf="isArchiveModalOpen"
       [archivedProjects]="archivedProjects"
