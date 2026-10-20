@@ -55,7 +55,7 @@ import { ParentProject } from '../../models/project.model';
           <!-- ★ AIボタンを廃止し、手動アクションのみのシンプルな構成へ -->
           <div class="memo-actions">
             <button class="btn-action promote-task" (click)="onPromoteToTask(memo)">
-              🚀 手動タスク化
+              🚀 タスク化
             </button>
 
             <div class="promote-project-group" *ngIf="projects.length > 0">
