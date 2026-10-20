@@ -1,60 +1,35 @@
 <div class="review-view-container">
-    <!-- ヘッダー＆ローカル設定エリア -->
-    <header class="review-header">
-      <div class="header-left">
-        <h2>📝 AIウィークリーレビュー</h2>
-        <span class="sub-title">過去7日間の実績と遅延傾向からAIパートナーが振り返りをサポート</span>
+  <!-- ヘッダー＆ローカル設定エリア -->
+  <header class="review-header">
+    <div class="header-left">
+      <h2>📝 AIウィークリーレビュー</h2>
+      <span class="sub-title">過去7日間の実績と遅延傾向からAIパートナーが振り返りをサポート</span>
+    </div>
+
+    <div class="header-controls">
+      <!-- 遅延収集 ON/OFF トグル -->
+      <label class="toggle-switch" title="期限変更時の理由チップ表示ON/OFF">
+        <input type="checkbox" [checked]="autoCollect" (change)="onToggleCollect()" />
+        <span class="slider"></span>
+        <span class="toggle-label">自動収集: {{ autoCollect ? 'ON' : 'OFF' }}</span>
+      </label>
+
+      <!-- AIトーン選択 -->
+      <div class="tone-select-group">
+        <span class="tone-label">AIトーン:</span>
+        <select [(ngModel)]="selectedTone" (change)="onToneChange()" class="tone-select">
+          <option value="sympathetic">🤝 寄り添う</option>
+          <option value="strict">🔥 厳しく</option>
+          <option value="objective">📊 客観的</option>
+        </select>
       </div>
-  
-      <div class="header-controls">
-        <!-- 遅延収集 ON/OFF トグル -->
-        <label class="toggle-switch" title="期限変更時の理由チップ表示ON/OFF">
-          <input type="checkbox" [checked]="autoCollect" (change)="onToggleCollect()" />
-          <span class="slider"></span>
-          <span class="toggle-label">自動収集: {{ autoCollect ? 'ON' : 'OFF' }}</span>
-        </label>
-  
-        <!-- AIトーン選択 -->
-        <div class="tone-select-group">
-          <span class="tone-label">AIトーン:</span>
-          <select [(ngModel)]="selectedTone" (change)="onToneChange()" class="tone-select">
-            <option value="sympathetic">🤝 寄り添う</option>
-            <option value="strict">🔥 厳しく</option>
-            <option value="objective">📊 客観的</option>
-          </select>
-        </div>
-      </div>
-    </header>
-  
-    <!-- レビューメインコンテンツ -->
-    <main class="review-body">
-      <!-- 上段：実績・遅延サマリーカード -->
-      <div class="stats-grid">
-        <!-- 1. 完了数カード -->
-        <div class="stat-card primary">
-          <div class="stat-icon">🎉</div>
-          <div class="stat-info">
-            <span class="stat-value">{{ completedCount }} <small>件</small></span>
-            <span class="stat-label">今週の完了タスク数</span>
-          </div>
-        </div>
-  
-        <!-- 2. 遅延要因内訳カード -->
-        <div class="stat-card delay-summary">
-          <h4>⏱️ 遅延要因ログの内訳 (全{{ recentLogs.length }}件)</h4>
-          <div class="reason-bars">
-            <div *ngFor="let stat of reasonStats" class="reason-row">
-              <span class="reason-label">{{ stat.icon }} {{ stat.label }}</span>
-              <div class="bar-bg">
-                <div class="bar-fill" [style.width.%]="stat.percentage"></div>
-              </div>
-              <span class="reason-count">{{ stat.count }}件 ({{ stat.percentage }}%)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-  
-      <!-- 下段：AIレビューコメントカード -->
+    </div>
+  </header>
+
+  <!-- レビューメインコンテンツ (2カラムグリッド) -->
+  <main class="review-body">
+    <!-- 左カラム：AIフィードバック（メイン） -->
+    <section class="main-column">
       <div class="ai-review-card">
         <div class="card-header">
           <h3>🤖 AIパートナーの週次振り返りフィードバック</h3>
@@ -62,24 +37,67 @@
             🔄 再生成
           </button>
         </div>
-  
+
         <div class="card-body">
           <!-- ローディング状態 -->
           <div *ngIf="isLoading" class="loading-box">
             <span class="spinner">⏳</span>
             <p>過去の実績と遅延要因をAIが分析中...</p>
           </div>
-  
+
           <!-- エラー表示 -->
           <div *ngIf="!isLoading && errorMessage" class="error-box">
             ⚠️ {{ errorMessage }}
           </div>
-  
+
           <!-- レビューテキスト表示 -->
           <div *ngIf="!isLoading && !errorMessage" class="review-content">
             <div class="review-text" [innerHTML]="reviewComment"></div>
           </div>
         </div>
       </div>
-    </main>
-  </div>
+    </section>
+
+    <!-- 右カラム：サマリー＆完了タスク一覧（サイド） -->
+    <aside class="side-column">
+      <!-- 1. 完了数カード -->
+      <div class="stat-card primary">
+        <div class="stat-icon">🎉</div>
+        <div class="stat-info">
+          <span class="stat-value">{{ completedCount }} <small>件</small></span>
+          <span class="stat-label">今週の完了タスク数</span>
+        </div>
+      </div>
+
+      <!-- 2. 遅延要因内訳カード -->
+      <div class="stat-card delay-summary">
+        <h4>⏱️ 遅延要因ログの内訳 (全{{ recentLogs.length }}件)</h4>
+        <div class="reason-bars">
+          <div *ngFor="let stat of reasonStats" class="reason-row">
+            <span class="reason-label">{{ stat.icon }} {{ stat.label }}</span>
+            <div class="bar-bg">
+              <div class="bar-fill" [style.width.%]="stat.percentage"></div>
+            </div>
+            <span class="reason-count">{{ stat.count }}件 ({{ stat.percentage }}%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 今週完了したタスク一覧カード -->
+      <div class="stat-card completed-summary">
+        <h4>✅ 今週完了したタスク</h4>
+        <div class="completed-task-list">
+          <ng-container *ngFor="let task of tasks">
+            <div *ngIf="task.status === 'done'" class="completed-task-item">
+              <span class="check-icon">✓</span>
+              <span class="task-title" [title]="task.title">{{ task.title }}</span>
+            </div>
+          </ng-container>
+          <div *ngIf="completedCount === 0" class="no-tasks">
+            完了したタスクはありません
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+</div>

@@ -1,241 +1,313 @@
 :host {
-    display: block;
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    background-color: var(--bg-main, #1a1d24);
-    color: var(--text-primary, #ffffff);
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: var(--bg-main, #1a1d24);
+  color: var(--text-primary, #ffffff);
+}
+
+.review-view-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ヘッダーエリア */
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color, #3b444e);
+}
+
+.header-left h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.sub-title {
+  font-size: 12px;
+  color: var(--text-muted, #9ca3af);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* スイッチトグル */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  display: none;
+}
+
+.slider {
+  width: 36px;
+  height: 20px;
+  background-color: var(--border-color, #3b444e);
+  border-radius: 20px;
+  position: relative;
+  transition: 0.2s;
+}
+
+.slider::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 3px;
+  top: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+input:checked + .slider {
+  background-color: var(--accent-color, #2563eb);
+}
+
+input:checked + .slider::before {
+  transform: translateX(16px);
+}
+
+.toggle-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* AIトーンセレクト */
+.tone-select-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tone-label {
+  font-size: 12px;
+  color: var(--text-muted, #9ca3af);
+}
+
+.tone-select {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #3b444e);
+  background-color: var(--bg-card, #2d3139);
+  color: var(--text-primary, #ffffff);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* 2カラムレイアウト設定 */
+.review-body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* 左メインカラム */
+.main-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 右サイドカラム */
+.side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* カード共通スタイル */
+.stat-card {
+  background-color: var(--bg-card, #2d3139);
+  border: 1px solid var(--border-color, #3b444e);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.stat-card.primary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(99, 102, 241, 0.15));
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.stat-icon {
+  font-size: 32px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--accent-color, #2563eb);
+  display: block;
+}
+
+.stat-value small {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 各カードの見出し */
+.stat-card.delay-summary h4,
+.stat-card.completed-summary h4 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+}
+
+/* 遅延理由バー */
+.reason-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reason-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+}
+
+.reason-label {
+  width: 140px;
+  white-space: nowrap;
+}
+
+.bar-bg {
+  flex: 1;
+  height: 6px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background-color: var(--accent-color, #2563eb);
+  border-radius: 3px;
+}
+
+.reason-count {
+  width: 80px;
+  text-align: right;
+  color: var(--text-muted);
+}
+
+/* 完了タスクリスト */
+.completed-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.completed-task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+}
+
+.completed-task-item:last-child {
+  border-bottom: none;
+}
+
+.check-icon {
+color: #10b981;
+font-weight: bold;
+}
+
+.task-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary, #ffffff);
+}
+
+.no-tasks {
+  font-size: 12px;
+  color: var(--text-muted, #9ca3af);
+  padding: 8px 0;
+}
+
+/* AIレビューカード */
+.ai-review-card {
+  background-color: var(--bg-card, #2d3139);
+  border: 1px solid var(--border-color, #3b444e);
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 380px;
+}
+
+.ai-review-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.ai-review-card h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.btn-refresh {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.loading-box {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--text-muted);
+}
+
+.error-box {
+  color: #ef4444;
+  padding: 16px;
+  font-size: 13px;
+}
+
+.review-content {
+  line-height: 1.7;
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+/* 画面幅が狭い場合のレスポンシブ対応 */
+@media (max-width: 900px) {
+  .review-body {
+      grid-template-columns: 1fr;
   }
-  
-  .review-view-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 24px 32px;
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-  
-  /* ヘッダーエリア */
-  .review-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-color, #3b444e);
-  }
-  
-  .header-left h2 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: bold;
-  }
-  
-  .sub-title {
-    font-size: 12px;
-    color: var(--text-muted, #9ca3af);
-  }
-  
-  .header-controls {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-  
-  /* スイッチトグル */
-  .toggle-switch {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-  }
-  
-  .toggle-switch input {
-    display: none;
-  }
-  
-  .slider {
-    width: 36px;
-    height: 20px;
-    background-color: var(--border-color, #3b444e);
-    border-radius: 20px;
-    position: relative;
-    transition: 0.2s;
-  }
-  
-  .slider::before {
-    content: '';
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    left: 3px;
-    top: 3px;
-    background-color: white;
-    border-radius: 50%;
-    transition: 0.2s;
-  }
-  
-  input:checked + .slider {
-    background-color: var(--accent-color, #2563eb);
-  }
-  
-  input:checked + .slider::before {
-    transform: translateX(16px);
-  }
-  
-  .toggle-label {
-    font-size: 12px;
-    font-weight: 600;
-  }
-  
-  /* AIトーンセレクト */
-  .tone-select-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  .tone-label {
-    font-size: 12px;
-    color: var(--text-muted, #9ca3af);
-  }
-  
-  .tone-select {
-    padding: 4px 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color, #3b444e);
-    background-color: var(--bg-card, #2d3139);
-    color: var(--text-primary, #ffffff);
-    font-size: 12px;
-    outline: none;
-    cursor: pointer;
-  }
-  
-  /* 集計グリッド */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    gap: 16px;
-  }
-  
-  .stat-card {
-    background-color: var(--bg-card, #2d3139);
-    border: 1px solid var(--border-color, #3b444e);
-    border-radius: 12px;
-    padding: 16px 20px;
-  }
-  
-  .stat-card.primary {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(99, 102, 241, 0.15));
-    border-color: rgba(37, 99, 235, 0.3);
-  }
-  
-  .stat-icon {
-    font-size: 32px;
-  }
-  
-  .stat-value {
-    font-size: 28px;
-    font-weight: bold;
-    color: var(--accent-color, #2563eb);
-    display: block;
-  }
-  
-  .stat-value small {
-    font-size: 14px;
-    color: var(--text-primary);
-  }
-  
-  .stat-label {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  
-  /* 遅延理由バー */
-  .stat-card.delay-summary h4 {
-    margin: 0 0 12px 0;
-    font-size: 13px;
-  }
-  
-  .reason-bars {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .reason-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 11px;
-  }
-  
-  .reason-label {
-    width: 140px;
-    white-space: nowrap;
-  }
-  
-  .bar-bg {
-    flex: 1;
-    height: 6px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  
-  .bar-fill {
-    height: 100%;
-    background-color: var(--accent-color, #2563eb);
-    border-radius: 3px;
-  }
-  
-  .reason-count {
-    width: 80px;
-    text-align: right;
-    color: var(--text-muted);
-  }
-  
-  /* AIレビューカード */
-  .ai-review-card {
-    background-color: var(--bg-card, #2d3139);
-    border: 1px solid var(--border-color, #3b444e);
-    border-radius: 12px;
-    padding: 20px;
-  }
-  
-  .ai-review-card .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  
-  .ai-review-card h3 {
-    margin: 0;
-    font-size: 15px;
-  }
-  
-  .btn-refresh {
-    background: none;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    cursor: pointer;
-  }
-  
-  .loading-box {
-    text-align: center;
-    padding: 40px 0;
-    color: var(--text-muted);
-  }
-  
-  .review-content {
-    line-height: 1.7;
-    font-size: 13px;
-    white-space: pre-wrap;
-  }
+}
