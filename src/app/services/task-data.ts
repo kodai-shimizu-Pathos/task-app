@@ -39,42 +39,64 @@ export class TaskDataService {
 
   private delayLogs: DelayLog[] = [];
 
-  // 過去指定日数の遅延ログを取得
+  // Observable の宣言 (Firestoreとのリアルタイム同期)
+  readonly projects$: Observable<ParentProject[]> = 
+    collectionData(this.projectsCollection, { idField: 'id' }) as Observable<ParentProject[]>;
+  readonly tasks$: Observable<Task[]> = 
+    collectionData(this.tasksCollection, { idField: 'id' }) as Observable<Task[]>;
+  readonly sidePocketMemos$: Observable<SidePocketMemo[]> = (
+    collectionData(this.sidePocketCollection, { idField: 'id' }) as Observable<SidePocketMemo[]>
+  ).pipe(
+    map(memos => memos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+  );
+
+  // Firestoreの delay_logs コレクションを同期するObservable
+  readonly delayLogs$: Observable<DelayLog[]> = 
+    collectionData(this.delayLogsCollection, { idField: 'id' }) as Observable<DelayLog[]>;
+
+  constructor() {
+    // サービス起動時にFirestoreの遅延ログを配列へ自動同期
+    this.delayLogs$.subscribe(logs => {
+      this.delayLogs = logs;
+    });
+  }
+
+  // --- データの取得 ---
+  getProjects(): Observable<ParentProject[]> {
+    return this.projects$;
+  }
+
+  getTasks(): Observable<Task[]> {
+    return this.tasks$;
+  }
+
+  getSidePocketMemos(): Observable<SidePocketMemo[]> {
+    return this.sidePocketMemos$;
+  }
+
+  // --- 遅延要因ログの記録 ---
+  async addDelayLog(log: Omit<DelayLog, 'id' | 'createdAt'>): Promise<void> {
+    const uid = this.authService.currentUserId;
+    if (!uid) throw new Error('未認証ユーザーは追加できません');
+
+    const newLog = {
+      ...log,
+      userId: uid,
+      id: `log_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    await addDoc(this.delayLogsCollection, newLog);
+  }
+
+  // --- 過去7日間の遅延ログを取得 ---
   getRecentDelayLogs(days: number = 7): DelayLog[] {
     const now = new Date();
     const pastDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
     return this.delayLogs.filter(log => new Date(log.createdAt) >= pastDate);
   }
 
-  // ユーザーの認証状態に応じて、自分のデータのみフィルタリング取得
-  readonly projects$: Observable<ParentProject[]> = this.authService.user$.pipe(
-    switchMap(u => {
-      if (!u) return of([]);
-      const q = query(this.projectsCollection, where('userId', '==', u.uid));
-      return collectionData(q, { idField: 'id' }) as Observable<ParentProject[]>;
-    })
-  );
-
-  readonly tasks$: Observable<Task[]> = this.authService.user$.pipe(
-    switchMap(u => {
-      if (!u) return of([]);
-      const q = query(this.tasksCollection, where('userId', '==', u.uid));
-      return collectionData(q, { idField: 'id' }) as Observable<Task[]>;
-    })
-  );
-
-  readonly sidePocketMemos$: Observable<SidePocketMemo[]> = this.authService.user$.pipe(
-    switchMap(u => {
-      if (!u) return of([]);
-      const q = query(this.sidePocketCollection, where('userId', '==', u.uid));
-      return (collectionData(q, { idField: 'id' }) as Observable<SidePocketMemo[]>).pipe(
-        map(memos => memos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
-      );
-    })
-  );
-
-  // --- データ追加時に userId を自動付与 ---
-
+  // --- 親課題の追加 ---
   async addProject(project: Omit<ParentProject, 'id' | 'userId'>): Promise<string> {
     const uid = this.authService.currentUserId;
     if (!uid) throw new Error('未認証ユーザーは追加できません');
@@ -103,20 +125,6 @@ export class TaskDataService {
     const cleaned = JSON.parse(JSON.stringify(newMemo));
     const docRef = await addDoc(this.sidePocketCollection, cleaned);
     return docRef.id;
-  }
-
-  async addDelayLog(log: Omit<DelayLog, 'id' | 'createdAt'>): Promise<void> {
-    const uid = this.authService.currentUserId;
-    if (!uid) throw new Error('未認証ユーザーは追加できません');
-
-    const newLog = {
-      ...log,
-      userId: uid,
-      id: `log_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-
-    await addDoc(this.delayLogsCollection, newLog);
   }
 
   // --- 更新・削除の既存処理 ---
@@ -148,18 +156,5 @@ export class TaskDataService {
     if (!id) return;
     const docRef = doc(this.firestore, `side_pocket_memos/${id}`);
     await deleteDoc(docRef);
-  }
-
-  // --- データの取得 ---
-  getProjects(): Observable<ParentProject[]> {
-    return this.projects$;
-  }
-
-  getTasks(): Observable<Task[]> {
-    return this.tasks$;
-  }
-
-  getSidePocketMemos(): Observable<SidePocketMemo[]> {
-    return this.sidePocketMemos$;
   }
 }
