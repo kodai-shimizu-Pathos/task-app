@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, SimpleChanges, OnChanges } from '@angular/core'; 
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms';
-import { Task, PriorityLevel, Status, ChecklistItem } from '../../models/task.model';
+import { Task, Status, ChecklistItem } from '../../models/task.model';
 import { ParentProject } from '../../models/project.model';
 import { AiService } from '../../services/ai.service';
 

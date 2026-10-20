@@ -18,6 +18,7 @@ import { ReviewViewComponent } from './components/review-view/review-view';
 import { AuthService } from './services/auth.service';
 import { LoginModalComponent } from './components/login-modal/login-modal';
 import { GuideTourComponent } from './components/guide-tour/guide-tour.component';
+
 /**
  * 遅延ログ情報インターフェース
  * タスク/親課題の期限変更時に記録される情報
@@ -29,13 +30,17 @@ export interface DelayLogInfo {
   newDueDate: string;
 }
 
+/**
+ * メインアプリケーションコンポーネント
+ * タスク管理、親課題管理、AI レビュー、遅延ログ、メモ機能を統合
+ */
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     SidePocketPanelComponent,
-    KanbanBoard, 
+    KanbanBoard,
     TaskForm,
     ProjectForm,
     MasterKanbanBoard,
@@ -50,42 +55,12 @@ export interface DelayLogInfo {
   styleUrl: './app.css',
 })
 export class AppComponent implements OnInit {
-  // ログアウト処理の追加
-  async onLogout(): Promise<void> {
-    if (confirm('ログアウトしますか？')) {
-      await this.authService.logout();
-    }
-  }
-
+  // === DI & サービス注入 ===
   authService = inject(AuthService);
-
-  isLoginModalOpen = false;
-
-  onOpenLoginModal(): void {
-    this.isLoginModalOpen = true;
-  }
-
-  onCloseLoginModal(): void {
-    this.isLoginModalOpen = false;
-  }
-
-  /** ガイドツアー表示状態 */
-  isGuideTourOpen = false;
-
-  // ========================================
-  // @Input / @Output / @ViewChild
-  // ========================================
-  @ViewChild(SidePocketPanelComponent) sidePocketPanel!: SidePocketPanelComponent;
-
-  // ========================================
-  // Dependency Injection
-  // ========================================
   private dataService = inject(TaskDataService);
   private pipService = inject(PipService);
 
-  // ========================================
-  // UI 状態管理
-  // ========================================
+  // === UI 状態管理 (State) ===
   /** アクティブビュー: 'tasks'（課題管理メイン）| 'review'（AIレビュー） */
   activeView: 'tasks' | 'review' = 'tasks';
 
@@ -113,9 +88,16 @@ export class AppComponent implements OnInit {
   /** 右ドッキングパネルの幅（単位: px） */
   taskFormWidth: number = 480;
 
-  // ========================================
-  // Project・Task データ管理
-  // ========================================
+  /** ログインモーダルの表示状態 */
+  isLoginModalOpen = false;
+
+  /** ガイドツアー表示状態 */
+  isGuideTourOpen = false;
+
+  // === コンポーネント参照 ===
+  @ViewChild(SidePocketPanelComponent) sidePocketPanel!: SidePocketPanelComponent;
+
+  // === データ参照 (Getters) ===
   /** 全親課題の配列 */
   projects: ParentProject[] = [];
 
@@ -134,9 +116,7 @@ export class AppComponent implements OnInit {
   /** 編集対象のタスク（フォーム用） */
   taskToEdit: Task | null = null;
 
-  // ========================================
-  // 遅延ログ・メモ昇格管理
-  // ========================================
+  // === 遅延ログ・メモ昇格管理 ===
   /** 遅延ログ情報のキュー */
   delayLogQueue: DelayLogInfo[] = [];
 
@@ -148,10 +128,6 @@ export class AppComponent implements OnInit {
 
   /** タスクフォーム開く直前の親課題パネル折り畳み状態を記憶 */
   private wasMasterPanelCollapsedBeforeForm: boolean = false;
-
-  // ========================================
-  // Getters
-  // ========================================
 
   /**
    * 遅延ログキューの先頭要素を取得
@@ -182,10 +158,11 @@ export class AppComponent implements OnInit {
     return this.projects.filter(p => p.status === 'archived');
   }
 
-  // ========================================
-  // ライフサイクル
-  // ========================================
+  // === ライフサイクル ===
 
+  /**
+   * コンポーネント初期化
+   */
   ngOnInit(): void {
     // テーマの初期化
     document.body.setAttribute('data-theme', this.currentTheme);
@@ -209,9 +186,32 @@ export class AppComponent implements OnInit {
     });
   }
 
-  // ========================================
-  // Public メソッド
-  // ========================================
+  // === ログアウト処理 ===
+
+  /**
+   * ログアウト実行
+   */
+  async onLogout(): Promise<void> {
+    if (confirm('ログアウトしますか？')) {
+      await this.authService.logout();
+    }
+  }
+
+  /**
+   * ログインモーダルを開く
+   */
+  onOpenLoginModal(): void {
+    this.isLoginModalOpen = true;
+  }
+
+  /**
+   * ログインモーダルを閉じる
+   */
+  onCloseLoginModal(): void {
+    this.isLoginModalOpen = false;
+  }
+
+  // === UI 操作（汎用） ===
 
   /**
    * ビュー切り替え（課題管理 ↔ AIレビュー）
@@ -284,9 +284,7 @@ export class AppComponent implements OnInit {
     window.addEventListener('mouseup', onMouseUp);
   }
 
-  // ========================================
-  // 親課題（Project）操作ハンドラ
-  // ========================================
+  // === 親課題 (Project) ハンドラ ===
 
   /**
    * 親課題を選択
@@ -381,8 +379,8 @@ export class AppComponent implements OnInit {
     // 期限が後ろ倒しになった場合、親課題としてキューに追加
     if (this.autoCollectDelayLog && oldDueDate && newDueDate) {
       const childCount = this.allTasks.filter(t => t.parentId === project!.id).length;
-      const titleLabel = childCount > 0 
-        ? `📁 ${project.title} (配下タスク${childCount}件)` 
+      const titleLabel = childCount > 0
+        ? `📁 ${project.title} (配下タスク${childCount}件)`
         : `📁 ${project.title}`;
 
       this.enqueueDelayLog({
@@ -460,9 +458,7 @@ export class AppComponent implements OnInit {
     this.isArchiveModalOpen = false;
   }
 
-  // ========================================
-  // 子タスク（Task）操作ハンドラ
-  // ========================================
+  // === 子タスク (Task) ハンドラ ===
 
   /**
    * タスク選択時（カードクリック）
@@ -625,23 +621,25 @@ export class AppComponent implements OnInit {
     }
   }
 
-  // ========================================
-  // Private ヘルパーメソッド
-  // ========================================
+  // === 遅延ログ & ヘルパー処理 ===
 
   /**
-   * カンバンカラムと同色のステータスカラーを取得
+   * ステータスのカラー値を取得
+   * @param status タスクのステータス
+   * @returns 16進数カラーコード
    */
   getStatusColor(status?: string): string {
     if (!status) return '#64748B';
     const normalized = status.toLowerCase().replace('_', '-');
-    if (normalized === 'done') return '#059669';       // 完了：グリーン
-    if (normalized === 'in-progress' || normalized === 'inprogress') return '#2563EB'; // 進行中：ブルー
-    return '#64748B';                                  // 未着手：スレートグレー
+    if (normalized === 'done') return '#059669';
+    if (normalized === 'in-progress' || normalized === 'inprogress') return '#2563EB';
+    return '#64748B';
   }
 
   /**
-   * 優先度日本語ラベル取得
+   * 優先度の日本語ラベルを取得
+   * @param priority 優先度
+   * @returns 日本語ラベル
    */
   getPriorityLabel(priority?: string): string {
     if (!priority) return '中';
@@ -653,7 +651,9 @@ export class AppComponent implements OnInit {
   }
 
   /**
-   * ステータス日本語ラベル取得
+   * ステータスの日本語ラベルを取得
+   * @param status ステータス
+   * @returns 日本語ラベル
    */
   getStatusLabel(status?: string): string {
     if (!status) return '未着手';
@@ -665,6 +665,7 @@ export class AppComponent implements OnInit {
 
   /**
    * タスクフォームを開く際に親課題パネルを自動で折り畳む
+   * @private
    */
   private openTaskFormWithAutoCollapse(): void {
     if (!this.isTaskFormOpen) {
@@ -681,6 +682,8 @@ export class AppComponent implements OnInit {
 
   /**
    * 遅延ログをキューに追加（最大3件保持、超過時は最古を保存）
+   * @param info 遅延ログ情報
+   * @private
    */
   private enqueueDelayLog(info: DelayLogInfo): void {
     if (info.newDueDate <= info.previousDueDate) return;
@@ -696,8 +699,14 @@ export class AppComponent implements OnInit {
   }
 
   /**
-   * Firestoreへ遅延ログを保存
+   * Firestore へ遅延ログを保存
    * 親課題更新の場合は配下の子タスクに分散記録
+   * @param taskId タスク/親課題 ID
+   * @param title タイトル
+   * @param oldDate 変更前の期限
+   * @param newDate 変更後の期限
+   * @param reason 遅延理由
+   * @private
    */
   private saveDelayLog(taskId: string, title: string, oldDate: string, newDate: string, reason: DelayReason): void {
     const isProject = this.projects.some(p => p.id === taskId);
@@ -728,7 +737,8 @@ export class AppComponent implements OnInit {
 
   /**
    * 各親課題の進捗率と完了タスク数を自動再計算
-   * 配下のタスク数・完了数から進捗率を算出し、Firestoreに反映
+   * 配下のタスク数・完了数から進捗率を算出し、Firestore に反映
+   * @private
    */
   private recalculateProgress(): void {
     if (!this.projects || this.projects.length === 0) return;
@@ -753,7 +763,7 @@ export class AppComponent implements OnInit {
           totalTaskCount: total,
           completedTaskCount: completed,
           progressPercentage: percentage,
-        }).catch(err => console.error('進捗率Firestore更新エラー:', err));
+        }).catch(err => console.error('進捗率 Firestore 更新エラー:', err));
 
         return {
           ...project,

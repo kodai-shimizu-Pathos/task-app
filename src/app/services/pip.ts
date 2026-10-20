@@ -10,6 +10,10 @@ declare global {
   }
 }
 
+/**
+ * Picture-in-Picture（PiP）サービス
+ * Document Picture-in-Picture API を使用した集中モード（浮遊ウィンドウ）管理
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -21,10 +25,17 @@ export class PipService {
     private injector: EnvironmentInjector
   ) {}
 
+  /**
+   * ブラウザが Document Picture-in-Picture API に対応しているか確認
+   * @returns 対応している場合は true
+   */
   isSupported(): boolean {
     return 'documentPictureInPicture' in window;
   }
 
+  /**
+   * PiP ウィンドウのトグル（開く/閉じる）
+   */
   async togglePip(): Promise<void> {
     if (this.pipWindow) {
       this.closePip();
@@ -37,7 +48,7 @@ export class PipService {
     }
 
     try {
-      // 1. 最前面ウィンドウの生成 (幅320px, 高さ52px)
+      // 1. PiP ウィンドウを生成（幅 320px、高さ 52px）
       this.pipWindow = await window.documentPictureInPicture!.requestWindow({
         width: 320,
         height: 52
@@ -45,7 +56,7 @@ export class PipService {
 
       const pipDoc = this.pipWindow.document;
 
-      // 2. PiPウィンドウの <head> へステルスCSSをダイレクト注入！(ブラウザデフォルトの白背景を完全抹消)
+      // 2. PiP ウィンドウへステルス CSS を注入（ダーク背景で統一）
       const styleEl = pipDoc.createElement('style');
       styleEl.textContent = `
         *, *::before, *::after {
@@ -165,7 +176,7 @@ export class PipService {
       `;
       pipDoc.head.appendChild(styleEl);
 
-      // 3. コンポーネント生成とDOM追加
+      // 3. PiP ウィンドウにコンポーネントをマウント
       const componentRef = createComponent(PipInboxComponent, {
         environmentInjector: this.injector
       });
@@ -188,6 +199,9 @@ export class PipService {
     }
   }
 
+  /**
+   * PiP ウィンドウを閉じる
+   */
   closePip(): void {
     if (this.pipWindow) {
       this.pipWindow.close();

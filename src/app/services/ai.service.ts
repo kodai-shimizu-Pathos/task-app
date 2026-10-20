@@ -3,20 +3,28 @@ import { environment } from '../../environments/environment';
 import { ParentProject } from '../models/project.model';
 import { DelayLog, DELAY_REASON_LABELS } from '../models/delay-log.model';
 
+/** AI レビューのトーン設定 */
 export type ReviewTone = 'sympathetic' | 'strict' | 'objective';
 
+/**
+ * AI サービス
+ * Google Gemini API を使用したタスク分析、提案、ウィークリーレビュー生成
+ */
 @Injectable({
   providedIn: 'root'
 })
-
 export class AiService {
   private readonly apiKey = environment.geminiApiKey;
   private readonly apiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
 
   constructor() {}
-  
+
   /**
-   * サブタスク候補の自動生成
+   * タスク完成後のサブタスク候補を自動生成
+   * @param title タスクのタイトル
+   * @param description タスクの詳細説明（オプション）
+   * @returns サブタスク候補の文字列配列
+   * @throws APIキーが未設定またはAPI呼び出しに失敗した場合
    */
   async generateSubtasks(title: string, description?: string): Promise<string[]> {
     if (!this.apiKey) {
@@ -63,7 +71,10 @@ export class AiService {
   }
 
   /**
-   * 未整理メモの自動親課題推測
+   * サイドポケットのメモから最適な親課題を自動推測
+   * @param memoContent メモの内容
+   * @param projects 既存の親課題リスト
+   * @returns 推測される親課題ID、提案タイトル、選定理由
    */
   async predictParentProject(
     memoContent: string,
@@ -143,7 +154,11 @@ ${JSON.stringify(projectsSummary, null, 2)}
   }
 
   /**
-   * プロンプト構成 (明確にフォーマットを指定)
+   * Gemini API 用プロンプトを構築
+   * @param title タスクのタイトル
+   * @param description タスクの説明（オプション）
+   * @returns フォーマットされたプロンプト文字列
+   * @private
    */
   private buildPrompt(title: string, description?: string): string {
     const descriptionPart = description ? ` (詳細: ${description})` : '';
@@ -155,7 +170,11 @@ ${JSON.stringify(projectsSummary, null, 2)}
   }
 
   /**
-   * 堅牢な JSON 配列パース (フォールバック付き)
+   * Gemini レスポンスから JSON 配列をパース
+   * @param responseText Gemini API のレスポンステキスト
+   * @returns パースされたサブタスク配列
+   * @throws JSON パースに失敗した場合
+   * @private
    */
   private parseSubtasksJson(responseText: string): any[] {
     let jsonString = responseText.trim();
@@ -190,25 +209,40 @@ ${JSON.stringify(projectsSummary, null, 2)}
     });
   }
 
+  /**
+   * API 呼び出しのリトライ処理（指数バックオフ対応）
+   * @param url リクエストURL
+   * @param options Fetch オプション
+   * @param retries リトライ回数（デフォルト 3）
+   * @param delay 初期待機時間（ミリ秒、デフォルト 2000）
+   * @returns Fetch レスポンス
+   * @throws リトライ上限に達した場合
+   * @private
+   */
   private async fetchWithRetry(url: string, options: RequestInit, retries = 3, delay = 2000): Promise<Response> {
     for (let i = 0; i < retries; i++) {
       const response = await fetch(url, options);
-      
+
       // 503 (UNAVAILABLE) の場合は一時的な混雑なので指定時間待ってリトライ
       if (response.status === 503 && i < retries - 1) {
         console.warn(`Gemini API 503エラー。${delay / 1000}秒後に再試行します... (${i + 1}/${retries})`);
         await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 1.5; // 待機時間を少しずつ伸ばす（指数バックオフ）
+        delay *= 1.5;
         continue;
       }
-      
+
       return response;
     }
     throw new Error('Gemini API リトライ上限に達しました');
   }
 
   /**
-   * 過去1週間の成果と遅延ログに基づくAIウィークリーレビューの生成
+   * 過去1週間の成果と遅延ログを基にウィークリーレビューを自動生成
+   * @param completedTaskCount 完了したタスク数
+   * @param delayLogs 遅延ログの配列
+   * @param tone レビューのトーン（共感的/厳密/客観的）
+   * @returns 生成されたレビュー文字列（Markdown フォーマット）
+   * @throws API キーが未設定またはAPI呼び出しに失敗した場合
    */
   async generateWeeklyReview(
     completedTaskCount: number,

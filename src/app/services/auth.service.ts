@@ -1,47 +1,66 @@
 import { Injectable, inject } from '@angular/core';
-import { 
-  Auth, 
-  User, 
-  user, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut 
+import {
+  Auth,
+  User,
+  user,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
 } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 
+/**
+ * 認証サービス
+ * Firebase Authentication を使用したユーザー認証の管理
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private auth: Auth = inject(Auth);
 
-  // ログイン状態を監視する Observable (未ログイン時は null)
+  /** ログイン状態を監視する Observable (未ログイン時は null) */
   readonly user$: Observable<User | null> = user(this.auth);
 
-  // 現在のユーザーIDを取得
+  /**
+   * 現在のユーザーID を取得
+   * @returns ユーザーID、未ログインの場合は null
+   */
   get currentUserId(): string | null {
     return this.auth.currentUser ? this.auth.currentUser.uid : null;
   }
 
-  // Googleログイン
+  /**
+   * Google アカウントでログイン
+   */
   async loginWithGoogle(): Promise<void> {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(this.auth, provider);
   }
 
-  // Email/Password ログイン
+  /**
+   * Email/Password でログイン
+   * @param email ユーザーのメールアドレス
+   * @param pass ユーザーのパスワード
+   */
   async loginWithEmail(email: string, pass: string): Promise<void> {
     await signInWithEmailAndPassword(this.auth, email, pass);
   }
 
-  // Email/Password 新規登録
+  /**
+   * Email/Password で新規登録
+   * @param email 登録するメールアドレス
+   * @param pass 登録するパスワード
+   */
   async registerWithEmail(email: string, pass: string): Promise<void> {
     await createUserWithEmailAndPassword(this.auth, email, pass);
   }
 
-  // ログアウト
+  /**
+   * ログアウト
+   */
   async logout(): Promise<void> {
     await signOut(this.auth);
   }
