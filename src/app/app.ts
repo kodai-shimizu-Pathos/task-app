@@ -2,7 +2,6 @@ import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidePocketPanelComponent } from './components/side-pocket-panel/side-pocket-panel';
 import { SidePocketMemo } from './services/task-data';
-import { AppShell, MainView } from './components/app-shell/app-shell';
 import { KanbanBoard } from './components/kanban-board/kanban-board';
 import { TaskForm } from './components/task-form/task-form';
 import { TaskDataService } from './services/task-data';
@@ -40,7 +39,6 @@ export interface DelayLogInfo {
     ProjectForm,
     MasterKanbanBoard,
     GanttBoard,
-    AppShell,
     ArchiveModal,
     DelayLogToast,
     ReviewViewComponent,
@@ -50,6 +48,13 @@ export interface DelayLogInfo {
   styleUrl: './app.css',
 })
 export class AppComponent implements OnInit {
+  // ログアウト処理の追加
+  async onLogout(): Promise<void> {
+    if (confirm('ログアウトしますか？')) {
+      await this.authService.logout();
+    }
+  }
+  
   authService = inject(AuthService);
 
   isLoginModalOpen = false;

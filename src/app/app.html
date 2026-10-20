@@ -1,26 +1,43 @@
 <div class="app-container">
-  <!-- 1. 左固定 App Shell サイドバー -->
-  <app-shell
-    [activeView]="activeView"
-    (viewChange)="onViewchange($event)"
-    (toggleConcentrationMode)="onToggleConcentrationMode()"
-    (openLoginModal)="onOpenLoginModal()">
-  </app-shell>
-
-  <!-- 2. 右側 メインエリア -->
+  <!-- メインレイアウト -->
   <div class="app-main-layout">
-    <!-- グローバルヘッダー -->
+    
+    <!-- ★ 統合グローバルヘッダー -->
     <header class="app-header">
+      
+      <!-- 【左側】ロゴ ＋ メインビュー切替 ＋ 親課題操作 -->
       <div class="header-left">
-        <h1 class="app-title" *ngIf="!selectedProject">BeSideFlow AI</h1>
-        <button *ngIf="selectedProject" class="btn-back" (click)="onUnselectProject()">← プロジェクト一覧へ戻る</button>
+        <!-- ロゴ（⚡なし・テキストのみ） -->
+        <h1 class="app-title" (click)="onUnselectProject()" title="トップへ戻る">BeSideFlow AI</h1>
+
+        <!-- メインビュー切替（課題管理 ↔ AIレビュー） -->
+        <div class="main-view-switcher">
+          <button 
+            type="button" 
+            [class.active]="activeView === 'tasks'" 
+            (click)="onViewchange('tasks')">
+            📁 課題管理
+          </button>
+          <button 
+            type="button" 
+            [class.active]="activeView === 'review'" 
+            (click)="onViewchange('review')">
+            📝 AIレビュー
+          </button>
+        </div>
+
+        <!-- 課題管理時：一覧へ戻る ＆ 親課題追加ボタン -->
+        <button *ngIf="selectedProject && activeView === 'tasks'" class="btn-back" (click)="onUnselectProject()">
+          ← 一覧へ
+        </button>
         <button type="button" class="btn-add-project" (click)="onOpenNewProjectForm()">
-          ＋ 親課題を追加
+          ＋ 親課題
         </button>
       </div>
 
+      <!-- 【中央】表示モード切替（課題管理タブ選択時のみ） -->
       <div class="header-center">
-        <div class="view-switcher">
+        <div class="view-switcher" *ngIf="activeView === 'tasks'">
           <button
             type="button"
             [class.active]="currentMode === 'KANBAN'"
@@ -36,21 +53,53 @@
         </div>
       </div>
 
+      <!-- 【右側】集中モード(目立たせる) ＋ ユーティリティ ＋ アカウント -->
       <div class="header-right">
-        <button type="button" class="theme-toggle-btn" (click)="onOpenArchiveModal()" title="アーカイブ一覧">
-          📦 アーカイブ ( {{ archivedProjects.length }} )
+        <!-- ★ 🎯 集中モード（黄〜オレンジのグラデーション＆発光で強調） -->
+        <button 
+          type="button" 
+          class="btn-concentration" 
+          (click)="onToggleConcentrationMode()" 
+          title="集中モード (PiP)">
+          <span class="icon">🎯</span>
+          <span>集中モード</span>
         </button>
-        <button type="button" class="theme-toggle-btn" (click)="toggleTheme()">
-          {{ currentTheme === 'dark' ? '☀️ ライト' : '🌙 ダーク' }}
+
+        <!-- 📦 アーカイブ -->
+        <button type="button" class="header-icon-btn" (click)="onOpenArchiveModal()" title="アーカイブ一覧">
+          📦 <span class="badge">{{ archivedProjects.length }}</span>
         </button>
+
+        <!-- ☀️/🌙 テーマ切替 -->
+        <button type="button" class="header-icon-btn" (click)="toggleTheme()" title="テーマ切替">
+          {{ currentTheme === 'dark' ? '☀️' : '🌙' }}
+        </button>
+
+        <!-- 👤 アカウント / 🔑 ログイン -->
+        <ng-container *ngIf="authService.user$ | async as user; else loggedOut">
+          <div 
+            class="header-user-avatar" 
+            (click)="onLogout()" 
+            [title]="(user.displayName || user.email) + ' (クリックでログアウト)'">
+            <img *ngIf="user.photoURL; else defaultAvatar" [src]="user.photoURL" alt="User Avatar" class="avatar-img" />
+            <ng-template #defaultAvatar>
+              <span class="avatar-text">{{ (user.email || 'U').charAt(0).toUpperCase() }}</span>
+            </ng-template>
+          </div>
+        </ng-container>
+        <ng-template #loggedOut>
+          <button type="button" class="btn-login-header" (click)="onOpenLoginModal()">
+            🔑 ログイン
+          </button>
+        </ng-template>
       </div>
     </header>
 
-    <!-- ★ メインコンテンツ領域 -->
+    <!-- ★ メインコンテンツ領域（ヘッダー以下全高） -->
     <main class="main-content">
       <ng-container *ngIf="activeView === 'tasks'">
         
-        <!-- パターンA：親課題未選択時（全画面 親課題カンバン/ガント） -->
+        <!-- パターンA：親課題未選択時 -->
         <div class="full-master-pane" *ngIf="!selectedProject" style="display: flex; width: 100%; height: 100%;">
           <div style="flex: 1; height: 100%; min-width: 0; overflow: hidden;">
             <app-master-kanban-board
@@ -72,7 +121,6 @@
             </app-gantt-board>
           </div>
         
-          <!-- 一覧画面での親課題フォーム右ドッキング -->
           <div class="docked-detail-pane" *ngIf="isProjectFormOpen" [style.width.px]="taskFormWidth">
             <div class="pane-resizer" (mousedown)="onResizeStart($event)"></div>
             <app-project-form
@@ -85,12 +133,9 @@
           </div>
         </div>
 
-        <!-- パターンB：親課題選択時（全高ドッキングパネル構造） -->
+        <!-- パターンB：親課題選択時 -->
         <div class="project-detail-layout" *ngIf="selectedProject">
-          
-          <!-- ★ 左〜中央エリア（サマリーカード ＋ ワークスペース） -->
           <div class="detail-main-area">
-            <!-- 1. 上部親課題ヒーローカード -->
             <div class="project-summary-card">
               <div class="summary-top-row">
                 <div class="summary-title-group">
@@ -111,7 +156,6 @@
                 </div>
               </div>
 
-              <!-- 下段: 進捗メーター -->
               <div class="summary-bottom-row">
                 <div class="progress-box">
                   <span class="progress-label">進捗率: {{ selectedProject.progressPercentage || 0 }}%</span>
@@ -121,7 +165,6 @@
                 </div>
               </div>
 
-              <!-- サマリー展開領域 -->
               <div class="summary-expanded-content" *ngIf="isSummaryExpanded">
                 <p class="project-desc" *ngIf="selectedProject.description">
                   <strong>概要:</strong> {{ selectedProject.description }}
@@ -135,7 +178,6 @@
               </div>
             </div>
 
-            <!-- 2. メイン ワークスペース (カンバン / ガント) -->
             <div class="workspace-body">
               <section class="main-board-pane">
                 <app-kanban-board 
@@ -161,12 +203,9 @@
             </div>
           </div>
 
-          <!-- ★ 右：全高ドッキング詳細パネル (ヒーローカードの横まで上いっぱいに全高化) -->
           <div class="docked-detail-pane" *ngIf="isTaskFormOpen || isProjectFormOpen" [style.width.px]="taskFormWidth">
-            <!-- 可変幅リサイザーハンドル -->
             <div class="pane-resizer" (mousedown)="onResizeStart($event)"></div>
             
-            <!-- 子タスクフォーム -->
             <app-task-form
               *ngIf="isTaskFormOpen"
               [taskToEdit]="taskToEdit"
@@ -178,7 +217,6 @@
               (closePanel)="onCloseTaskForm()">
             </app-task-form>
 
-            <!-- 親課題フォーム -->
             <app-project-form
               *ngIf="isProjectFormOpen"
               [projectToEdit]="projectToEdit"
@@ -188,11 +226,9 @@
               (closeModal)="onCloseProjectForm()">
             </app-project-form>
           </div>
-
         </div>
       </ng-container>
 
-      <!-- AIレビュー画面 -->
       <ng-container *ngIf="activeView === 'review'">
         <app-review-view
           [tasks]="allTasks"
@@ -201,7 +237,6 @@
         </app-review-view>
       </ng-container>
 
-      <!-- 最右端：サイドポケット引き出し -->
       <app-side-pocket-panel
         [projects]="projects"
         [selectedProject]="selectedProject"
