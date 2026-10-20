@@ -347,7 +347,7 @@
   transition: width 0.3s ease;
 }
 
-.btn-toggle-summary, .btn-edit-project-icon {
+.btn-toggle-summary, .btn-edit-project-icon, .btn-archive-project-icon {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
@@ -359,7 +359,7 @@
   transition: background-color 0.2s;
 }
 
-.btn-toggle-summary:hover, .btn-edit-project-icon:hover {
+.btn-toggle-summary:hover, .btn-edit-project-icon:hover, .btn-archive-project-icon:hover {
   background: var(--border-color);
 }
 

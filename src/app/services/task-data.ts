@@ -306,16 +306,18 @@ export class TaskDataService {
   private authService: AuthService = inject(AuthService);
 
   private delayLogs: DelayLog[] = [];
-  private inMemoryProjects: BehaviorSubject<ParentProject[]> = new BehaviorSubject<ParentProject[]>([]);
-  private inMemoryTasks: BehaviorSubject<Task[]> = new BehaviorSubject<Task[]>([]);
-  private inMemoryMemos: BehaviorSubject<SidePocketMemo[]> = new BehaviorSubject<SidePocketMemo[]>([]);
+
+  // ★ 1. メモリ保持用 BehaviorSubject をデモデータで初期化
+  private inMemoryProjects = new BehaviorSubject<ParentProject[]>(DEMO_PROJECTS);
+  private inMemoryTasks = new BehaviorSubject<Task[]>(DEMO_TASKS);
+  private inMemoryMemos = new BehaviorSubject<SidePocketMemo[]>(DEMO_SIDE_POCKET_MEMOS);
 
   /** 認証状態に応じた親課題のリアルタイム同期ストリーム */
   readonly projects$: Observable<ParentProject[]> = this.authService.user$.pipe(
     switchMap(user => {
       if (!user) {
-        // 未ログイン時: デモデータを返す
-        return of(DEMO_PROJECTS);
+        // ★ 2. 未ログイン時: メモリ上のデモデータストリームを返す
+        return this.inMemoryProjects.asObservable();
       }
       // ログイン時: Firestore から取得
       const projectsCollection = collection(this.firestore, `users/${user.uid}/projects`);
@@ -328,8 +330,8 @@ export class TaskDataService {
   readonly tasks$: Observable<Task[]> = this.authService.user$.pipe(
     switchMap(user => {
       if (!user) {
-        // 未ログイン時: デモデータを返す
-        return of(DEMO_TASKS);
+        // 未ログイン時: メモリ上のデモデータストリームを返す
+        return this.inMemoryTasks.asObservable();
       }
       // ログイン時: Firestore から取得
       const tasksCollection = collection(this.firestore, `users/${user.uid}/tasks`);
@@ -342,8 +344,8 @@ export class TaskDataService {
   readonly sidePocketMemos$: Observable<SidePocketMemo[]> = this.authService.user$.pipe(
     switchMap(user => {
       if (!user) {
-        // 未ログイン時: 空配列を返す
-        return of([]);
+        // 未ログイン時: メモリ上のデモメモストリームを返す
+        return this.inMemoryMemos.asObservable();
       }
       // ログイン時: Firestore から取得
       const sidePocketCollection = collection(this.firestore, `users/${user.uid}/side_pocket_memos`);

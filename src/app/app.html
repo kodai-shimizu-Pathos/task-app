@@ -161,7 +161,11 @@
                     {{ isSummaryExpanded ? '▲ 閉じる' : '▼ 概要・メモ' }}
                   </button>
                   <button type="button" class="btn-edit-project-icon" (click)="onEditProject()" title="親課題を編集">
-                    ✏️
+                    ✏️ 編集
+                  </button>
+
+                  <button type="button" class="btn-archive-project-icon" (click)="onArchiveSelectedProject()" title="親課題をアーカイブ">
+                    📦 アーカイブ
                   </button>
                 </div>
               </div>
