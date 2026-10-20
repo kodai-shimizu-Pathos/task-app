@@ -1,0 +1,56 @@
+<ng-container *ngIf="isOpen">
+  <!-- 暗転オーバーレイ -->
+  <div 
+    #spotlightOverlay
+    class="guide-tour-overlay"
+    [style.clip-path]="clipPathValue">
+  </div>
+
+  <!-- ポップオーバーカード -->
+  <div
+    #popoverCard
+    class="guide-tour-popover"
+    [style.top.px]="popoverPosition?.top"
+    [style.left.px]="popoverPosition?.left">
+    
+    <!-- ヘッダー -->
+    <div class="popover-header">
+      <div class="step-indicator">
+        {{ currentStepNumber }} / {{ totalSteps }}
+      </div>
+      <button
+        type="button"
+        class="btn-close-popover"
+        (click)="closeTour()"
+        title="ツアーを閉じる">
+        ✕
+      </button>
+    </div>
+
+    <!-- タイトル -->
+    <h3 class="popover-title">{{ currentStep.title }}</h3>
+
+    <!-- 説明文 -->
+    <p class="popover-description">{{ currentStep.description }}</p>
+
+    <!-- フッター（ボタン） -->
+    <div class="popover-footer">
+      <button
+        type="button"
+        class="btn-prev"
+        (click)="goToPreviousStep()"
+        [disabled]="currentStepIndex === 0"
+        title="前のステップへ">
+        ← 前へ
+      </button>
+
+      <button
+        type="button"
+        class="btn-next"
+        (click)="goToNextStep()"
+        title="次のステップへ">
+        {{ isLastStep ? '完了' : '次へ →' }}
+      </button>
+    </div>
+  </div>
+</ng-container>

@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { DelayLog } from '../models/delay-log.model';
 import { 
   Firestore, 
   collection, 
@@ -6,23 +7,19 @@ import {
   doc, 
   addDoc, 
   updateDoc, 
-  deleteDoc,
-  query,
-  where
+  deleteDoc 
 } from '@angular/fire/firestore';
-import { Observable, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
-import { AuthService } from './auth.service';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ParentProject } from '../models/project.model';
 import { Task } from '../models/task.model';
-import { DelayLog } from '../models/delay-log.model';
 
+// サイドポケットメモの型定義
 export interface SidePocketMemo {
   id: string;
-  userId: string; // ★追加
   content: string;
   createdAt: string;
-  parentProjectId?: string;
+  parentProjectId?: string; // オプション：特定の親課題に関連付ける場合
 }
 
 @Injectable({
@@ -30,12 +27,12 @@ export interface SidePocketMemo {
 })
 export class TaskDataService {
   private firestore: Firestore = inject(Firestore);
-  private authService: AuthService = inject(AuthService);
 
+  // コレクション参照の宣言
   private projectsCollection = collection(this.firestore, 'projects');
   private tasksCollection = collection(this.firestore, 'tasks');
   private sidePocketCollection = collection(this.firestore, 'side_pocket_memos');
-  private delayLogsCollection = collection(this.firestore, 'delay_logs');
+  private delayLogsCollection = collection(this.firestore, 'delay_logs'); // ★ Firestore連携追加
 
   private delayLogs: DelayLog[] = [];
 
@@ -50,12 +47,12 @@ export class TaskDataService {
     map(memos => memos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
   );
 
-  // Firestoreの delay_logs コレクションを同期するObservable
+  // ★ 遅延ログのリアルタイム同期用 Observable
   readonly delayLogs$: Observable<DelayLog[]> = 
     collectionData(this.delayLogsCollection, { idField: 'id' }) as Observable<DelayLog[]>;
 
   constructor() {
-    // サービス起動時にFirestoreの遅延ログを配列へ自動同期
+    // ★ サービス起動時にFirestore上の遅延ログを配列へ自動同期（リロード対策）
     this.delayLogs$.subscribe(logs => {
       this.delayLogs = logs;
     });
@@ -76,58 +73,45 @@ export class TaskDataService {
 
   // --- 遅延要因ログの記録 ---
   async addDelayLog(log: Omit<DelayLog, 'id' | 'createdAt'>): Promise<void> {
-    const uid = this.authService.currentUserId;
-    if (!uid) throw new Error('未認証ユーザーは追加できません');
-
-    const newLog = {
+    const newLog: DelayLog = {
       ...log,
-      userId: uid,
       id: `log_${Date.now()}`,
       createdAt: new Date().toISOString(),
     };
 
+    console.log('遅延ログをFirestoreに記録しました：', newLog);
+    // Firestoreに保存（自動同期されるため this.delayLogs.push は不要）
     await addDoc(this.delayLogsCollection, newLog);
   }
 
-  // --- 過去7日間の遅延ログを取得 ---
+  // --- 過去N日間の遅延ログを取得 ---
   getRecentDelayLogs(days: number = 7): DelayLog[] {
     const now = new Date();
     const pastDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
     return this.delayLogs.filter(log => new Date(log.createdAt) >= pastDate);
   }
 
-  // --- 親課題の追加 ---
-  async addProject(project: Omit<ParentProject, 'id' | 'userId'>): Promise<string> {
-    const uid = this.authService.currentUserId;
-    if (!uid) throw new Error('未認証ユーザーは追加できません');
-
-    const newProject = { ...project, userId: uid };
-    const cleaned = JSON.parse(JSON.stringify(newProject));
-    const docRef = await addDoc(this.projectsCollection, cleaned);
-    return docRef.id;
-  }
-
-  async addTask(task: Omit<Task, 'id' | 'userId'>): Promise<string> {
-    const uid = this.authService.currentUserId;
-    if (!uid) throw new Error('未認証ユーザーは追加できません');
-
-    const newTask = { ...task, userId: uid };
-    const cleaned = JSON.parse(JSON.stringify(newTask));
-    const docRef = await addDoc(this.tasksCollection, cleaned);
-    return docRef.id;
-  }
-
+  // --- SidePocket CRUD処理 (Firestore永続化) ---
   async addSidePocketMemo(memo: { content: string; createdAt: string; parentProjectId?: string }): Promise<string> {
-    const uid = this.authService.currentUserId;
-    if (!uid) throw new Error('未認証ユーザーは追加できません');
-
-    const newMemo = { ...memo, userId: uid };
-    const cleaned = JSON.parse(JSON.stringify(newMemo));
+    const cleaned = JSON.parse(JSON.stringify(memo));
     const docRef = await addDoc(this.sidePocketCollection, cleaned);
     return docRef.id;
   }
 
-  // --- 更新・削除の既存処理 ---
+  async deleteSidePocketMemo(id: string): Promise<void> {
+    if (!id) return;
+    const docRef = doc(this.firestore, `side_pocket_memos/${id}`);
+    await deleteDoc(docRef);
+  }
+
+  // --- Project CRUD処理 ---
+  async addProject(project: Omit<ParentProject, 'id'>): Promise<string> {
+    const cleaned = JSON.parse(JSON.stringify(project));
+    const docRef = await addDoc(this.projectsCollection, cleaned);
+    return docRef.id;
+  }
+
   async updateProject(id: string, data: Partial<ParentProject>): Promise<void> {
     const cleaned = JSON.parse(JSON.stringify(data));
     delete cleaned.id;
@@ -140,6 +124,13 @@ export class TaskDataService {
     await deleteDoc(docRef);
   }
 
+  // --- Task CRUD処理 ---
+  async addTask(task: Omit<Task, 'id'>): Promise<string> {
+    const cleaned = JSON.parse(JSON.stringify(task));
+    const docRef = await addDoc(this.tasksCollection, cleaned);
+    return docRef.id;
+  }
+
   async updateTask(id: string, data: Partial<Task>): Promise<void> {
     const cleaned = JSON.parse(JSON.stringify(data));
     delete cleaned.id;
@@ -149,12 +140,6 @@ export class TaskDataService {
 
   async deleteTask(id: string): Promise<void> {
     const docRef = doc(this.firestore, `tasks/${id}`);
-    await deleteDoc(docRef);
-  }
-
-  async deleteSidePocketMemo(id: string): Promise<void> {
-    if (!id) return;
-    const docRef = doc(this.firestore, `side_pocket_memos/${id}`);
     await deleteDoc(docRef);
   }
 }

@@ -17,6 +17,7 @@ import { DelayReason } from './models/delay-log.model';
 import { ReviewViewComponent } from './components/review-view/review-view';
 import { AuthService } from './services/auth.service';
 import { LoginModalComponent } from './components/login-modal/login-modal';
+import { GuideTourComponent } from './components/guide-tour/guide-tour.component';
 /**
  * 遅延ログ情報インターフェース
  * タスク/親課題の期限変更時に記録される情報
@@ -43,6 +44,7 @@ export interface DelayLogInfo {
     DelayLogToast,
     ReviewViewComponent,
     LoginModalComponent,
+    GuideTourComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -66,6 +68,9 @@ export class AppComponent implements OnInit {
   onCloseLoginModal(): void {
     this.isLoginModalOpen = false;
   }
+
+  /** ガイドツアー表示状態 */
+  isGuideTourOpen = false;
 
   // ========================================
   // @Input / @Output / @ViewChild

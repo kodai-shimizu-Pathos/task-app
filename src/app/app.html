@@ -7,8 +7,8 @@
       <!-- 【左ゾーン】ロゴ ＋ メインビュー切替 ＋ 一覧へ戻るボタン -->
       <div class="header-left">
         <h1 class="app-title" (click)="onUnselectProject()" title="トップへ戻る">BeSideFlow AI</h1>
-
-        <div class="main-view-switcher">
+    
+        <div class="main-view-switcher" data-tour="step-1">
           <button 
             type="button" 
             [class.active]="activeView === 'tasks'" 
@@ -30,7 +30,7 @@
 
       <!-- 【中央ゾーン】表示モード切替（課題管理時のみ表示） -->
       <div class="header-center">
-        <div class="view-switcher" *ngIf="activeView === 'tasks'">
+        <div class="view-switcher" *ngIf="activeView === 'tasks'" data-tour="step-2">
           <button
             type="button"
             [class.active]="currentMode === 'KANBAN'"
@@ -52,10 +52,17 @@
         <button 
           type="button" 
           class="btn-concentration" 
+          data-tour="step-4"
           (click)="onToggleConcentrationMode()" 
           title="集中モード (PiP)">
           <span class="icon">🎯</span>
           <span class="btn-text">集中モード</span>
+        </button>
+
+        <!-- ❓ ガイド -->
+        <button type="button" class="header-icon-btn" (click)="isGuideTourOpen = true" title="使い方ガイド">
+          <span class="icon">❓</span>
+          <span class="btn-label">ガイド</span>
         </button>
 
         <!-- 📦 アーカイブ -->
@@ -242,6 +249,7 @@
       </ng-container>
 
       <app-side-pocket-panel
+        data-tour="step-3"
         [projects]="projects"
         [selectedProject]="selectedProject"
         (promoteToTask)="onPromoteMemoToTask($event)"
@@ -270,5 +278,11 @@
       *ngIf="isLoginModalOpen"
       (closeModal)="onCloseLoginModal()">
     </app-login-modal>
+
+    <!-- ガイドツアー -->
+    <app-guide-tour
+      [isOpen]="isGuideTourOpen"
+      (closeRequested)="isGuideTourOpen = false">
+    </app-guide-tour>
   </div>
 </div>
