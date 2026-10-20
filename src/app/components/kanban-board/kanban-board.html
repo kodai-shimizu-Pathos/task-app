@@ -21,10 +21,11 @@
         <option value="LOW">優先度： 低</option>
       </select>
 
-      <!-- 3. ソート項目 -->
+      <!-- 3. ソート項目（「完了予定日順」追加） -->
       <select [(ngModel)]="sortBy" class="filter-select">
-        <option value="createdAt">作成日順</option>
         <option value="deadline">最終期限順</option>
+        <option value="scheduledEndDate">完了予定日順</option>
+        <option value="createdAt">作成日順</option>
         <option value="priority">優先度順</option>
       </select>
 
@@ -37,7 +38,7 @@
         {{ sortOrder === 'asc' ? '▲' : '▼' }}
       </button>
 
-      <!-- ★ 5. 選択中の複数アクティブタグチップ群 -->
+      <!-- 5. 選択中の複数アクティブタグチップ群 -->
       <div class="active-tags-container" *ngIf="selectedTags.length > 0">
         <div class="active-tag-chip" *ngFor="let tag of selectedTags">
           <span class="tag-label">#{{ tag }}</span>

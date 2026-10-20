@@ -1,7 +1,7 @@
 <div class="master-kanban-wrapper">
   <!-- ツールバー -->
   <div class="master-toolbar">
-    <!-- 1. 検索ボックス（アイコン付き・固定幅） -->
+    <!-- 1. 検索ボックス -->
     <div class="search-box">
       <span class="search-icon">🔍</span>
       <input
@@ -20,10 +20,11 @@
       <option value="LOW">優先度：低</option>
     </select>
     
-    <!-- 3. ソート項目選択 -->
+    <!-- 3. ソート項目選択（「完了予定日順」追加） -->
     <select [(ngModel)]="sortBy" class="filter-select">
-      <option value="createdAt">作成日順</option>
       <option value="deadline">最終期限順</option>
+      <option value="scheduledEndDate">完了予定日順</option>
+      <option value="createdAt">作成日順</option>
       <option value="priority">優先度順</option>
       <option value="progress">進捗度順</option>
     </select>
@@ -41,7 +42,7 @@
       </div>
     </div>
 
-    <!-- 6. 動的リセットボタン（条件変更時のみ表示） -->
+    <!-- 6. 動的リセットボタン -->
     <button 
       *ngIf="isFilterActive"
       (click)="resetFilters()" 

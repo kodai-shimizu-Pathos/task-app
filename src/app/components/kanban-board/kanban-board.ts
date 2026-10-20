@@ -19,11 +19,11 @@ export class KanbanBoard implements OnChanges {
   @Output() addTask = new EventEmitter<void>();
   @Output() taskUpdated = new EventEmitter<Task>();
 
-  // フィルター・ソート状態
+  // フィルター・ソート状態（デフォルト：最終期限の昇順）
   searchKeyword: string = '';
   priorityFilter: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW' = 'ALL';
-  selectedTags: string[] = []; // ★ 複数タグ選択対応（配列管理）
-  sortBy: 'createdAt' | 'deadline' | 'priority' = 'createdAt';
+  selectedTags: string[] = [];
+  sortBy: 'createdAt' | 'deadline' | 'scheduledEndDate' | 'priority' = 'deadline';
   sortOrder: 'asc' | 'desc' = 'asc';
 
   availableTags: string[] = [];
@@ -34,47 +34,37 @@ export class KanbanBoard implements OnChanges {
     }
   }
 
-  // フィルター条件がアクティブか判定
   get isFilterActive(): boolean {
     return (
       this.searchKeyword.trim() !== '' ||
       this.priorityFilter !== 'ALL' ||
       this.selectedTags.length > 0 ||
-      this.sortBy !== 'createdAt' ||
+      this.sortBy !== 'deadline' ||
       this.sortOrder !== 'asc'
     );
   }
 
-  /**
-   * ★ タグ選択ハンドラ（トグル処理：未選択なら追加、選択済みなら解除）
-   */
   onTagSelected(tag: string): void {
     const cleaned = this.cleanTag(tag);
     const index = this.selectedTags.findIndex(t => this.cleanTag(t) === cleaned);
 
     if (index >= 0) {
-      this.selectedTags.splice(index, 1); // 選択解除
+      this.selectedTags.splice(index, 1);
     } else {
-      this.selectedTags.push(cleaned);   // 複数選択追加
+      this.selectedTags.push(cleaned);
     }
   }
 
-  /**
-   * 個別タグの解除
-   */
   removeTagFilter(tag: string): void {
     const target = this.cleanTag(tag);
     this.selectedTags = this.selectedTags.filter(t => this.cleanTag(t) !== target);
   }
 
-  /**
-   * フィルター条件を全リセット
-   */
   resetAllFilters(): void {
     this.searchKeyword = '';
     this.priorityFilter = 'ALL';
     this.selectedTags = [];
-    this.sortBy = 'createdAt';
+    this.sortBy = 'deadline';
     this.sortOrder = 'asc';
   }
 
@@ -99,13 +89,52 @@ export class KanbanBoard implements OnChanges {
     }
   }
 
-  /**
-   * ★ フィルター＆ソート適用後のタスク一覧（複数タグのAND条件抽出）
-   */
+  // 多段階ソート比較メソッド
+  private compareTasks(a: Task, b: Task): number {
+    const getWeight = (p?: string) => ({ HIGH: 3, MEDIUM: 2, LOW: 1 }[p?.toUpperCase() || ''] || 0);
+    const parseDate = (d?: string) => (d ? new Date(d.replace(/-/g, '/')).getTime() : Infinity);
+
+    // 1. 完了予定日順
+    if (this.sortBy === 'scheduledEndDate') {
+      const dateA = parseDate(a.scheduledEndDate);
+      const dateB = parseDate(b.scheduledEndDate);
+      let diff = dateA - dateB;
+      if (this.sortOrder === 'desc') diff = -diff;
+
+      if (diff !== 0) return diff;
+      return getWeight(b.priority) - getWeight(a.priority); // 同日の場合は優先度高順
+    }
+
+    // 2. 最終期限順
+    if (this.sortBy === 'deadline') {
+      const dateA = parseDate(a.deadline || a.scheduledEndDate);
+      const dateB = parseDate(b.deadline || b.scheduledEndDate);
+      let diff = dateA - dateB;
+      if (this.sortOrder === 'desc') diff = -diff;
+
+      if (diff !== 0) return diff;
+      return getWeight(b.priority) - getWeight(a.priority); // 同日の場合は優先度高順
+    }
+
+    // 3. 優先度順
+    if (this.sortBy === 'priority') {
+      let diff = getWeight(b.priority) - getWeight(a.priority);
+      if (this.sortOrder === 'desc') diff = -diff;
+
+      if (diff !== 0) return diff;
+      // 同優先度の場合は期限が近い順
+      return parseDate(a.deadline || a.scheduledEndDate) - parseDate(b.deadline || b.scheduledEndDate);
+    }
+
+    // 4. 作成日順
+    const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return this.sortOrder === 'asc' ? tA - tB : tB - tA;
+  }
+
   get filteredAndSortedTasks(): Task[] {
     let result = [...this.tasks];
 
-    // 1. 検索キーワード
     if (this.searchKeyword.trim()) {
       const kw = this.searchKeyword.toLowerCase().trim();
       result = result.filter(
@@ -113,12 +142,10 @@ export class KanbanBoard implements OnChanges {
       );
     }
 
-    // 2. 優先度
     if (this.priorityFilter !== 'ALL') {
       result = result.filter(t => (t.priority || '').toUpperCase() === this.priorityFilter);
     }
 
-    // 3. 複数タグのAND判定（選択されたタグすべてを保持するタスクを抽出）
     if (this.selectedTags.length > 0) {
       result = result.filter(t => {
         if (!t.tags || t.tags.length === 0) return false;
@@ -127,24 +154,7 @@ export class KanbanBoard implements OnChanges {
       });
     }
 
-    // 4. ソート
-    result.sort((a, b) => {
-      let comparison = 0;
-      if (this.sortBy === 'deadline') {
-        const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
-        const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
-        comparison = dateA - dateB;
-      } else if (this.sortBy === 'priority') {
-        const weight: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1, high: 3, medium: 2, low: 1 };
-        comparison = (weight[b.priority] || 0) - (weight[a.priority] || 0);
-      } else {
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        comparison = timeB - timeA;
-      }
-      return this.sortOrder === 'asc' ? comparison : -comparison;
-    });
-
+    result.sort((a, b) => this.compareTasks(a, b));
     return result;
   }
 

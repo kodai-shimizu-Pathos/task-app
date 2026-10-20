@@ -18,12 +18,12 @@ export class MasterKanbanBoard implements OnChanges {
   @Output() selectProject = new EventEmitter<ParentProject>();
   @Output() parentTaskUpdated = new EventEmitter<ParentProject>();
 
-  // フィルター・ソート状態
+  // フィルター・ソート状態（デフォルト：最終期限の昇順）
   searchKeyword: string = '';
   priorityFilter: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW' = 'ALL';
-  selectedTags: string[] = []; // ★ 複数タグ選択（配列管理）
-  sortBy: 'createdAt' | 'deadline' | 'priority' | 'progress' = 'createdAt';
-  sortOrder: 'asc' | 'desc' = 'desc';
+  selectedTags: string[] = [];
+  sortBy: 'createdAt' | 'deadline' | 'scheduledEndDate' | 'priority' | 'progress' = 'deadline';
+  sortOrder: 'asc' | 'desc' = 'asc';
 
   availableTags: string[] = [];
 
@@ -33,18 +33,16 @@ export class MasterKanbanBoard implements OnChanges {
     }
   }
 
-  // フィルター条件が初期状態から変更されているか判定
   get isFilterActive(): boolean {
     return (
       this.searchKeyword.trim() !== '' ||
       this.priorityFilter !== 'ALL' ||
       this.selectedTags.length > 0 ||
-      this.sortBy !== 'createdAt' ||
-      this.sortOrder !== 'desc'
+      this.sortBy !== 'deadline' ||
+      this.sortOrder !== 'asc'
     );
   }
 
-  // カード上のタグ押下時のトグル処理（AND検索）
   onTagSelected(tagInput: string | any): void {
     const rawTag = typeof tagInput === 'string' ? tagInput : (tagInput?.detail || '');
     if (!rawTag) return;
@@ -53,36 +51,82 @@ export class MasterKanbanBoard implements OnChanges {
     const index = this.selectedTags.findIndex(t => this.cleanTag(t) === cleaned);
 
     if (index >= 0) {
-      this.selectedTags.splice(index, 1); // 選択解除
+      this.selectedTags.splice(index, 1);
     } else {
-      this.selectedTags.push(cleaned);   // 選択追加
+      this.selectedTags.push(cleaned);
     }
   }
 
-  // 個別タグの解除
   removeTagFilter(tag: string): void {
     const target = this.cleanTag(tag);
     this.selectedTags = this.selectedTags.filter(t => this.cleanTag(t) !== target);
   }
 
-  // フィルター全リセット
   resetFilters(): void {
     this.searchKeyword = '';
     this.priorityFilter = 'ALL';
     this.selectedTags = [];
-    this.sortBy = 'createdAt';
-    this.sortOrder = 'desc';
+    this.sortBy = 'deadline';
+    this.sortOrder = 'asc';
   }
 
   toggleSortOrder(): void {
     this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
   }
 
+  // 多段階ソート比較メソッド
+  private compareProjects(a: ParentProject, b: ParentProject): number {
+    const getWeight = (p?: string) => ({ HIGH: 3, MEDIUM: 2, LOW: 1 }[p?.toUpperCase() || ''] || 0);
+    const parseDate = (d?: string) => (d ? new Date(d.replace(/-/g, '/')).getTime() : Infinity);
+
+    // 1. 完了予定日順
+    if (this.sortBy === 'scheduledEndDate') {
+      const dateA = parseDate(a.scheduledEndDate);
+      const dateB = parseDate(b.scheduledEndDate);
+      let diff = dateA - dateB;
+      if (this.sortOrder === 'desc') diff = -diff;
+
+      if (diff !== 0) return diff;
+      return getWeight(b.priority) - getWeight(a.priority); // 同日の場合は優先度高順
+    }
+
+    // 2. 最終期限順
+    if (this.sortBy === 'deadline') {
+      const dateA = parseDate(a.deadline || a.scheduledEndDate);
+      const dateB = parseDate(b.deadline || b.scheduledEndDate);
+      let diff = dateA - dateB;
+      if (this.sortOrder === 'desc') diff = -diff;
+
+      if (diff !== 0) return diff;
+      return getWeight(b.priority) - getWeight(a.priority); // 同日の場合は優先度高順
+    }
+
+    // 3. 優先度順
+    if (this.sortBy === 'priority') {
+      let diff = getWeight(b.priority) - getWeight(a.priority);
+      if (this.sortOrder === 'desc') diff = -diff;
+
+      if (diff !== 0) return diff;
+      // 同優先度の場合は期限が近い順
+      return parseDate(a.deadline || a.scheduledEndDate) - parseDate(b.deadline || b.scheduledEndDate);
+    }
+
+    // 4. 進捗度順
+    if (this.sortBy === 'progress') {
+      const diff = (a.progressPercentage || 0) - (b.progressPercentage || 0);
+      return this.sortOrder === 'asc' ? diff : -diff;
+    }
+
+    // 5. 作成日順
+    const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return this.sortOrder === 'asc' ? tA - tB : tB - tA;
+  }
+
   get filteredAndSortedProjects(): ParentProject[] {
     if (!this.projects) return [];
     let result = [...this.projects];
 
-    // 1. キーワード検索
     if (this.searchKeyword.trim()) {
       const kw = this.searchKeyword.toLowerCase().trim();
       result = result.filter(p => 
@@ -91,12 +135,10 @@ export class MasterKanbanBoard implements OnChanges {
       );
     }
 
-    // 2. 優先度フィルター
     if (this.priorityFilter !== 'ALL') {
       result = result.filter(p => p.priority && p.priority.toUpperCase() === this.priorityFilter);
     }
 
-    // 3. 複数タグAND判定
     if (this.selectedTags.length > 0) {
       result = result.filter(p => {
         if (!p.tags || p.tags.length === 0) return false;
@@ -105,26 +147,7 @@ export class MasterKanbanBoard implements OnChanges {
       });
     }
 
-    // 4. ソート処理
-    result.sort((a, b) => {
-      let comparison = 0;
-      if (this.sortBy === 'deadline') {
-        const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
-        const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
-        comparison = dateA - dateB;
-      } else if (this.sortBy === 'priority') {
-        const weight: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1, high: 3, medium: 2, low: 1 };
-        comparison = (weight[b.priority] || 0) - (weight[a.priority] || 0);
-      } else if (this.sortBy === 'progress') {
-        comparison = (a.progressPercentage || 0) - (b.progressPercentage || 0);
-      } else {
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        comparison = timeA - timeB;
-      }
-      return this.sortOrder === 'asc' ? comparison : -comparison;
-    });
-
+    result.sort((a, b) => this.compareProjects(a, b));
     return result;
   }
 
