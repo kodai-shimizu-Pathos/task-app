@@ -23,7 +23,9 @@
           </button>
         </div>
 
-        <button *ngIf="selectedProject && activeView === 'tasks'" class="btn-back" (click)="onUnselectProject()">
+        <button *ngIf="selectedProject && activeView === 'tasks' && currentMode !== 'LIST'"
+          class="btn-back"
+          (click)="onUnselectProject()">
           ← 一覧へ
         </button>
       </div>
@@ -42,6 +44,12 @@
             [class.active]="currentMode === 'GANTT'"
             (click)="switchViewMode('GANTT')">
             ガントチャート
+          </button>
+          <button
+            type="button"
+            [class.active]="currentMode === 'LIST'"
+            (click)="switchViewMode('LIST')">
+            リスト
           </button>
         </div>
       </div>
@@ -123,11 +131,31 @@
               (addTask)="onOpenNewTaskForm()"
               (projectUpdated)="onParentTaskUpdated($event)">
             </app-gantt-board>
+
+            <app-task-list-board
+              *ngIf="currentMode === 'LIST'"
+              [tasks]="allTasks"
+              [projects]="projects"
+              [selectedProject]="selectedProject"
+              (selectTask)="onSelectTask($event)"
+              (selectProject)="onSelectProject($event)"
+              (taskUpdated)="onTaskUpdated($event)">
+            </app-task-list-board>
           </div>
         
-          <div class="docked-detail-pane" *ngIf="isProjectFormOpen" [style.width.px]="taskFormWidth">
+          <div class="docked-detail-pane" *ngIf="isTaskFormOpen || isProjectFormOpen" [style.width.px]="taskFormWidth">
             <div class="pane-resizer" (mousedown)="onResizeStart($event)"></div>
+            <app-task-form
+              *ngIf="isTaskFormOpen"
+              [taskToEdit]="taskToEdit"
+              [projects]="projects"
+              (taskCreated)="onTaskCreated($event)"
+              (taskUpdated)="onTaskUpdated($event)"
+              (taskDeleted)="onTaskDeleted($event)"
+              (closePanel)="onCloseTaskForm()">
+            </app-task-form>
             <app-project-form
+              *ngIf="isProjectFormOpen"
               [projectToEdit]="projectToEdit"
               (projectCreated)="onProjectCreated($event)"
               (projectUpdated)="onProjectUpdated($event)"
@@ -214,6 +242,16 @@
                   (taskUpdated)="onTaskUpdated($event)"
                   (projectUpdated)="onParentTaskUpdated($event)">
                 </app-gantt-board>
+
+                <app-task-list-board
+                *ngIf="currentMode === 'LIST'"
+                [tasks]="allTasks"
+                [projects]="projects"
+                [selectedProject]="selectedProject"
+                (selectTask)="onSelectTask($event)"
+                (selectProject)="onSelectProject($event)"
+                (taskUpdated)="onTaskUpdated($event)">
+                </app-task-list-board>
               </section>
             </div>
           </div>

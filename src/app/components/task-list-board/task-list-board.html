@@ -1,0 +1,205 @@
+<div class="task-list-board-container">
+
+  <!-- フィルタータブバー（右端に親課題解除チップ） -->
+  <div class="filter-tabs-bar">
+    <div class="filter-tabs-left">
+      <button
+        *ngFor="let tab of tabs"
+        type="button"
+        class="filter-tab"
+        [class.active]="currentTab === tab.id"
+        (click)="switchTab(tab.id)">
+        <span class="tab-label">{{ tab.label }}</span>
+        <span class="tab-count">{{ getTabCount(tab.id) }}</span>
+      </button>
+    </div>
+
+    <!-- 右端：選択中親課題のアクティブ解除チップ -->
+    <div *ngIf="selectedProject" class="filter-tabs-right">
+      <span class="project-filter-clear-chip" (click)="clearProjectFilter($event)" title="親課題フィルターを解除して全表示に戻す">
+        📁 {{ selectedProject.title }} <span class="clear-x">✕</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- 固定テーブルヘッダー（日付列にも同サイズの22px空スロットを挿入して垂直揃え） -->
+  <div class="table-header">
+    <div class="col col-checkbox"></div>
+    <div class="col col-status">ステータス</div>
+    <div class="col col-priority">優先度</div>
+    <div class="col col-project">親課題</div>
+    <div class="col col-title">タスク名</div>
+    <div class="col col-scheduled">
+      <span class="alert-slot"></span>
+      完了予定日
+    </div>
+    <div class="col col-deadline">
+      <span class="alert-slot"></span>
+      最終期限
+    </div>
+    <div class="col col-actions">操作</div>
+  </div>
+
+  <!-- タスク一覧 -->
+  <div class="task-table">
+    <div *ngIf="getVisibleTasksByTab().length === 0" class="no-tasks-message">
+      該当するタスクはありません
+    </div>
+
+    <ng-container *ngFor="let task of getVisibleTasksByTab()">
+      <div [class]="getTaskRowClass(task)">
+
+        <!-- 1. チェックボックス -->
+        <div class="col col-checkbox">
+          <input
+            type="checkbox"
+            class="task-checkbox"
+            [checked]="task.status === 'done'"
+            (change)="onTaskCheckboxChange(task, $any($event).target.checked)"
+            (click)="$event.stopPropagation()">
+        </div>
+
+        <!-- 2. ステータス（文字のみプルダウン） -->
+        <div class="col col-status">
+          <select
+            class="status-select-text"
+            [value]="task.status || 'todo'"
+            (change)="onStatusChange(task, $any($event).target.value)"
+            (click)="$event.stopPropagation()"
+            title="ステータス変更">
+            <option value="todo">未着手</option>
+            <option value="in-progress">進行中</option>
+            <option value="done">完了</option>
+          </select>
+        </div>
+
+        <!-- 3. 優先度（カンバン同期バッジプルダウン） -->
+        <div class="col col-priority">
+          <select
+            class="priority-select-badge"
+            [class]="'priority-' + (task.priority || 'medium').toLowerCase()"
+            [value]="(task.priority || 'medium').toLowerCase()"
+            (change)="onPriorityChange(task, $any($event).target.value)"
+            (click)="$event.stopPropagation()"
+            title="優先度変更">
+            <option value="high">🔴 高</option>
+            <option value="medium">🟡 中</option>
+            <option value="low">🔵 低</option>
+          </select>
+        </div>
+
+        <!-- 4. 所属親課題（クリックでその親課題に絞り込み） -->
+        <div class="col col-project">
+          <span
+            *ngIf="getParentProjectLabel(task)"
+            class="project-badge-tag"
+            (click)="onParentProjectBadgeClick($event, task)"
+            [title]="'クリックで親課題「' + getParentProjectLabel(task) + '」に絞り込み'">
+            {{ getParentProjectLabel(task) }}
+          </span>
+          <span *ngIf="!getParentProjectLabel(task)" class="text-empty">-</span>
+        </div>
+
+        <!-- 5. タスク名（ダブルクリックでインライン編集） -->
+        <div class="col col-title" (dblclick)="startEditingTitle(task, $event)">
+          <div class="title-with-subtasks">
+            <button
+              *ngIf="hasSubtasks(task)"
+              type="button"
+              class="subtask-toggle-btn"
+              (click)="toggleSubtasks($event, task)">
+              {{ expandedTasks[task.id] ? '▼' : '▶' }}
+            </button>
+
+            <span
+              *ngIf="editingTaskId !== task.id"
+              class="task-title"
+              [class.line-through]="task.status === 'done'"
+              title="ダブルクリックでタイトル編集">
+              {{ task.title }}
+            </span>
+
+            <input
+              *ngIf="editingTaskId === task.id"
+              type="text"
+              class="title-inline-input"
+              [(ngModel)]="editingTaskTitle"
+              (keyup.enter)="saveTitle(task)"
+              (keyup.escape)="cancelEditingTitle()"
+              (blur)="saveTitle(task)"
+              (click)="$event.stopPropagation()"
+              autofocus>
+
+            <span *ngIf="hasSubtasks(task)" class="subtask-badge">
+              ☑ {{ getCompletedSubtaskCount(task) }}/{{ getTotalSubtaskCount(task) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- 6. 完了予定日（22px固定スロットで縦揃え） -->
+        <div class="col col-scheduled">
+          <span class="alert-slot">
+            <span *ngIf="isScheduledOverdue(task)" title="完了予定日を超過">⚠️</span>
+          </span>
+          <input
+            type="date"
+            class="inline-date-picker"
+            [value]="task.scheduledEndDate || ''"
+            (change)="onScheduledDateChange(task, $any($event).target.value)"
+            (click)="$event.stopPropagation()">
+        </div>
+
+        <!-- 7. 最終期限（22px固定スロットで縦揃え） -->
+        <div class="col col-deadline">
+          <span class="alert-slot">
+            <span *ngIf="isDeadlineOverdue(task)" title="最終期限を超過">🚨</span>
+          </span>
+          <input
+            type="date"
+            class="inline-date-picker"
+            [value]="task.deadline || ''"
+            (change)="onDeadlineChange(task, $any($event).target.value)"
+            (click)="$event.stopPropagation()">
+        </div>
+
+        <!-- 8. 操作ボタン -->
+        <div class="col col-actions">
+          <button
+            type="button"
+            class="btn-edit"
+            (click)="onEditTaskClick($event, task)"
+            title="編集フォームを開く">
+            ✏️
+          </button>
+        </div>
+
+      </div>
+
+      <!-- サブタスク展開行 -->
+      <ng-container *ngIf="expandedTasks[task.id] && task.checklist">
+        <div *ngFor="let subtask of task.checklist" class="subtask-row">
+          <div class="col col-checkbox">
+            <input
+              type="checkbox"
+              class="subtask-checkbox"
+              [checked]="subtask.completed"
+              (change)="onSubtaskCheckboxChange($event, task, subtask.id, $any($event).target.checked)"
+              (click)="$event.stopPropagation()">
+          </div>
+          <div class="col col-status"></div>
+          <div class="col col-priority"></div>
+          <div class="col col-project"></div>
+          <div class="col col-title">
+            <span class="subtask-text" [class.line-through]="subtask.completed">
+              {{ subtask.text }}
+            </span>
+          </div>
+          <div class="col col-scheduled"></div>
+          <div class="col col-deadline"></div>
+          <div class="col col-actions"></div>
+        </div>
+      </ng-container>
+
+    </ng-container>
+  </div>
+</div>

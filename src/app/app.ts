@@ -18,6 +18,7 @@ import { ReviewViewComponent } from './components/review-view/review-view';
 import { AuthService } from './services/auth.service';
 import { LoginModalComponent } from './components/login-modal/login-modal';
 import { GuideTourComponent } from './components/guide-tour/guide-tour.component';
+import { TaskListBoardComponent } from './components/task-list-board/task-list-board';
 
 /**
  * 遅延ログ情報インターフェース
@@ -45,6 +46,7 @@ export interface DelayLogInfo {
     ProjectForm,
     MasterKanbanBoard,
     GanttBoard,
+    TaskListBoardComponent,
     ArchiveModal,
     DelayLogToast,
     ReviewViewComponent,
@@ -64,8 +66,8 @@ export class AppComponent implements OnInit {
   /** アクティブビュー: 'tasks'（課題管理メイン）| 'review'（AIレビュー） */
   activeView: 'tasks' | 'review' = 'tasks';
 
-  /** 表示モード: 'KANBAN' | 'GANTT' */
-  currentMode: 'KANBAN' | 'GANTT' = 'KANBAN';
+  /** 表示モード: 'KANBAN' | 'GANTT' | 'LIST' */
+  currentMode: 'KANBAN' | 'GANTT' | 'LIST' = 'KANBAN';
 
   /** テーマ: 'dark' | 'light' */
   currentTheme: 'dark' | 'light' = 'dark';
@@ -222,9 +224,9 @@ export class AppComponent implements OnInit {
   }
 
   /**
-   * 表示モード切り替え（KANBAN ↔ GANTT）
+   * 表示モード切り替え（KANBAN ↔ GANTT ↔ LIST）
    */
-  switchViewMode(view: 'KANBAN' | 'GANTT'): void {
+  switchViewMode(view: 'KANBAN' | 'GANTT' | 'LIST'): void {
     this.currentMode = view;
   }
 

@@ -39,6 +39,7 @@ const DEMO_PROJECTS: ParentProject[] = [
     scheduledStartDate: '2026-10-01',
     scheduledEndDate: '2026-10-15', // 完了予定超過中（オレンジアラート）
     deadline: '2026-10-28',
+
     totalTaskCount: 4,
     completedTaskCount: 2,
     progressPercentage: 50,
@@ -114,7 +115,11 @@ const DEMO_TASKS: Task[] = [
     scheduledEndDate: '2026-10-10',
     deadline: '2026-10-10',
     createdAt: '2026-10-01T10:00:00Z',
-    updatedAt: '2026-10-10T17:00:00Z'
+    updatedAt: '2026-10-10T17:00:00Z',
+    checklist: [
+      { id: 'sub_1_1', text: 'レイアウト構成の定義', completed: true },
+      { id: 'sub_1_2', text: '傾向グラフコンポーネントの組み込み', completed: true }
+    ]
   },
   {
     id: 'demo_task_2',
@@ -130,7 +135,11 @@ const DEMO_TASKS: Task[] = [
     scheduledEndDate: '2026-10-16',
     deadline: '2026-10-16',
     createdAt: '2026-10-05T11:00:00Z',
-    updatedAt: '2026-10-16T15:00:00Z'
+    updatedAt: '2026-10-16T15:00:00Z',
+    checklist: [
+      { id: 'sub_2_1', text: 'プロンプトテンプレートの策定', completed: true },
+      { id: 'sub_2_2', text: 'レスポンスパーサーの実装', completed: true }
+    ]
   },
   {
     id: 'demo_task_3',
@@ -143,10 +152,15 @@ const DEMO_TASKS: Task[] = [
     parentId: 'demo_project_1',
     description: 'スポットライト型機能ガイドの実装',
     scheduledStartDate: '2026-10-05',
-    scheduledEndDate: '2026-10-15', // ★ 完了予定超過（オレンジ枠線＆黄色完了予定バッジ）
+    scheduledEndDate: '2026-10-15', // 完了予定超過中
     deadline: '2026-10-28',
     createdAt: '2026-10-05T09:00:00Z',
-    updatedAt: '2026-10-20T00:00:00Z'
+    updatedAt: '2026-10-20T00:00:00Z',
+    checklist: [
+      { id: 'sub_3_1', text: 'ツアーDOM要素のハイライト処理', completed: true },
+      { id: 'sub_3_2', text: 'ステップナビゲーションモーダル作成', completed: true },
+      { id: 'sub_3_3', text: 'ツアー完了フラグの永続化', completed: false }
+    ]
   },
   {
     id: 'demo_task_4',
@@ -194,9 +208,14 @@ const DEMO_TASKS: Task[] = [
     description: 'データクレンジング作業の遅延',
     scheduledStartDate: '2026-10-01',
     scheduledEndDate: '2026-10-12', // 完了予定超過
-    deadline: '2026-10-17', // ★ 最終期限超過（赤色枠線＆赤色最終期限バッジ）
+    deadline: '2026-10-17', // 最終期限超過
     createdAt: '2026-10-01T13:00:00Z',
-    updatedAt: '2026-10-20T00:00:00Z'
+    updatedAt: '2026-10-20T00:00:00Z',
+    checklist: [
+      { id: 'sub_6_1', text: 'インデックスの事前バックアップ', completed: true },
+      { id: 'sub_6_2', text: '不正フォーマットデータのクレンジング', completed: false },
+      { id: 'sub_6_3', text: 'CSV形式エクスポートの実行', completed: false }
+    ]
   },
   {
     id: 'demo_task_7',
@@ -230,7 +249,11 @@ const DEMO_TASKS: Task[] = [
     scheduledEndDate: '2026-11-01',
     deadline: '2026-11-01',
     createdAt: '2026-10-15T09:30:00Z',
-    updatedAt: '2026-10-20T00:00:00Z'
+    updatedAt: '2026-10-20T00:00:00Z',
+    checklist: [
+      { id: 'sub_8_1', text: 'PiPコンテナのドラッグハンドラー調整', completed: true },
+      { id: 'sub_8_2', text: '最小化・最大化ボタンの実装', completed: false }
+    ]
   },
   {
     id: 'demo_task_9',
