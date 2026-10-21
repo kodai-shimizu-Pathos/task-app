@@ -292,8 +292,8 @@ export class AppComponent implements OnInit {
   /**
    * 親課題を選択
    */
-  onSelectProject(project: ParentProject): void {
-    this.selectedProject = project;
+  onSelectProject(project?: ParentProject): void {
+    this.selectedProject = project || null;
     this.isMasterPanelCollapsed = false;
     this.closeAllForms();
   }

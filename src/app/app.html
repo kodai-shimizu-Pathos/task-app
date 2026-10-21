@@ -135,11 +135,12 @@
             <app-task-list-board
               *ngIf="currentMode === 'LIST'"
               [tasks]="allTasks"
-              [projects]="projects"
+              [projects]="activeProjects"
               [selectedProject]="selectedProject"
               (selectTask)="onSelectTask($event)"
               (selectProject)="onSelectProject($event)"
-              (taskUpdated)="onTaskUpdated($event)">
+              (taskUpdated)="onTaskUpdated($event)"
+              (addTask)="onOpenNewTaskForm()">
             </app-task-list-board>
           </div>
         
@@ -148,7 +149,7 @@
             <app-task-form
               *ngIf="isTaskFormOpen"
               [taskToEdit]="taskToEdit"
-              [projects]="projects"
+              [projects]="activeProjects"
               (taskCreated)="onTaskCreated($event)"
               (taskUpdated)="onTaskUpdated($event)"
               (taskDeleted)="onTaskDeleted($event)"
@@ -246,11 +247,12 @@
                 <app-task-list-board
                 *ngIf="currentMode === 'LIST'"
                 [tasks]="allTasks"
-                [projects]="projects"
+                [projects]="activeProjects"
                 [selectedProject]="selectedProject"
                 (selectTask)="onSelectTask($event)"
                 (selectProject)="onSelectProject($event)"
-                (taskUpdated)="onTaskUpdated($event)">
+                (taskUpdated)="onTaskUpdated($event)"
+                (addTask)="onOpenNewTaskForm()">
                 </app-task-list-board>
               </section>
             </div>
@@ -262,7 +264,7 @@
             <app-task-form
               *ngIf="isTaskFormOpen"
               [taskToEdit]="taskToEdit"
-              [projects]="projects"
+              [projects]="activeProjects"
               [projectId]="selectedProject.id"
               (taskCreated)="onTaskCreated($event)"
               (taskUpdated)="onTaskUpdated($event)"
@@ -292,7 +294,7 @@
 
       <app-side-pocket-panel
         data-tour="step-3"
-        [projects]="projects"
+        [projects]="activeProjects"
         [selectedProject]="selectedProject"
         (promoteToTask)="onPromoteMemoToTask($event)"
         (promoteToProjectMemo)="onPromoteMemoToProjectMemo($event)">

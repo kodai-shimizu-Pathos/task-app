@@ -1,6 +1,6 @@
 <div class="task-list-board-container">
 
-  <!-- フィルタータブバー（右端に親課題解除チップ） -->
+  <!-- フィルタータブバー（右端に親課題解除チップ ＆ 新規タスクボタン） -->
   <div class="filter-tabs-bar">
     <div class="filter-tabs-left">
       <button
@@ -14,11 +14,15 @@
       </button>
     </div>
 
-    <!-- 右端：選択中親課題のアクティブ解除チップ -->
-    <div *ngIf="selectedProject" class="filter-tabs-right">
-      <span class="project-filter-clear-chip" (click)="clearProjectFilter($event)" title="親課題フィルターを解除して全表示に戻す">
+    <!-- 右端：親課題解除チップ ＆ 新規タスクボタン -->
+    <div class="filter-tabs-right">
+      <span *ngIf="selectedProject" class="project-filter-clear-chip" (click)="clearProjectFilter($event)" title="親課題フィルターを解除して全表示に戻す">
         📁 {{ selectedProject.title }} <span class="clear-x">✕</span>
       </span>
+
+      <button type="button" class="btn-add-task" (click)="onAddNewTask()">
+        ＋ 新規タスク
+      </button>
     </div>
   </div>
 

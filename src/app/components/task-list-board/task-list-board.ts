@@ -28,6 +28,7 @@ export class TaskListBoardComponent implements OnInit, OnChanges {
   @Output() selectTask = new EventEmitter<Task>();
   @Output() selectProject = new EventEmitter<ParentProject | undefined>();
   @Output() taskUpdated = new EventEmitter<Task>();
+  @Output() addTask = new EventEmitter<void>();
 
   currentTab: TaskFilterTab = 'all';
 
@@ -63,14 +64,9 @@ export class TaskListBoardComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // 初回読み込み、親課題フィルター切り替え、または件数が変わった時のみ全体再分類
-    if (changes['tasks'] || changes['selectedProject']) {
-      const prevLength = changes['tasks']?.previousValue?.length;
-      const currLength = changes['tasks']?.currentValue?.length;
-
-      if (prevLength !== currLength || changes['selectedProject']) {
-        this.categorizeAndSortTasks();
-      }
+    // 親課題フィルター切り替え、またはタスク・親課題データの変更時に自動再分類
+    if (changes['tasks'] || changes['projects'] || changes['selectedProject']) {
+      this.categorizeAndSortTasks();
     }
   }
 
@@ -121,8 +117,18 @@ export class TaskListBoardComponent implements OnInit, OnChanges {
     });
   }
 
+  /** タスクの自動フィルタリング・分類・確定ソート */
   private categorizeAndSortTasks(): void {
     const sourceTasks = this.getFilteredTasksByProject();
+
+    // ★ アクティブな親課題IDのセットを作成
+    const activeProjectIds = new Set(this.projects.map(p => p.id));
+
+    // ★ 全表示モーショの際、アーカイブされた親課題に紐づくタスクを動的に除外
+    const validTasks = sourceTasks.filter(task => {
+      if (this.selectedProject) return true;
+      return !!task.parentId && activeProjectIds.has(task.parentId);
+    });
 
     const overdue: Task[] = [];
     const todayTomorrow: Task[] = [];
@@ -136,7 +142,7 @@ export class TaskListBoardComponent implements OnInit, OnChanges {
     const tomDd = String(tomorrow.getDate()).padStart(2, '0');
     const tomorrowStr = `${tomYyyy}-${tomMm}-${tomDd}`;
 
-    for (const task of sourceTasks) {
+    for (const task of validTasks) {
       if (task.status === 'done') {
         completed.push(task);
       } else {
@@ -295,6 +301,11 @@ export class TaskListBoardComponent implements OnInit, OnChanges {
   onEditTaskClick(event: Event, task: Task): void {
     event.stopPropagation();
     this.selectTask.emit(task);
+  }
+
+  /** 「＋ 新規タスク」ボタンクリック */
+  onAddNewTask(): void {
+    this.addTask.emit();
   }
 
   toggleSubtasks(event: Event, task: Task): void {

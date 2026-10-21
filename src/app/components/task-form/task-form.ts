@@ -207,12 +207,21 @@ export class TaskForm implements OnInit, OnChanges {
   }
 
   /**
+   * 選択可能な親課題リスト
+   * （アクティブな親課題 ＋ 編集中のタスクが現在所属している親課題がアーカイブ済みの場合は例外的に含める）
+   */
+  get availableProjects(): ParentProject[] {
+    const currentParentId = this.taskData.parentId;
+    return this.projects.filter(p => p.status !== 'archived' || p.id === currentParentId);
+  }
+
+  /**
    * AIでサブタスク候補を生成
-   * タイトルが入力されていることが前提
+   * ダイアログを出さず、そのままチェックリストへ直接反映
    */
   async generateSubtasksWithAi(): Promise<void> {
+    // タスク名が未入力の場合は処理しない
     if (!this.taskData.title || !this.taskData.title.trim()) {
-      alert('タスク名を入力してからAI分解を実行してください。');
       return;
     }
 
@@ -228,6 +237,7 @@ export class TaskForm implements OnInit, OnChanges {
         this.taskData.checklist = [];
       }
 
+      // 生成されたサブタスクをチェックリストへ追加
       for (const subtaskText of subtasks) {
         const newItem: ChecklistItem = {
           id: 'item-' + Date.now() + Math.random(),
@@ -239,11 +249,9 @@ export class TaskForm implements OnInit, OnChanges {
       }
 
       this.recalculateChecklistProgress();
-      alert(`✓ ${subtasks.length}個のサブタスクを追加しました！`);
+      // ★ 完了ダイアログ（alert）を撤廃し、ストレスなくそのまま入力欄・リストへ自動反映
     } catch (error) {
-      console.error('AI サブタスク生成エラー:', error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      alert(`エラーが発生しました:\n${errorMessage}`);
+      console.error('AIサブタスク生成エラー:', error);
     } finally {
       this.isGeneratingAi = false;
     }

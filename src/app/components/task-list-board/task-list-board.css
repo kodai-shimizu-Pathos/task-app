@@ -61,12 +61,40 @@
     font-size: 0.75rem;
     text-align: center;
   }
+
+  .list-header-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
   
   /* 右端：親課題解除アクティブチップ */
   .filter-tabs-right {
     display: flex;
     align-items: center;
-    margin-left: 1rem;
+    gap: 8px;
+  }
+
+  /* 新規タスク追加ボタン */
+  .btn-add-task {
+    background-color: var(--accent-color, #2563EB);
+    color: #ffffff;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-add-task:hover {
+    opacity: 0.9;
   }
   
   .project-filter-clear-chip {

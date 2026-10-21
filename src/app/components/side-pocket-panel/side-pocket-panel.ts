@@ -350,6 +350,9 @@ import { ParentProject } from '../../models/project.model';
       color: var(--text-primary, #E8EAEE);
       cursor: pointer;
       outline: none;
+
+      text-align: center;
+      text-align-last: center;
     }
 
     .project-select:focus {

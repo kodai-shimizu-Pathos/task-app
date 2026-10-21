@@ -22,16 +22,16 @@
           <div class="form-group">
             <label for="proj-status">ステータス<span class="required">*</span></label>
             <select id="proj-status" name="status" [(ngModel)]="status" required>
-              <option value="todo">🔴 未着手</option>
-              <option value="in-progress">🟡 進行中</option>
-              <option value="done">🟢 完了</option>
+              <option value="todo">未着手</option>
+              <option value="in-progress">進行中</option>
+              <option value="done">完了</option>
             </select>
           </div>
           <div class="form-group">
             <label for="proj-priority">優先度<span class="required">*</span></label>
             <select id="proj-priority" name="priority" [(ngModel)]="priority" required>
               <option value="low">🔵 低</option>
-              <option value="medium">🟢 中</option>
+              <option value="medium">🟡 中</option>
               <option value="high">🔴 高</option>
             </select>
           </div>
