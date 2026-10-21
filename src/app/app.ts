@@ -597,11 +597,37 @@ export class AppComponent implements OnInit {
       updatedAt: new Date().toISOString()
     };
 
+    // ★ 選択中の親課題であれば、ローカル状態の即時更新 ＆ アコーディオンを自動展開
+    if (this.selectedProject?.id === targetProject.id) {
+      this.selectedProject = { ...updatedProject };
+      this.isSummaryExpanded = true;
+    }
+
     const { id, ...projectData } = updatedProject;
     this.dataService.updateProject(id, projectData);
 
     // サイドポケットから消化・削除
     this.dataService.deleteSidePocketMemo(event.memo.id);
+  }
+
+ /**
+ * 親課題のメモ履歴から指定されたメモを削除
+ */
+  onDeleteProjectMemo(index: number): void {
+    if (!this.selectedProject || !this.selectedProject.memos) return;
+
+    const updatedMemos = [...this.selectedProject.memos];
+    updatedMemos.splice(index, 1);
+
+    const updatedProject = {
+      ...this.selectedProject,
+      memos: updatedMemos,
+      updatedAt: new Date().toISOString()
+    };
+
+    this.selectedProject = updatedProject;
+    const { id, ...projectData } = updatedProject;
+    this.dataService.updateProject(id, projectData);
   }
 
   /**

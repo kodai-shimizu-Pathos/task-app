@@ -212,6 +212,20 @@
                 <p class="project-desc" *ngIf="selectedProject.description">
                   <strong>概要:</strong> {{ selectedProject.description }}
                 </p>
+
+                <!-- 📌 親課題メモ履歴 -->
+                <div class="project-memos-section" *ngIf="selectedProject.memos && selectedProject.memos.length > 0">
+                  <strong class="memos-header-label">📌 メモ履歴 ({{ selectedProject.memos.length }}件):</strong>
+                  <div class="project-memo-list">
+                    <div *ngFor="let memo of selectedProject.memos; let i = index" class="project-memo-item">
+                      <div class="memo-item-header">
+                        <span class="memo-time">⏰ {{ memo.timestamp }}</span>
+                        <button type="button" class="btn-delete-memo" (click)="onDeleteProjectMemo(i)" title="メモを削除">✕</button>
+                      </div>
+                      <span class="memo-text">{{ memo.content }}</span>
+                    </div>
+                  </div>
+                </div>
                 <div class="doc-links-chips" *ngIf="selectedProject.docLinks && selectedProject.docLinks.length > 0">
                   <strong>関連資料:</strong>
                   <a *ngFor="let doc of selectedProject.docLinks" [href]="doc.url" target="_blank" class="doc-chip">

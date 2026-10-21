@@ -445,3 +445,70 @@
   margin-bottom: 1.25rem;
   flex-shrink: 0;
 }
+
+/* 📌 親課題メモ履歴 */
+.project-memos-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.memos-header-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.project-memo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 120px; /* ★ 高さを上限固定し、メイン領域の圧迫を防止 */
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.project-memo-item {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-memo-item .memo-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.project-memo-item .memo-text {
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.memo-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-delete-memo {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 3px;
+  transition: color 0.15s;
+}
+
+.btn-delete-memo:hover {
+  color: var(--priority-high, #EF4444);
+}
